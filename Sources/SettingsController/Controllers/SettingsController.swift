@@ -65,7 +65,7 @@ public final class SettingsController: UITableViewController {
         
         tableView?.register(SettingsCell.self)
         tableView?.rowHeight = 45
-        tableView?.contentInset.top = 25
+        tableView?.contentInset.top = configuration.topInset
         
         navigationItem.largeTitleDisplayMode = .automatic
         navigationItem.rightBarButtonItem = closeButton
@@ -145,6 +145,8 @@ extension SettingsController {
 extension SettingsController {
         
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        tableView.deselectRow(at: indexPath, animated: true)
         
         guard let cell = tableView.cellForRow(at: indexPath) as? SettingsCell else { return }
                 
