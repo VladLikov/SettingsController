@@ -11,12 +11,6 @@ public protocol SettingsControllerDelegate: AnyObject {
     func settingsDidDissmised(_ initialAppColor: UIColor)
 }
 
-public struct SettingsConfiguration {
-    public var settingsTitle: String?
-    public var initialAppColor: UIColor
-    public var sections: [SettingsSection]
-}
-
 // MARK: - SettingsController
 
 public final class SettingsController: UITableViewController {
