@@ -17,7 +17,7 @@ public enum SettingsDefaultRow {
         case rateApp(String)
         case moreApps(String)
         case contactDeveloper(String)
-        case premium(Bool, UIViewController)
+        case premium(Bool, UIViewController.Type)
         
         var title: String {
             switch self {

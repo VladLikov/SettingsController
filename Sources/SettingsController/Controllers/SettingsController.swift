@@ -221,7 +221,7 @@ extension SettingsController {
 
 extension SettingsController {
         
-    private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController) {
+    private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type) {
         
         if hasPremium {
             
@@ -234,8 +234,9 @@ extension SettingsController {
             
         } else {
             
-            premiumVC.modalPresentationStyle = .overFullScreen
-            present(premiumVC, animated: true)
+            let vc = premiumVC.init()
+            vc.modalPresentationStyle = .overFullScreen
+            present(vc, animated: true)
             
         }
         
