@@ -67,7 +67,7 @@ public final class SettingsController: UITableViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-         title = configuration.settingsTitle
+        title = configuration.settingsTitle
         
         tableView?.register(SettingsCell.self)
         tableView?.rowHeight = 45
@@ -245,22 +245,10 @@ extension SettingsController {
     private func sendMail(_ email: String) {
         
         guard MFMailComposeViewController.canSendMail() else { return }
-
-        let mail = MFMailComposeViewController()
         
-        let deviceModel = UIDevice.current.model
-        let systemVersion = UIDevice.current.systemVersion
+        let mail = MFMailComposeViewController.getDefault(for: email)
         
-        let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? ""
-        let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-        
-        let message = "\n\n\n\n\n\nDevice: \(deviceModel)\niOS: \(systemVersion)\nApp Version: \(appVersion)"
-        
-        mail.setMessageBody(message, isHTML: false)
-        mail.setSubject(appName ?? "")
-        mail.setToRecipients([email])
-        
-        present(mail, animated: true, completion: nil)
+        present(mail, animated: true)
         
     }
     

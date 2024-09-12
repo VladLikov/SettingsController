@@ -10,20 +10,6 @@ import UIKit
 // MARK: - SplitController
 
 final class SplitController: UISplitViewController {
-
-    static func getDefault(for vc: UIViewController) -> UIViewController {
-                
-        let detailController = UIViewController()
-        detailController.setEmptyView(.init(title:    NSLocalizedString("Select an item", comment: ""),
-                                            subtitle: NSLocalizedString("Additional information will appear here.", comment: "")))
-        
-        
-        let splitViewController = SplitController()
-        splitViewController.viewControllers = [vc, detailController]
-                
-        return splitViewController
-        
-    }
     
     // MARK: Life Cycle
     
@@ -57,6 +43,26 @@ extension SplitController: UISplitViewControllerDelegate {
     
     func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController: UIViewController, onto primaryViewController: UIViewController) -> Bool {
         return true
+    }
+    
+}
+
+// MARK: - Get Default
+
+extension SplitController {
+    
+    static func getDefault(for vc: UIViewController) -> UIViewController {
+                
+        let detailController = UIViewController()
+        detailController.setEmptyView(.init(title:    NSLocalizedString("Select an item", comment: ""),
+                                            subtitle: NSLocalizedString("Additional information will appear here.", comment: "")))
+        
+        
+        let splitViewController = SplitController()
+        splitViewController.viewControllers = [vc, detailController]
+                
+        return splitViewController
+        
     }
     
 }

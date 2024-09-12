@@ -26,3 +26,4 @@ extension UIImage {
         }.withRenderingMode(.alwaysTemplate)
     }
 }
+
