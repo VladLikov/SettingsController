@@ -248,6 +248,8 @@ extension SettingsController {
         
         let mail = MFMailComposeViewController.getDefault(for: email)
         
+        mail.mailComposeDelegate = self
+        
         present(mail, animated: true)
         
     }
@@ -274,4 +276,12 @@ extension SettingsController {
         }
     }
     
+}
+
+// MARK: - MFMailComposeViewControllerDelegate
+
+extension SettingsController: @preconcurrency MFMailComposeViewControllerDelegate {
+    public func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: (any Error)?) {
+        controller.dismiss(animated: true)
+    }
 }
