@@ -36,7 +36,13 @@ public final class SettingsController: UITableViewController {
         
         return settingsController
     }
-        
+    
+    // MARK: Is Taptic Engine Supported
+    
+    public func isTapticEngineSupported() -> Bool {
+        return (UIDevice.current.value(forKey: "_feedbackSupportLevel") as? NSNumber)?.boolValue ?? false
+    }
+    
     // MARK: Properties [Private]
     
     private var configuration: SettingsConfiguration
@@ -277,16 +283,6 @@ extension SettingsController {
         if let url = URL(string: "itms-apps://itunes.apple.com/developer/id\(developerID)") {
             UIApplication.shared.open(url)
         }
-    }
-    
-}
-
-// MARK: - Public Helpers
-
-extension SettingsController {
-    
-    public func isTapticEngineSupported() -> Bool {
-        return (UIDevice.current.value(forKey: "_feedbackSupportLevel") as? NSNumber)?.boolValue ?? false
     }
     
 }
