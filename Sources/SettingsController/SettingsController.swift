@@ -12,16 +12,16 @@ protocol SettingsControllerDelegate: AnyObject {
 
 // MARK: - SettingsController
 
-open class SettingsController: UITableViewController {
+final class SettingsController: UITableViewController {
     
-    var settingsTitle: String?
-    var initialAppColor: UIColor?
-    var sections: [SettingsController.Section] = []
+    public var settingsTitle: String?
+    public var initialAppColor: UIColor?
+    public var sections: [SettingsController.Section] = []
 
     weak var delegate: SettingsControllerDelegate?
         
     @discardableResult
-    static func presentSettings(from fromVC: UIViewController) -> SettingsController {
+    public static func presentSettings(from fromVC: UIViewController) -> SettingsController {
         let settingsController = SettingsController()
         let settingsNavController = UINavigationController(rootViewController: settingsController)
                 
@@ -127,7 +127,7 @@ open class SettingsController: UITableViewController {
         super.init(coder: coder)
     }
     
-    open override func viewDidLoad() {
+     override func viewDidLoad() {
         super.viewDidLoad()
         
         title = settingsTitle
@@ -145,7 +145,7 @@ open class SettingsController: UITableViewController {
         
     }
     
-    open override func viewWillAppear(_ animated: Bool) {
+     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
                 
         DispatchQueue.main.async { [weak self] in
@@ -156,25 +156,25 @@ open class SettingsController: UITableViewController {
     
     // MARK: Status Bar
     
-    open override var preferredStatusBarStyle: UIStatusBarStyle {
+     override var preferredStatusBarStyle: UIStatusBarStyle {
         .default
     }
               
     // MARK: UITableViewDataSource
     
-    open override func numberOfSections(in tableView: UITableView) -> Int {
+     override func numberOfSections(in tableView: UITableView) -> Int {
         return sections.count
     }
     
-    open override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return sections[section].rows.count
     }
     
-    open override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         return sections[section].title
     }
     
-    open override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
                         
@@ -203,7 +203,7 @@ open class SettingsController: UITableViewController {
     
     // MARK: UITableViewDelegate
     
-    open override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         guard let cell = tableView.cellForRow(at: indexPath) as? SettingsCell else { return }
                 
