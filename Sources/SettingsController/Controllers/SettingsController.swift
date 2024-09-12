@@ -7,13 +7,13 @@ import AlertKit
 
 // MARK: - SettingsControllerDelegate
 
-protocol SettingsControllerDelegate: AnyObject {
+public protocol SettingsControllerDelegate: AnyObject {
     func settingsDidDissmised(_ initialAppColor: UIColor)
 }
 
 // MARK: - SettingsController
 
-final class SettingsController: UITableViewController {
+public final class SettingsController: UITableViewController {
     
     // MARK: Properties [Public]
 
@@ -58,7 +58,7 @@ final class SettingsController: UITableViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-     override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         
          title = configuration.settingsTitle
@@ -76,7 +76,7 @@ final class SettingsController: UITableViewController {
         
     }
     
-     override func viewWillAppear(_ animated: Bool) {
+    public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
                 
         DispatchQueue.main.async { [weak self] in
@@ -90,7 +90,7 @@ final class SettingsController: UITableViewController {
 // MARK: - Status Bar
 
 extension SettingsController {
-     override var preferredStatusBarStyle: UIStatusBarStyle {
+    public override var preferredStatusBarStyle: UIStatusBarStyle {
         .default
     }
 }
@@ -99,19 +99,19 @@ extension SettingsController {
 
 extension SettingsController {
     
-    override func numberOfSections(in tableView: UITableView) -> Int {
+    public override func numberOfSections(in tableView: UITableView) -> Int {
        return sections.count
    }
    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
        return sections[section].rows.count
    }
    
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
        return sections[section].title
    }
    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
        
        let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
                        
@@ -144,7 +144,7 @@ extension SettingsController {
 
 extension SettingsController {
         
-     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         guard let cell = tableView.cellForRow(at: indexPath) as? SettingsCell else { return }
                 
