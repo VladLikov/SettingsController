@@ -12,13 +12,13 @@ public struct SettingsRow {
     var title: String
     var detail: String?
     var icon: SettingsIcon
-    var vc: UIViewController.Type? = nil
-    var function: ((_ indexPath: IndexPath) -> Void)? = nil
+    var vc: UIViewController.Type?
+    var function: ((_ indexPath: IndexPath) -> Void)?
     
     public init(title: String,
-                detail: String?,
+                detail: String? = nil,
                 icon: SettingsIcon,
-                vc: UIViewController.Type?,
+                vc: UIViewController.Type? = nil,
                 function: ((_ indexPath: IndexPath) -> Void)? = nil) {
         
         self.title = title
