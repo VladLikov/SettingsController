@@ -7,7 +7,7 @@
 
 import UIKit
 
-class SettingsCell: UITableViewCell {
+final class SettingsCell: UITableViewCell {
                 
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()

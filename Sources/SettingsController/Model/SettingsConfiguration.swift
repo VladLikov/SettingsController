@@ -7,8 +7,8 @@
 
 import UIKit
 
-public struct SettingsConfiguration {
-    public var settingsTitle: String?
-    public var initialAppColor: UIColor
-    public var sections: [SettingsSection]
-}
+//public struct SettingsConfiguration {
+//    public var settingsTitle: String?
+//    public var initialAppColor: UIColor
+//    public var sections: [SettingsSection]
+//}
