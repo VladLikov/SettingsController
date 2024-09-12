@@ -127,7 +127,7 @@ extension SettingsController {
        
        switch item {
        case .row(let row):
-           cell.configure(title: row.title, icon: row.icon, detail: nil)
+           cell.configure(title: row.title, icon: row.icon, detail: row.detail)
 
        case .action(let action):
            var detail: String?
