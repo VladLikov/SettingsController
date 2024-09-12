@@ -10,4 +10,9 @@ import Foundation
 public struct SettingsSection {
     var title: String? = nil
     var rows: [SettingsDefaultRow]
+    
+    public init(title: String? = nil, rows: [SettingsDefaultRow]) {
+        self.title = title
+        self.rows = rows
+    }
 }

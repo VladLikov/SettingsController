@@ -11,7 +11,7 @@ public struct SettingsIcon {
     var image: UIImage?
     var color: UIColor
     
-    init(image: UIImage?, color: UIColor, inset: Inset? = nil) {
+    public init(image: UIImage?, color: UIColor, inset: Inset? = nil) {
         if let inset {
             self.image = image?.inset(inset.value)
         } else {

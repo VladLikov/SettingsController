@@ -7,6 +7,6 @@
 
 import Foundation
 
-struct Inset {
+public struct Inset {
     var value: CGFloat = 4
 }
