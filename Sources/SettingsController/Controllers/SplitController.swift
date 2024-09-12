@@ -9,7 +9,7 @@ import UIKit
 
 // MARK: - SplitController
 
-class SplitController: UISplitViewController {
+final class SplitController: UISplitViewController {
 
     static func getDefault(for vc: UIViewController) -> UIViewController {
                 

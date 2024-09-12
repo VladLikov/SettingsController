@@ -9,5 +9,5 @@ import Foundation
 
 public struct SettingsSection {
     var title: String? = nil
-    var rows: [CustomRow]
+    var rows: [SettingsDefaultRow]
 }

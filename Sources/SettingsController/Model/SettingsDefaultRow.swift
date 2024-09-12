@@ -37,15 +37,25 @@ public enum SettingsDefaultRow {
         var icon: SettingsIcon {
             switch self {
             case .shareApp(_):
-                SettingsIcon(image: UIImage(systemName: "square.and.arrow.up.fill"), color: .systemYellow)
+                SettingsIcon(image: UIImage(systemName: "square.and.arrow.up.fill"),
+                             color: .systemYellow,
+                             inset: .init())
             case .rateApp(_):
-                SettingsIcon(image: UIImage(systemName: "heart.fill"), color: .systemRed)
+                SettingsIcon(image: UIImage(systemName: "heart.fill"),
+                             color: .systemRed,
+                             inset: .init())
             case .moreApps(_):
-                SettingsIcon(image: UIImage(systemName: "square.stack.3d.up.fill"), color: .systemIndigo)
+                SettingsIcon(image: UIImage(systemName: "square.stack.3d.up.fill"),
+                             color: .systemIndigo,
+                             inset: .init())
             case .premium(_, _):
-                SettingsIcon(image: UIImage(systemName: "star.fill"), color: .systemBlue)
+                SettingsIcon(image: UIImage(systemName: "star.fill"),
+                             color: .systemBlue,
+                             inset: .init())
             case .contactDeveloper(_):
-                SettingsIcon(image: UIImage(systemName: "envelope.fill"), color: .systemBlue)
+                SettingsIcon(image: UIImage(systemName: "envelope.fill"),
+                             color: .systemBlue,
+                             inset: .init())
             }
         }
     }

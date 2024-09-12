@@ -60,7 +60,7 @@ class SettingsCell: UITableViewCell {
         super.init(coder: coder)
     }
     
-    public func configure(title: String, icon: Icon, detail: String? = nil) {
+    public func configure(title: String, icon: SettingsIcon, detail: String? = nil) {
         self.titleLabel.text = title
         self.iconImageView.image = icon.image
         self.iconImageView.backgroundColor = icon.color
