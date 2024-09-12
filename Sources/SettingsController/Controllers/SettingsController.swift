@@ -3,6 +3,7 @@
 
 import UIKit
 import MessageUI
+import AlertKit
 
 // MARK: - SettingsControllerDelegate
 
@@ -10,19 +11,100 @@ protocol SettingsControllerDelegate: AnyObject {
     func settingsDidDissmised(_ initialAppColor: UIColor)
 }
 
+public struct SettingsConfiguration {
+    public var settingsTitle: String?
+    public var initialAppColor: UIColor
+    public var sections: [Section]
+}
+
+// MARK: Section
+
+public struct Section {
+    var title: String? = nil
+    var rows: [CustomRow]
+}
+
+// MARK: CustomRow
+
+public enum CustomRow {
+    case row(Row)
+    case action(Action)
+    
+    public enum Action {
+        case shareApp(String)
+        case rateApp(String)
+        case moreApps(String)
+        case contactDeveloper(String)
+        case premium(Bool, UIViewController)
+        
+        var title: String {
+            switch self {
+            case .shareApp(_):
+                NSLocalizedString("Share app", comment: "")
+            case .rateApp(_):
+                NSLocalizedString("Write a review", comment: "")
+            case .moreApps(_):
+                NSLocalizedString("More apps", comment: "")
+            case .premium(_, _):
+                NSLocalizedString("Premium", comment: "")
+            case .contactDeveloper(_):
+                NSLocalizedString("Contact Developer", comment: "")
+            }
+        }
+        
+        var icon: Icon {
+            switch self {
+            case .shareApp(_):
+                Icon(image: UIImage(systemName: "square.and.arrow.up.fill"), color: .systemYellow)
+            case .rateApp(_):
+                Icon(image: UIImage(systemName: "heart.fill"), color: .systemRed)
+            case .moreApps(_):
+                Icon(image: UIImage(systemName: "square.stack.3d.up.fill"), color: .systemIndigo)
+            case .premium(_, _):
+                Icon(image: UIImage(systemName: "star.fill"), color: .systemBlue)
+            case .contactDeveloper(_):
+                Icon(image: UIImage(systemName: "envelope.fill"), color: .systemBlue)
+            }
+        }
+    }
+}
+
+// MARK: Row
+
+public struct Row {
+    var title: String
+    var icon: Icon
+    var vc: UIViewController.Type? = nil
+    var function: ((_ indexPath: IndexPath) -> Void)? = nil
+}
+
+// MARK: Icon
+
+public struct Icon {
+    var image: UIImage?
+    var color: UIColor
+    
+    init(image: UIImage?, color: UIColor) {
+        self.image = image
+        self.color = color
+    }
+}
+
 // MARK: - SettingsController
 
 final class SettingsController: UITableViewController {
     
-    public var settingsTitle: String?
-    public var initialAppColor: UIColor?
-    public var sections: [SettingsController.Section] = []
-
+    private var configuration: SettingsConfiguration
+    
+    private lazy var sections = configuration.sections
+    
     weak var delegate: SettingsControllerDelegate?
         
     @discardableResult
-    public static func presentSettings(from fromVC: UIViewController) -> SettingsController {
-        let settingsController = SettingsController()
+    public static func presentSettings(configuration: SettingsConfiguration,
+                                       from fromVC: UIViewController) -> SettingsController {
+        
+        let settingsController = SettingsController(configuration: configuration)
         let settingsNavController = UINavigationController(rootViewController: settingsController)
                 
         let splitViewController = SplitController.getDefault(for: settingsNavController)
@@ -33,79 +115,6 @@ final class SettingsController: UITableViewController {
         
         return settingsController
     }
-    
-    // MARK: Section
-
-    struct Section {
-        var title: String? = nil
-        var rows: [CustomRow]
-    }
-    
-    // MARK: CustomRow
-
-    enum CustomRow {
-        case row(Row)
-        case action(Action)
-        
-        enum Action {
-            case shareApp(String)
-            case rateApp(String)
-            case moreApps(String)
-            case contactDeveloper(String)
-            case premium(Bool, UIViewController)
-            
-            var title: String {
-                switch self {
-                case .shareApp(_):
-                    NSLocalizedString("Share app", comment: "")
-                case .rateApp(_):
-                    NSLocalizedString("Write a review", comment: "")
-                case .moreApps(_):
-                    NSLocalizedString("More apps", comment: "")
-                case .premium(_, _):
-                    NSLocalizedString("Premium", comment: "")
-                case .contactDeveloper(_):
-                    NSLocalizedString("Contact Developer", comment: "")
-                }
-            }
-            
-            var icon: Icon {
-                switch self {
-                case .shareApp(_):
-                    Icon(image: UIImage(systemName: "square.and.arrow.up.fill"), color: .systemYellow)
-                case .rateApp(_):
-                    Icon(image: UIImage(systemName: "heart.fill"), color: .systemRed)
-                case .moreApps(_):
-                    Icon(image: UIImage(systemName: "square.stack.3d.up.fill"), color: .systemIndigo)
-                case .premium(_, _):
-                    Icon(image: UIImage(systemName: "star.fill"), color: .systemBlue)
-                case .contactDeveloper(_):
-                    Icon(image: UIImage(systemName: "envelope.fill"), color: .systemBlue)
-                }
-            }
-        }
-    }
-
-    // MARK: Row
-
-    struct Row {
-        var title: String
-        var icon: Icon
-        var vc: UIViewController.Type? = nil
-        var function: ((_ indexPath: IndexPath) -> Void)? = nil
-    }
-    
-    // MARK: Icon
-    
-    struct Icon {
-        var image: UIImage?
-        var color: UIColor
-        
-        init(image: UIImage?, color: UIColor) {
-            self.image = image
-            self.color = color
-        }
-    }
         
     // MARK: Properties [Private]
     
@@ -115,7 +124,8 @@ final class SettingsController: UITableViewController {
     
     // MARK: Life Cycle
     
-    private init() {
+    private init(configuration: SettingsConfiguration) {
+        self.configuration = configuration
         if #available(iOS 13.0, *) {
             super.init(style: .insetGrouped)
         } else {
@@ -123,14 +133,18 @@ final class SettingsController: UITableViewController {
         }
     }
     
-    required public init?(coder: NSCoder) {
-        super.init(coder: coder)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
+    
+//    required public init?(coder: NSCoder) {
+//        super.init(coder: coder)
+//    }
     
      override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = settingsTitle
+         title = configuration.settingsTitle
         
         tableView?.register(SettingsCell.self)
         tableView?.rowHeight = 45
@@ -254,8 +268,8 @@ final class SettingsController: UITableViewController {
     @objc func closeAction(_ sender: UIBarButtonItem) {
         
         navigationController?.dismiss(animated: true, completion: { [weak self] in
-            guard let self, let initialAppColor else { return }
-            delegate?.settingsDidDissmised(initialAppColor)
+            guard let self else { return }
+            delegate?.settingsDidDissmised(configuration.initialAppColor)
         })
                 
     }
@@ -266,12 +280,12 @@ final class SettingsController: UITableViewController {
         
         if hasPremium {
             
-//            AlertKitAPI.present(
-//                title: NSLocalizedString("Premium is active", comment: ""),
-//                icon: .custom(.init(.star.fill)),
-//                style: .iOS16AppleMusic,
-//                haptic: .success
-//            )
+            AlertKitAPI.present(
+                title: NSLocalizedString("Premium is active", comment: ""),
+                icon: .custom(UIImage(systemName: "star.fill") ?? .init()),
+                style: .iOS16AppleMusic,
+                haptic: .success
+            )
             
         } else {
             
