@@ -38,7 +38,7 @@ public enum SettingsDefaultRow {
             switch self {
             case .shareApp(_):
                 SettingsIcon(image: UIImage(systemName: "square.and.arrow.up.fill"),
-                             color: .systemYellow,
+                             color: .systemOrange,
                              inset: .init())
             case .rateApp(_):
                 SettingsIcon(image: UIImage(systemName: "heart.fill"),
