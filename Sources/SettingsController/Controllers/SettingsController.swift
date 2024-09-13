@@ -203,8 +203,8 @@ extension SettingsController {
     private func closeAction(_ sender: UIBarButtonItem) {
         
         navigationController?.dismiss(animated: true, completion: { [weak self] in
-            guard let self else { return }
-            delegate?.settingsDidDissmised(configuration.initialAppColor)
+            guard let self, let initialAppColor = configuration.initialAppColor else { return }
+            delegate?.settingsDidDissmised(initialAppColor)
         })
                 
     }
