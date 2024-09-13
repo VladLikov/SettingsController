@@ -74,8 +74,11 @@ public final class SettingsController: UITableViewController {
         
         tableView?.register(SettingsCell.self)
         tableView?.rowHeight = 45
-        tableView?.contentInset.top = configuration.topInset
-        
+         
+        if let topInset = configuration.topInset {
+            tableView?.contentInset.top = topInset
+        }
+                
         navigationItem.largeTitleDisplayMode = .automatic
         navigationItem.rightBarButtonItem = closeButton
 
