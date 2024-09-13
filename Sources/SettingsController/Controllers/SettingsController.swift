@@ -22,6 +22,8 @@ public final class SettingsController: UITableViewController {
         
     // MARK: Present Settings
 
+    
+    // need to change
     @discardableResult
     public static func presentSettings(configuration: SettingsConfiguration,
                                        from fromVC: UIViewController) -> SettingsController {
@@ -56,12 +58,12 @@ public final class SettingsController: UITableViewController {
     
     // MARK: Life Cycle
     
-    init(configuration: SettingsConfiguration) {
+    public init(configuration: SettingsConfiguration) {
         self.configuration = configuration
         super.init(style: .insetGrouped)
     }
     
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
