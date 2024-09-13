@@ -7,8 +7,27 @@
 
 import UIKit
 
+// MARK: - SettingsCell
+
 final class SettingsCell: UITableViewCell {
-                
+    
+    // MARK: Properties [Public]
+    
+    public var title: String? {
+        titleLabel.text
+    }
+    
+    // MARK: Properties [Private]
+    
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 1
+        label.font = .systemFont(ofSize: 17)
+        label.textColor = .label
+        label.textAlignment = .left
+        return label
+    }()
+    
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -17,15 +36,6 @@ final class SettingsCell: UITableViewCell {
         imageView.contentMode = .scaleAspectFit
         imageView.layer.cornerRadius = round(CGFloat(30 / 4))
         return imageView
-    }()
-    
-    let titleLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 1
-        label.font = .systemFont(ofSize: 17)
-        label.textColor = .label
-        label.textAlignment = .left
-        return label
     }()
     
     private let detailLabel: UILabel = {
@@ -46,6 +56,8 @@ final class SettingsCell: UITableViewCell {
         return stackView
     }()
     
+    // MARK: Life Cycle
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: Self.reuseIdentifier)
         
@@ -60,21 +72,37 @@ final class SettingsCell: UITableViewCell {
         super.init(coder: coder)
     }
     
+}
+
+// MARK: - Configure
+
+extension SettingsCell {
+    
     public func configure(title: String, icon: SettingsIcon, detail: String? = nil) {
         self.titleLabel.text = title
         self.iconImageView.image = icon.image
         self.iconImageView.backgroundColor = icon.color
         self.detailLabel.text = detail
-
+        
         self.detailLabel.isHidden = detail == nil
     }
+    
+}
 
+// MARK: - Setup View
+
+extension SettingsCell {
+    
     private func setupView() {
-        
         contentView.addSubview(iconImageView)
         contentView.addSubview(stackView)
-
     }
+    
+}
+
+// MARK: - Set Constraints
+
+extension SettingsCell {
     
     private func setConstraints() {
         

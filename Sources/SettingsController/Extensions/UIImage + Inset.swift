@@ -8,7 +8,7 @@
 import Foundation
 import UIKit.UIImage
 
-extension UIImage {
+public extension UIImage {
     func inset(_ inset: CGFloat = 4.0) -> UIImage {
         return self.with(UIEdgeInsets(top: inset, left: inset, bottom: inset, right: inset))
     }

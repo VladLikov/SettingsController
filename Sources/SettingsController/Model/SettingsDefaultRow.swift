@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import SafeSFSymbols
 
 public enum SettingsDefaultRow {
     case row(SettingsRow)
@@ -37,23 +38,23 @@ public enum SettingsDefaultRow {
         var icon: SettingsIcon {
             switch self {
             case .shareApp(_):
-                SettingsIcon(image: UIImage(systemName: "square.and.arrow.up.fill"),
+                SettingsIcon(image: UIImage(.square.andArrowUpFill),
                              color: .systemOrange,
                              inset: .init())
             case .rateApp(_):
-                SettingsIcon(image: UIImage(systemName: "heart.fill"),
+                SettingsIcon(image: UIImage(.heart.fill),
                              color: .systemRed,
                              inset: .init())
             case .moreApps(_):
-                SettingsIcon(image: UIImage(systemName: "square.stack.3d.up.fill"),
+                SettingsIcon(image: UIImage(.square.stack_3dUpFill),
                              color: .systemIndigo,
                              inset: .init())
             case .premium(_, _):
-                SettingsIcon(image: UIImage(systemName: "star.fill"),
+                SettingsIcon(image: UIImage(.star.fill),
                              color: .systemBlue,
                              inset: .init())
             case .contactDeveloper(_):
-                SettingsIcon(image: UIImage(systemName: "envelope.fill"),
+                SettingsIcon(image: UIImage(.envelope.fill),
                              color: .systemBlue,
                              inset: .init())
             }

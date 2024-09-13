@@ -4,6 +4,7 @@
 import UIKit
 import MessageUI
 import AlertKit
+import SafeSFSymbols
 
 // MARK: - SettingsControllerDelegate
 
@@ -82,15 +83,6 @@ public final class SettingsController: UITableViewController {
         
     }
     
-    public override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-                
-        DispatchQueue.main.async { [weak self] in
-            self?.navigationController?.navigationBar.sizeToFit()
-        }
-        
-    }
-    
 }
 
 // MARK: - Status Bar
@@ -166,7 +158,7 @@ extension SettingsController {
             if let vcType = row.vc {
                 
                 let vc = vcType.init()
-                vc.navigationItem.title = cell.titleLabel.text
+                vc.navigationItem.title = cell.title
                 navigationController?.pushViewController(vc, animated: true)
                 
             } else if let function = row.function {
@@ -227,7 +219,7 @@ extension SettingsController {
             
             AlertKitAPI.present(
                 title: NSLocalizedString("Premium is active", comment: ""),
-                icon: .custom(UIImage(systemName: "star.fill") ?? .init()),
+                icon: .custom(UIImage(.star.fill)),
                 style: .iOS16AppleMusic,
                 haptic: .success
             )

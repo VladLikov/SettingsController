@@ -1,5 +1,5 @@
 {
-  "originHash" : "f5bcb3e11438caf250f23aa5a70e56a733763dfd650f60e0221aa87bb9d75f4f",
+  "originHash" : "346dbb8166863ae079174f0168254000a450febbb7deabd1e9206e897ed541a9",
   "pins" : [
     {
       "identity" : "alertkit",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "3b73be8db5a7e7efaf474c6ed919f5a437d843c9",
         "version" : "5.1.9"
+      }
+    },
+    {
+      "identity" : "safesfsymbols",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sparrowcode/SafeSFSymbols.git",
+      "state" : {
+        "revision" : "07f11f923b53f26cf9214800f8a397a87865f3ef",
+        "version" : "2.0.1"
       }
     }
   ],
