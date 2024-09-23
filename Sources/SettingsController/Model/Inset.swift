@@ -8,9 +8,9 @@
 import Foundation
 
 public struct Inset {
-    public var value: CGFloat = 4
+    public var value: CGFloat
     
-    public init(value: CGFloat) {
+    public init(value: CGFloat = 4) {
         self.value = value
     }
 }
