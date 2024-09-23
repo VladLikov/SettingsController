@@ -8,5 +8,5 @@
 import Foundation
 
 public struct Inset {
-    var value: CGFloat = 4
+    public var value: CGFloat = 4
 }
