@@ -31,6 +31,7 @@ class LanguageController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        tableView.register(UITableViewCell.self)
         tableView.register(SubtitleTableViewCell.self)
         
         navigationItem.largeTitleDisplayMode = .never
@@ -55,7 +56,7 @@ extension LanguageController {
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if section == 1 {
-            return NSLocalizedString("Help me translate the app to another language and get premium forever for free.", comment: "")
+            return NSLocalizedString("If you want you can help me translate the app to another language.", comment: "")
         }
         return nil
     }
@@ -63,10 +64,10 @@ extension LanguageController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let section = indexPath.section, row = indexPath.row
-
-        let cell = tableView.dequeueReusableCell(ofType: SubtitleTableViewCell.self, for: indexPath)
                     
         if section == 0 {
+            
+            let cell = tableView.dequeueReusableCell(ofType: SubtitleTableViewCell.self, for: indexPath)
             
             let languageCode = languages[row]
             
@@ -79,13 +80,19 @@ extension LanguageController {
             
             cell.accessoryType = isCurrent ? .checkmark : .none
             
+            return cell
+            
         } else if section == 1 && row == 0 {
+            let cell = tableView.dequeueReusableCell(ofType: UITableViewCell.self, for: indexPath)
+            
             cell.textLabel?.text = NSLocalizedString("Need other language", comment: "")
             cell.textLabel?.textAlignment = .center
             cell.textLabel?.textColor = view.tintColor
+            
+            return cell
         }
         
-        return cell
+        return .init()
         
     }
     
@@ -108,10 +115,6 @@ extension LanguageController {
             sendMail()
         }
                 
-    }
-    
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 60
     }
     
 }
