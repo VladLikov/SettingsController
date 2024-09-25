@@ -19,7 +19,8 @@ public enum SettingsDefaultRow {
         case moreApps(String)
         case contactDeveloper(String)
         case premium(Bool, UIViewController.Type)
-        
+        case language(String)
+
         var title: String {
             switch self {
             case .shareApp(_):
@@ -32,6 +33,8 @@ public enum SettingsDefaultRow {
                 NSLocalizedString("Premium", comment: "")
             case .contactDeveloper(_):
                 NSLocalizedString("Contact Developer", comment: "")
+            case .language(_):
+                NSLocalizedString("Language", comment: "")
             }
         }
         
@@ -56,6 +59,10 @@ public enum SettingsDefaultRow {
             case .contactDeveloper(_):
                 SettingsIcon(image: UIImage(.envelope.fill),
                              color: .systemBlue,
+                             inset: .init())
+            case .language(_):
+                SettingsIcon(image: UIImage(.globe),
+                             color: .gray,
                              inset: .init())
             }
         }

@@ -7,11 +7,11 @@
 
 import UIKit
 
-protocol ReusableView: AnyObject {
+public protocol ReusableView: AnyObject {
     static var reuseIdentifier: String { get }
 }
 
-extension ReusableView where Self: UIView {
+public extension ReusableView where Self: UIView {
     static var reuseIdentifier: String {
         return String(describing: Self.self)
     }
@@ -19,7 +19,7 @@ extension ReusableView where Self: UIView {
 
 extension UITableViewCell: ReusableView {}
 
-extension UITableView {
+public extension UITableView {
         
     func register<T: UITableViewCell>(_: T.Type) {
         register(T.self, forCellReuseIdentifier: T.reuseIdentifier)

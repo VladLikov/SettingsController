@@ -189,6 +189,9 @@ extension SettingsController {
             case .contactDeveloper(let email):
                 sendMail(email)
                 
+            case .language(let email):
+                presentLanguagesController(email)
+                
             }
 
         }
@@ -218,6 +221,14 @@ extension SettingsController {
 
 extension SettingsController {
         
+    private func presentLanguagesController(_ email: String) {
+        
+        guard let languagesVC = LanguageController(email: email) else { return }
+        languagesVC.navigationItem.title = NSLocalizedString("Language", comment: "")
+        navigationController?.pushViewController(languagesVC, animated: true)
+        
+    }
+    
     private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type) {
         
         if hasPremium {
