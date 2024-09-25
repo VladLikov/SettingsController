@@ -36,7 +36,11 @@ class LanguageController: UITableViewController {
         navigationItem.largeTitleDisplayMode = .never
     }
     
-    // MARK: UITableViewDataSource
+}
+
+// MARK: - UITableViewDataSource
+
+extension LanguageController {
     
     override func numberOfSections(in tableView: UITableView) -> Int {
         return 2
@@ -67,10 +71,9 @@ class LanguageController: UITableViewController {
             let languageCode = languages[row]
             
             cell.textLabel?.text = Locale(identifier: languageCode).localizedString(forLanguageCode: languageCode)?.capitalized
-            
             cell.detailTextLabel?.text = Locale.current.localizedString(forLanguageCode: languageCode)?.capitalized
             
-//            cell.detailTextLabel?.textColor = .gray
+            cell.detailTextLabel?.textColor = .gray
             
             let isCurrent = languageCode == Locale.current.languageCode
             
@@ -79,14 +82,19 @@ class LanguageController: UITableViewController {
         } else if section == 1 && row == 0 {
             cell.textLabel?.text = NSLocalizedString("Need other language", comment: "")
             cell.textLabel?.textAlignment = .center
+            cell.textLabel?.textColor = view.tintColor
         }
         
         return cell
         
     }
     
-    // MARK: UITableViewDelegate
-    
+}
+
+// MARK: - UITableViewDelegate
+
+extension LanguageController {
+        
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
@@ -100,6 +108,10 @@ class LanguageController: UITableViewController {
             sendMail()
         }
                 
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 60
     }
     
 }
