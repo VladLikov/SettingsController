@@ -18,8 +18,7 @@ class LanguageController: UITableViewController {
     
     // MARK: Life Cycle
     
-    init?(email: String) {
-        guard !email.isEmpty else { return nil }
+    init(email: String) {
         super.init(style: .insetGrouped)
         
         self.email = email

@@ -126,7 +126,7 @@ extension SettingsController {
        case .row(let row):
            cell.configure(title: row.title, icon: row.icon, detail: row.detail)
 
-       case .action(let action):
+       case .defaultRow(let action):
            var detail: String?
            
            if case .premium(let hasPremium, _) = action {
@@ -163,17 +163,19 @@ extension SettingsController {
             if let vcType = row.vc {
                 
                 let vc = vcType.init()
-                vc.navigationItem.title = cell.title
-                navigationController?.pushViewController(vc, animated: true)
+                pushVC(vc, navigationTitle: cell.title)
+                
+//                vc.navigationItem.title = cell.title
+//                navigationController?.pushViewController(vc, animated: true)
                 
             } else if let function = row.function {
                 tableView.deselectRow(at: indexPath, animated: true)
                 function(indexPath)
             }
 
-        case .action(let action):
+        case .defaultRow(let row):
             
-            switch action {
+            switch row {
             case .shareApp(let appID):
                 shareApp(appID, at: indexPath)
                 
@@ -183,20 +185,27 @@ extension SettingsController {
             case .moreApps(let developerID):
                 moreApps(developerID)
 
-            case .premium(let hasPremium, let premiumVC):
-                presentPremium(hasPremium, premiumVC: premiumVC)
+            case .premium(let hasPremium, let vc):
+                presentPremium(hasPremium, premiumVC: vc)
                 
             case .contactDeveloper(let email):
                 sendMail(email)
                 
             case .language(let email):
-                presentLanguagesController(email)
+                pushVC(LanguageController(email: email), navigationTitle: cell.title)
                 
             }
 
         }
 
                         
+    }
+    
+    private func pushVC(_ vc: UIViewController, navigationTitle: String?) {
+        
+        vc.navigationItem.title = navigationTitle
+        navigationController?.pushViewController(vc, animated: true)
+        
     }
     
 }
@@ -220,14 +229,6 @@ extension SettingsController {
 // MARK: - Private Methods
 
 extension SettingsController {
-        
-    private func presentLanguagesController(_ email: String) {
-        
-        guard let languagesVC = LanguageController(email: email) else { return }
-        languagesVC.navigationItem.title = NSLocalizedString("Language", comment: "")
-        navigationController?.pushViewController(languagesVC, animated: true)
-        
-    }
     
     private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type) {
         

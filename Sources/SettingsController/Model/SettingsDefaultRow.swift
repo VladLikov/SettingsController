@@ -9,11 +9,11 @@ import Foundation
 import UIKit
 import SafeSFSymbols
 
-public enum SettingsDefaultRow {
+public enum SettingsRowData {
     case row(SettingsRow)
-    case action(Action)
+    case defaultRow(DefaultRow)
     
-    public enum Action {
+    public enum DefaultRow {
         case shareApp(String)
         case rateApp(String)
         case moreApps(String)

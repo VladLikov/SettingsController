@@ -9,9 +9,9 @@ import Foundation
 
 public struct SettingsSection {
     var title: String? = nil
-    var rows: [SettingsDefaultRow]
+    var rows: [SettingsRowData]
     
-    public init(title: String? = nil, rows: [SettingsDefaultRow]) {
+    public init(title: String? = nil, rows: [SettingsRowData]) {
         self.title = title
         self.rows = rows
     }
