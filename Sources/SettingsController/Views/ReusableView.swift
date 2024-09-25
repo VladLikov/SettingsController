@@ -33,14 +33,5 @@ public extension UITableView {
         }
         return cell
     }
-    
-    func dequeueReusableSubtitleCell<T: UITableViewCell>(ofType cellType: T.Type,
-                                                 for indexPath: IndexPath) -> T {
-        guard let cell = dequeueReusableCell(withIdentifier: cellType.reuseIdentifier,
-                                             for: indexPath) as? T else {
-            return .init(style: .subtitle, reuseIdentifier: cellType.reuseIdentifier)
-        }
-        return cell
-    }
-    
+
 }

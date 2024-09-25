@@ -31,7 +31,7 @@ class LanguageController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.register(UITableViewCell.self)
+        tableView.register(SubtitleTableViewCell.self)
         
         navigationItem.largeTitleDisplayMode = .never
     }
@@ -64,7 +64,7 @@ extension LanguageController {
         
         let section = indexPath.section, row = indexPath.row
 
-        let cell = tableView.dequeueReusableSubtitleCell(ofType: UITableViewCell.self, for: indexPath)
+        let cell = tableView.dequeueReusableCell(ofType: SubtitleTableViewCell.self, for: indexPath)
                     
         if section == 0 {
             
