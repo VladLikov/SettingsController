@@ -64,7 +64,7 @@ extension LanguageController {
         
         let section = indexPath.section, row = indexPath.row
 
-        let cell = tableView.dequeueReusableCell(ofType: UITableViewCell.self, for: indexPath)
+        let cell = tableView.dequeueReusableSubtitleCell(ofType: UITableViewCell.self, for: indexPath)
                     
         if section == 0 {
             
