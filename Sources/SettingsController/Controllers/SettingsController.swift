@@ -10,7 +10,7 @@ import SafeSFSymbols
 
 public protocol SettingsControllerDelegate: AnyObject {
 //    func settingsDidDissmised(_ initialAppColor: UIColor)
-    func settingsDidDissmised(_ initialValues: [AnyKeyPath: Any]?)
+    func settingsDidDismissed(_ initialValues: [AnyKeyPath: Any]?)
 }
 
 // MARK: - SettingsController
@@ -130,7 +130,7 @@ extension SettingsController {
        case .defaultRow(let action):
            var detail: String?
            
-           if case .premium(let hasPremium, _) = action {
+           if case .premium(let hasPremium, _, _) = action {
                detail = hasPremium ? NSLocalizedString("Active", comment: "") : NSLocalizedString("Not active", comment: "")
            }
            
@@ -186,7 +186,7 @@ extension SettingsController {
             case .moreApps(let developerID):
                 moreApps(developerID)
 
-            case .premium(let hasPremium, let vc):
+            case .premium(let hasPremium, _, let vc):
                 presentPremium(hasPremium, premiumVC: vc)
                 
             case .contactDeveloper(let email):
@@ -222,7 +222,7 @@ extension SettingsController {
 //            guard let self, let initialAppColor = configuration.initialAppColor else { return }
 //            delegate?.settingsDidDissmised(initialAppColor)
             guard let self else { return }
-            delegate?.settingsDidDissmised(configuration.initialValues)
+            delegate?.settingsDidDismissed(configuration.initialValues)
         })
                 
     }

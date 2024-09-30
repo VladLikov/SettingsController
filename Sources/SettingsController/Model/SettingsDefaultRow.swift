@@ -18,7 +18,7 @@ public enum SettingsRowData {
         case rateApp(String)
         case moreApps(String)
         case contactDeveloper(String)
-        case premium(Bool, UIViewController.Type)
+        case premium(Bool, UIColor, UIViewController.Type)
         case language(String)
 
         var title: String {
@@ -29,7 +29,7 @@ public enum SettingsRowData {
                 NSLocalizedString("Write a review", comment: "")
             case .moreApps(_):
                 NSLocalizedString("More apps", comment: "")
-            case .premium(_, _):
+            case .premium(_, _, _):
                 NSLocalizedString("Premium", comment: "")
             case .contactDeveloper(_):
                 NSLocalizedString("Contact Developer", comment: "")
@@ -52,9 +52,9 @@ public enum SettingsRowData {
                 SettingsIcon(image: UIImage(.square.stack_3dUpFill),
                              color: .systemIndigo,
                              inset: .init())
-            case .premium(_, _):
+            case .premium(_, let color, _):
                 SettingsIcon(image: UIImage(.star.fill),
-                             color: .systemBlue,
+                             color: color,
                              inset: .init())
             case .contactDeveloper(_):
                 SettingsIcon(image: UIImage(.envelope.fill),
