@@ -9,13 +9,20 @@ import UIKit
 
 public struct SettingsConfiguration {
     public var settingsTitle: String?
-    public var initialAppColor: UIColor?
+//    public var initialAppColor: UIColor?
     public var topInset: CGFloat?
     public var sections: [SettingsSection]
     
-    public init(settingsTitle: String? = nil, initialAppColor: UIColor? = nil, topInset: CGFloat? = nil, sections: [SettingsSection]) {
+    public var initialValues: [String: Any]?
+    
+    public init(settingsTitle: String? = nil,
+                initialValues: [String: Any]? = nil,
+                /*initialAppColor: UIColor? = nil,*/
+                topInset: CGFloat? = nil,
+                sections: [SettingsSection]) {
         self.settingsTitle = settingsTitle
-        self.initialAppColor = initialAppColor
+//        self.initialAppColor = initialAppColor
+        self.initialValues = initialValues
         self.sections = sections
         self.topInset = topInset
     }

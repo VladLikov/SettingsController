@@ -9,7 +9,8 @@ import SafeSFSymbols
 // MARK: - SettingsControllerDelegate
 
 public protocol SettingsControllerDelegate: AnyObject {
-    func settingsDidDissmised(_ initialAppColor: UIColor)
+//    func settingsDidDissmised(_ initialAppColor: UIColor)
+    func settingsDidDissmised(_ initialValues: [String: Any]?)
 }
 
 // MARK: - SettingsController
@@ -218,8 +219,10 @@ extension SettingsController {
     private func closeAction(_ sender: UIBarButtonItem) {
         
         navigationController?.dismiss(animated: true, completion: { [weak self] in
-            guard let self, let initialAppColor = configuration.initialAppColor else { return }
-            delegate?.settingsDidDissmised(initialAppColor)
+//            guard let self, let initialAppColor = configuration.initialAppColor else { return }
+//            delegate?.settingsDidDissmised(initialAppColor)
+            
+            self?.delegate?.settingsDidDissmised(self?.configuration.initialValues)
         })
                 
     }
