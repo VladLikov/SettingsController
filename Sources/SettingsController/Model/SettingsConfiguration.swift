@@ -13,10 +13,10 @@ public struct SettingsConfiguration {
     public var topInset: CGFloat?
     public var sections: [SettingsSection]
     
-    public var initialValues: [String: Any]?
+    public var initialValues: [AnyKeyPath: Any]?
     
     public init(settingsTitle: String? = nil,
-                initialValues: [String: Any]? = nil,
+                initialValues: [AnyKeyPath: Any]? = nil,
                 /*initialAppColor: UIColor? = nil,*/
                 topInset: CGFloat? = nil,
                 sections: [SettingsSection]) {
