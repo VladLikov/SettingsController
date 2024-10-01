@@ -9,7 +9,7 @@ import UIKit
 
 // MARK: - SettingsCell
 
-final class SettingsCell: UITableViewCell {
+public final class SettingsCell: UITableViewCell {
     
     // MARK: Properties [Public]
     
