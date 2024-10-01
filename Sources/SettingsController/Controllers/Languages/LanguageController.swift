@@ -56,7 +56,7 @@ extension LanguageController {
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if section == 1 {
-            return NSLocalizedString("If you want you can help me translate the app to another language.", comment: "")
+            return NSLocalizedString("If you want you can help me translate the app to another language.", bundle: .module, comment: "")
         }
         return nil
     }

@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "SettingsController",
+    defaultLocalization: .init(rawValue: "en"),
     platforms: [.iOS(.v13)],
     products: [
         .library(
@@ -17,6 +18,7 @@ let package = Package(
     targets: [
         .target(
             name: "SettingsController",
-            dependencies: ["AlertKit", "SafeSFSymbols"]),
+            dependencies: ["AlertKit", "SafeSFSymbols"],
+            resources: [.process("Resources")]),
     ]
 )
