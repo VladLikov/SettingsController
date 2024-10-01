@@ -248,7 +248,9 @@ extension SettingsController {
         } else {
             
             let vc = premiumVC.init()
-            vc.modalPresentationStyle = .overFullScreen
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                vc.modalPresentationStyle = .overFullScreen
+            }
             present(vc, animated: true)
             
         }
