@@ -20,7 +20,7 @@ public enum SettingsRowData {
         case contactDeveloper(String)
         case premium(Bool, UIColor, UIViewController.Type)
         case language(String)
-
+//
         var title: String {
             switch self {
             case .shareApp(_):

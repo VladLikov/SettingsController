@@ -1,7 +1,28 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-
+    "More apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наши приложения"
+          }
+        }
+      }
+    },
+    "Write a review" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оставить отзыв"
+          }
+        }
+      }
+    }
   },
   "version" : "1.0"
 }
