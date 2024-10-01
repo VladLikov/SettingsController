@@ -9,7 +9,6 @@ import UIKit
 
 public struct SettingsConfiguration {
     public var settingsTitle: String?
-//    public var initialAppColor: UIColor?
     public var topInset: CGFloat?
     public var sections: [SettingsSection]
     
@@ -17,11 +16,10 @@ public struct SettingsConfiguration {
     
     public init(settingsTitle: String? = nil,
                 initialValues: [AnyKeyPath: Any]? = nil,
-                /*initialAppColor: UIColor? = nil,*/
                 topInset: CGFloat? = nil,
                 sections: [SettingsSection]) {
+        
         self.settingsTitle = settingsTitle
-//        self.initialAppColor = initialAppColor
         self.initialValues = initialValues
         self.sections = sections
         self.topInset = topInset

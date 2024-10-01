@@ -9,7 +9,6 @@ import SafeSFSymbols
 // MARK: - SettingsControllerDelegate
 
 public protocol SettingsControllerDelegate: AnyObject {
-//    func settingsDidDissmised(_ initialAppColor: UIColor)
     func settingsDidDismissed(_ initialValues: [AnyKeyPath: Any]?)
 }
 
@@ -22,7 +21,6 @@ public final class SettingsController: UITableViewController {
     public weak var delegate: SettingsControllerDelegate?
         
     // MARK: Present Settings
-
     
     // need to change
     @discardableResult
@@ -205,7 +203,6 @@ extension SettingsController {
     private func pushVC(_ vc: UIViewController, navigationTitle: String?) {
         
         vc.navigationItem.title = navigationTitle
-//        navigationController?.pushViewController(vc, animated: true)
         showDetailViewController(vc, sender: nil)
         
     }
@@ -220,8 +217,6 @@ extension SettingsController {
     private func closeAction(_ sender: UIBarButtonItem) {
         
         navigationController?.dismiss(animated: true, completion: { [weak self] in
-//            guard let self, let initialAppColor = configuration.initialAppColor else { return }
-//            delegate?.settingsDidDissmised(initialAppColor)
             guard let self else { return }
             delegate?.settingsDidDismissed(configuration.initialValues)
         })

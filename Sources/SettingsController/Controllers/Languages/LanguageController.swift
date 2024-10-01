@@ -83,11 +83,12 @@ extension LanguageController {
             return cell
             
         } else if section == 1 && row == 0 {
+            
             let cell = tableView.dequeueReusableCell(ofType: UITableViewCell.self, for: indexPath)
             
             cell.textLabel?.text = NSLocalizedString("Need other language", bundle: .module, comment: "")
             cell.textLabel?.textAlignment = .center
-            cell.textLabel?.textColor = view.tintColor
+            cell.textLabel?.textColor = UIApplication.shared.windows.first?.tintColor
             
             return cell
         }
