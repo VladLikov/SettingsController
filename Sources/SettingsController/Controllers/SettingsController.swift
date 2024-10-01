@@ -169,7 +169,7 @@ extension SettingsController {
                 
             } else if let function = row.function {
                 tableView.deselectRow(at: indexPath, animated: true)
-                function(indexPath)
+                function(indexPath, tableView)
             }
 
         case .defaultRow(let row):
