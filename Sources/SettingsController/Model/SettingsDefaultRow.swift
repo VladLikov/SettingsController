@@ -24,7 +24,7 @@ public enum SettingsRowData {
         var title: String {
             switch self {
             case .shareApp(_):
-                NSLocalizedString("Share app", comment: "")
+                NSLocalizedString("Share app", bundle: .module, comment: "")
             case .rateApp(_):
                 NSLocalizedString("Write a review", comment: "")
             case .moreApps(_):
