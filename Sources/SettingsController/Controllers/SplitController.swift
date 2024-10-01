@@ -54,8 +54,8 @@ extension SplitController {
     static func getDefault(for vc: UIViewController) -> UIViewController {
                 
         let detailController = UIViewController()
-        detailController.setEmptyView(.init(title:    NSLocalizedString("Select an item", comment: ""),
-                                            subtitle: NSLocalizedString("Additional information will appear here.", comment: "")))
+        detailController.setEmptyView(.init(title:    NSLocalizedString("Select an item", bundle: .module, comment: ""),
+                                            subtitle: NSLocalizedString("Additional information will appear here.", bundle: .module, comment: "")))
         
         
         let splitViewController = SplitController()

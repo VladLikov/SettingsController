@@ -26,15 +26,15 @@ public enum SettingsRowData {
             case .shareApp(_):
                 NSLocalizedString("Share app", bundle: .module, comment: "")
             case .rateApp(_):
-                NSLocalizedString("Write a review", comment: "")
+                NSLocalizedString("Write a review", bundle: .module, comment: "")
             case .moreApps(_):
-                NSLocalizedString("More apps", comment: "")
+                NSLocalizedString("More apps", bundle: .module, comment: "")
             case .premium(_, _, _):
-                NSLocalizedString("Premium", comment: "")
+                NSLocalizedString("Premium", bundle: .module, comment: "")
             case .contactDeveloper(_):
-                NSLocalizedString("Contact Developer", comment: "")
+                NSLocalizedString("Contact Developer", bundle: .module, comment: "")
             case .language(_):
-                NSLocalizedString("Language", comment: "")
+                NSLocalizedString("Language", bundle: .module, comment: "")
             }
         }
         

@@ -131,7 +131,7 @@ extension SettingsController {
            var detail: String?
            
            if case .premium(let hasPremium, _, _) = action {
-               detail = hasPremium ? NSLocalizedString("Active", comment: "") : NSLocalizedString("Not active", comment: "")
+               detail = hasPremium ? NSLocalizedString("Active", bundle: .module, comment: "") : NSLocalizedString("Not active", bundle: .module, comment: "")
            }
            
            cell.configure(title: action.title, icon: action.icon, detail: detail)
@@ -238,7 +238,7 @@ extension SettingsController {
         if hasPremium {
             
             AlertKitAPI.present(
-                title: NSLocalizedString("Premium is active", comment: ""),
+                title: NSLocalizedString("Premium is active", bundle: .module, comment: ""),
                 icon: .custom(UIImage(.star.fill)),
                 style: .iOS16AppleMusic,
                 haptic: .success
