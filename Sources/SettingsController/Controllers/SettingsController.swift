@@ -129,7 +129,9 @@ extension SettingsController {
            var detail: String?
            
            if case .premium(let hasPremium, _, _) = action {
-               detail = hasPremium ? NSLocalizedString("Active", bundle: .module, comment: "") : NSLocalizedString("Not active", bundle: .module, comment: "")
+               detail = hasPremium ?
+               NSLocalizedString("Active", bundle: .module, comment: "") :
+               NSLocalizedString("Not active", bundle: .module, comment: "")
            }
            
            cell.configure(title: action.title, icon: action.icon, detail: detail)
@@ -148,8 +150,10 @@ extension SettingsController {
         
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        tableView.deselectRow(at: indexPath, animated: true)
-        
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            tableView.deselectRow(at: indexPath, animated: true)
+        }
+                
         guard let cell = tableView.cellForRow(at: indexPath) as? SettingsCell else { return }
                 
         let section = indexPath.section, row = indexPath.row
@@ -163,10 +167,7 @@ extension SettingsController {
                 
                 let vc = vcType.init()
                 pushVC(vc, navigationTitle: cell.title)
-                
-//                vc.navigationItem.title = cell.title
-//                navigationController?.pushViewController(vc, animated: true)
-                
+
             } else if let function = row.function {
                 tableView.deselectRow(at: indexPath, animated: true)
                 function(indexPath, tableView)
