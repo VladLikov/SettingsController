@@ -7,12 +7,12 @@
 
 import UIKit
 
-protocol DataEmpty {
+public protocol DataEmpty {
     func setEmptyView(_ emptyView: EmptyView) async
     func resetEmptyView() async
 }
 
-class EmptyView: UIView {
+public class EmptyView: UIView {
     
     private var headerText: String?
     private var footerText: String?
@@ -37,7 +37,7 @@ class EmptyView: UIView {
         return label
     }()
     
-    init(title: String?, subtitle: String?) {
+    public init(title: String?, subtitle: String?) {
         super.init(frame: .zero)
         
         self.headerText = title
@@ -72,29 +72,29 @@ class EmptyView: UIView {
 }
 
 extension UITableView: DataEmpty {
-    func setEmptyView(_ emptyView: EmptyView) {
+    public func setEmptyView(_ emptyView: EmptyView) {
         self.backgroundView = emptyView
     }
     
-    func resetEmptyView() {
+    public func resetEmptyView() {
         self.backgroundView = nil
     }
 }
 
 extension UICollectionView: DataEmpty {
-    func setEmptyView(_ emptyView: EmptyView) {
+    public func setEmptyView(_ emptyView: EmptyView) {
         self.backgroundView = emptyView
     }
     
-    func resetEmptyView() {
+    public func resetEmptyView() {
         self.backgroundView = nil
     }
 }
 
 extension UIViewController: DataEmpty {
-    func setEmptyView(_ emptyView: EmptyView) {
+    public func setEmptyView(_ emptyView: EmptyView) {
         self.view = emptyView
     }
     
-    func resetEmptyView() {}
+    public func resetEmptyView() {}
 }
