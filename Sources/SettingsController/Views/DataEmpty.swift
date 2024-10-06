@@ -34,6 +34,7 @@ public class EmptyView: UIView {
         label.textColor = .gray
         label.font = .systemFont(ofSize: 20, weight: .bold)
         label.textAlignment = .center
+        label.numberOfLines = 3
         return label
     }()
     
