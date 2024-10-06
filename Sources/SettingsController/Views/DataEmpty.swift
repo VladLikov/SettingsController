@@ -71,6 +71,16 @@ class EmptyView: UIView {
     
 }
 
+extension UITableView: DataEmpty {
+    func setEmptyView(_ emptyView: EmptyView) {
+        self.backgroundView = emptyView
+    }
+    
+    func resetEmptyView() {
+        self.backgroundView = nil
+    }
+}
+
 extension UICollectionView: DataEmpty {
     func setEmptyView(_ emptyView: EmptyView) {
         self.backgroundView = emptyView
