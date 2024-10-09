@@ -204,8 +204,13 @@ extension SettingsController {
     private func pushVC(_ vc: UIViewController, navigationTitle: String?) {
         
         vc.navigationItem.title = navigationTitle
-        showDetailViewController(UINavigationController(rootViewController: vc), sender: nil)
         
+        if UIDevice.current.userInterfaceIdiom != .phone {
+            showDetailViewController(UINavigationController(rootViewController: vc), sender: nil)
+        } else {
+            showDetailViewController(vc, sender: nil)
+        }
+                
     }
     
 }
