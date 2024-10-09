@@ -204,7 +204,7 @@ extension SettingsController {
     private func pushVC(_ vc: UIViewController, navigationTitle: String?) {
         
         vc.navigationItem.title = navigationTitle
-        showDetailViewController(vc, sender: nil)
+        showDetailViewController(UINavigationController(rootViewController: vc), sender: nil)
         
     }
     
