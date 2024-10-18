@@ -33,11 +33,11 @@ public enum SettingsRowData {
             case .premium(_, _, _):
                 NSLocalizedString("Premium", bundle: .module, comment: "")
             case .contactDeveloper(_):
-                NSLocalizedString("Contact Developer", bundle: .module, comment: "")
+                NSLocalizedString("Contact developer", bundle: .module, comment: "")
             case .language(_):
                 NSLocalizedString("Language", bundle: .module, comment: "")
             case .telegram(_):
-                NSLocalizedString("Telegram Channel", comment: "")
+                NSLocalizedString("Telegram channel", comment: "")
             }
         }
         

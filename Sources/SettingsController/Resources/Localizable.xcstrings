@@ -23,8 +23,7 @@
         }
       }
     },
-    "Contact Developer" : {
-      "extractionState" : "manual",
+    "Contact developer" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
@@ -133,7 +132,7 @@
         }
       }
     },
-    "Telegram Channel" : {
+    "Telegram channel" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
