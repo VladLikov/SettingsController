@@ -20,6 +20,7 @@ public enum SettingsRowData {
         case contactDeveloper(String)
         case premium(Bool, UIColor, UIViewController.Type)
         case language(String)
+        case telegram(String)
 
         var title: String {
             switch self {
@@ -35,6 +36,8 @@ public enum SettingsRowData {
                 NSLocalizedString("Contact Developer", bundle: .module, comment: "")
             case .language(_):
                 NSLocalizedString("Language", bundle: .module, comment: "")
+            case .telegram(_):
+                NSLocalizedString("Telegram Channel", comment: "")
             }
         }
         
@@ -63,6 +66,10 @@ public enum SettingsRowData {
             case .language(_):
                 SettingsIcon(image: UIImage(.globe),
                              color: .gray,
+                             inset: .init())
+            case .telegram(_):
+                SettingsIcon(image: UIImage(resource: .telegram),
+                             color: .systemBlue,
                              inset: .init())
             }
         }

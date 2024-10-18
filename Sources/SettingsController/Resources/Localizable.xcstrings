@@ -133,6 +133,9 @@
         }
       }
     },
+    "Telegram Channel" : {
+
+    },
     "Write a review" : {
       "extractionState" : "manual",
       "localizations" : {

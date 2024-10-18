@@ -22,21 +22,23 @@ public final class SettingsController: UITableViewController {
         
     // MARK: Present Settings
     
-    // need to change
     @discardableResult
     public static func presentSettings(configuration: SettingsConfiguration,
                                        from fromVC: UIViewController) -> SettingsController {
         
-        let settingsController = SettingsController(configuration: configuration)
-        let settingsNavController = UINavigationController(rootViewController: settingsController)
-                
-        let splitViewController = SplitController.getDefault(for: settingsNavController)
+        DispatchQueue.anywayOnMain {
+            
+            let settingsController = SettingsController(configuration: configuration)
+            let settingsNavController = UINavigationController(rootViewController: settingsController)
+                    
+            let splitViewController = SplitController.getDefault(for: settingsNavController)
 
-        splitViewController.modalPresentationStyle = .overFullScreen
-        
-        fromVC.present(splitViewController, animated: true)
-        
-        return settingsController
+            splitViewController.modalPresentationStyle = .overFullScreen
+            
+            fromVC.present(splitViewController, animated: true)
+            
+            return settingsController
+        }
     }
     
     // MARK: Is Taptic Engine Supported
@@ -194,6 +196,9 @@ extension SettingsController {
             case .language(let email):
                 pushVC(LanguageController(email: email), navigationTitle: cell.title)
                 
+            case .telegram(let channelUrl):
+                openTelegramChannel(channelUrl)
+                
             }
 
         }
@@ -290,6 +295,21 @@ extension SettingsController {
         if let url = URL(string: "itms-apps://itunes.apple.com/developer/id\(developerID)") {
             UIApplication.shared.open(url)
         }
+    }
+    
+    private func openTelegramChannel(_ channelUrl: String) {
+        
+        guard let appURL = URL(string: "tg://resolve?domain=\(channelUrl)"),
+              let webURL = URL(string: "https://t.me/\(channelUrl)") else {
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(appURL) {
+            UIApplication.shared.open(appURL)
+        } else {
+            UIApplication.shared.open(webURL)
+        }
+        
     }
     
 }
