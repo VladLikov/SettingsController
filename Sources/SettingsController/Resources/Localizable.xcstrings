@@ -134,7 +134,14 @@
       }
     },
     "Telegram Channel" : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Telegram канал"
+          }
+        }
+      }
     },
     "Write a review" : {
       "extractionState" : "manual",

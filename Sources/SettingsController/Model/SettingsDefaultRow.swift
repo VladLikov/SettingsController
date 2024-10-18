@@ -71,6 +71,7 @@ public enum SettingsRowData {
                 SettingsIcon(image: UIImage(resource: .telegram),
                              color: .systemBlue,
                              inset: .init())
+                
             }
         }
     }
