@@ -23,17 +23,18 @@ public final class SettingsController: UITableViewController {
     // MARK: Present Settings
     
     @discardableResult
-    public static func presentSettings(configuration: SettingsConfiguration,
-                                       from fromVC: UIViewController) -> SettingsController {
+    public static func present(configuration: SettingsConfiguration,
+                               from fromVC: UIViewController) -> SettingsController {
         
         DispatchQueue.anywayOnMain {
             
             let settingsController = SettingsController(configuration: configuration)
             let settingsNavController = UINavigationController(rootViewController: settingsController)
-                    
+            
             let splitViewController = SplitController.getDefault(for: settingsNavController)
-
-            splitViewController.modalPresentationStyle = .overFullScreen
+            
+//            splitViewController.modalPresentationStyle = .overFullScreen
+            splitViewController.modalPresentationStyle = .fullScreen
             
             fromVC.present(splitViewController, animated: true)
             
