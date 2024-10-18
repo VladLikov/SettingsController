@@ -10,7 +10,7 @@ import Foundation
 public struct Inset {
     public var value: CGFloat
     
-    public init(value: CGFloat = 4) {
+    public init(_ value: CGFloat = 4) {
         self.value = value
     }
 }

@@ -69,8 +69,8 @@ public enum SettingsRowData {
                              inset: .init())
             case .telegram(_):
                 SettingsIcon(image: UIImage(resource: .telegram),
-                             color: .systemBlue,
-                             inset: .init())
+                             color: .init(hex: "0091FF"),
+                             inset: .init(3))
                 
             }
         }

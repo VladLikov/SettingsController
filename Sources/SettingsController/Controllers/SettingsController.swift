@@ -88,7 +88,7 @@ public final class SettingsController: UITableViewController {
         clearsSelectionOnViewWillAppear = true
         
     }
-    
+        
 }
 
 // MARK: - Status Bar
