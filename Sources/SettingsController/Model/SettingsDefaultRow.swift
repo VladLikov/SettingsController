@@ -10,17 +10,23 @@ import UIKit
 import SafeSFSymbols
 
 public enum SettingsRowData {
+    
     case row(SettingsRow)
     case defaultRow(DefaultRow)
     
     public enum DefaultRow {
+        
+        case premium(Bool, UIColor, UIViewController.Type)
+
         case shareApp(String)
         case rateApp(String)
         case moreApps(String)
+        
         case contactDeveloper(String)
-        case premium(Bool, UIColor, UIViewController.Type)
         case language(String)
+
         case telegram(String)
+        case vkGroup(String)
 
         var title: String {
             switch self {
@@ -37,7 +43,9 @@ public enum SettingsRowData {
             case .language(_):
                 NSLocalizedString("Language", bundle: .module, comment: "")
             case .telegram(_):
-                NSLocalizedString("Telegram channel", comment: "")
+                NSLocalizedString("Telegram channel", bundle: .module, comment: "")
+            case .vkGroup(_):
+                NSLocalizedString("VK group", bundle: .module, comment: "")
             }
         }
         
@@ -69,6 +77,10 @@ public enum SettingsRowData {
                              inset: .init())
             case .telegram(_):
                 SettingsIcon(image: UIImage(resource: .telegram),
+                             color: .init(hex: "0091FF"),
+                             inset: .init(1))
+            case .vkGroup(_):
+                SettingsIcon(image: UIImage(resource: .vk),
                              color: .init(hex: "0091FF"),
                              inset: .init(1))
                 

@@ -197,8 +197,11 @@ extension SettingsController {
             case .language(let email):
                 pushVC(LanguageController(email: email), navigationTitle: cell.title)
                 
-            case .telegram(let channelUrl):
-                openTelegramChannel(channelUrl)
+            case .telegram(let channelURL):
+                openTelegramChannel(channelURL)
+                
+            case .vkGroup(let groupID):
+                openVKGroup(groupID)
                 
             }
 
@@ -298,10 +301,25 @@ extension SettingsController {
         }
     }
     
-    private func openTelegramChannel(_ channelUrl: String) {
+    private func openTelegramChannel(_ channelURL: String) {
         
-        guard let appURL = URL(string: "tg://resolve?domain=\(channelUrl)"),
-              let webURL = URL(string: "https://t.me/\(channelUrl)") else {
+        guard let appURL = URL(string: "tg://resolve?domain=\(channelURL)"),
+              let webURL = URL(string: "https://t.me/\(channelURL)") else {
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(appURL) {
+            UIApplication.shared.open(appURL)
+        } else {
+            UIApplication.shared.open(webURL)
+        }
+        
+    }
+    
+    private func openVKGroup(_ groupID: String) {
+        
+        guard let appURL = URL(string: "vk://vk.com/club\(groupID)"),
+              let webURL = URL(string: "https://vk.com/club\(groupID)") else {
             return
         }
         

@@ -142,6 +142,16 @@
         }
       }
     },
+    "VK group" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Группа ВК"
+          }
+        }
+      }
+    },
     "Write a review" : {
       "extractionState" : "manual",
       "localizations" : {
