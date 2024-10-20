@@ -82,7 +82,7 @@ public enum SettingsRowData {
             case .vkGroup(_):
                 SettingsIcon(image: UIImage(resource: .vk),
                              color: .init(hex: "0091FF"),
-                             inset: .init(4))
+                             inset: .init(5))
                 
             }
         }
