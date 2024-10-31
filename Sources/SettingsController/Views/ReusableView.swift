@@ -18,6 +18,7 @@ public extension ReusableView where Self: UIView {
 }
 
 extension UITableViewCell: ReusableView {}
+extension UICollectionReusableView: ReusableView {}
 
 public extension UITableView {
         
@@ -34,4 +35,76 @@ public extension UITableView {
         return cell
     }
 
+}
+
+public extension UICollectionView {
+    
+    // MARK: - Register cells & views
+
+    func register<T: UICollectionViewCell>(_ cellClass: T.Type) {
+        register(cellClass, forCellWithReuseIdentifier: cellClass.reuseIdentifier)
+    }
+    
+    func register<T: UICollectionViewCell>(_ cellClasses: [T.Type]) {
+        cellClasses.forEach { register($0) }
+    }
+    
+    func register<T: UICollectionReusableView>(_ viewClass: T.Type, forSupplementaryViewOfKind elementKind: String) {
+        register(viewClass, forSupplementaryViewOfKind: elementKind,
+                 withReuseIdentifier: viewClass.reuseIdentifier)
+    }
+    
+    func registerHeaderView<T: UICollectionReusableView>(_ viewClass: T.Type) {
+        register(viewClass, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+                 withReuseIdentifier: viewClass.reuseIdentifier)
+    }
+    
+    func registerHeaderViews<T: UICollectionReusableView>(_ viewClasses: [T.Type]) {
+        viewClasses.forEach { registerHeaderView($0) }
+    }
+    
+    func registerFooterView<T: UICollectionReusableView>(_ viewClass: T.Type) {
+        register(viewClass, forSupplementaryViewOfKind: UICollectionView.elementKindSectionFooter,
+                 withReuseIdentifier: viewClass.reuseIdentifier)
+    }
+    
+    func registerFooterViews<T: UICollectionReusableView>(_ viewClasses: [T.Type]) {
+        viewClasses.forEach { registerFooterView($0) }
+    }
+    
+    // MARK: - Dequeue cells & views
+
+    func dequeueReusableCell<T: UICollectionViewCell>(ofType cellType: T.Type, for indexPath: IndexPath) -> T {
+        guard let cell = dequeueReusableCell(withReuseIdentifier: cellType.reuseIdentifier,
+                                             for: indexPath) as? T else {
+            return .init()
+        }
+        return cell
+    }
+    
+    func dequeueReusableSupplementaryView<T: UICollectionReusableView>(ofKind elementKind: String,
+                                                                       viewType: T.Type,
+                                                                       for indexPath: IndexPath) -> T {
+        guard let view = dequeueReusableSupplementaryView(ofKind: elementKind,
+                                                          withReuseIdentifier: viewType.reuseIdentifier,
+                                                          for: indexPath) as? T else {
+            return .init()
+        }
+        return view
+    }
+    
+    func dequeueReusableHeaderView<T: UICollectionReusableView>(ofType viewType: T.Type,
+                                                                for indexPath: IndexPath) -> T {
+        return dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionHeader,
+                                                viewType: viewType,
+                                                for: indexPath)
+    }
+    
+    func dequeueReusableFooterView<T: UICollectionReusableView>(ofType viewType: T.Type,
+                                                                for indexPath: IndexPath) -> T {
+        return dequeueReusableSupplementaryView(ofKind: UICollectionView.elementKindSectionFooter,
+                                                viewType: viewType,
+                                                for: indexPath)
+    }
+    
 }
