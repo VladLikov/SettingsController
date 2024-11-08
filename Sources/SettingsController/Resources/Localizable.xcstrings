@@ -55,6 +55,17 @@
         }
       }
     },
+    "Language needed: " : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужен язык: "
+          }
+        }
+      }
+    },
     "More apps" : {
       "extractionState" : "manual",
       "localizations" : {

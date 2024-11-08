@@ -17,7 +17,7 @@ extension MFMailComposeViewController {
         let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? ""
         let appName = (Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ?? ""
         
-        let message = "\(needLanguage ? NSLocalizedString("Needed language: ", bundle: .module, comment: "") : "")\n\n\n\n\n\nDevice: \(deviceModel)\niOS: \(systemVersion)\nApp Version: \(appVersion)"
+        let message = "\(needLanguage ? NSLocalizedString("Language needed: ", bundle: .module, comment: "") : "")\n\n\n\n\n\nDevice: \(deviceModel)\niOS: \(systemVersion)\nApp Version: \(appVersion)"
         
         mail.setMessageBody(message, isHTML: false)
         mail.setSubject(appName)
