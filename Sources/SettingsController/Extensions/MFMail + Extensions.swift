@@ -8,7 +8,7 @@
 import MessageUI
 
 extension MFMailComposeViewController {
-    static func getDefault(for email: String) -> MFMailComposeViewController {
+    static func getDefault(for email: String, needLanguage: Bool = false) -> MFMailComposeViewController {
         let mail = MFMailComposeViewController()
         
         let deviceModel = UIDevice.current.model
@@ -17,7 +17,7 @@ extension MFMailComposeViewController {
         let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? ""
         let appName = (Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ?? ""
         
-        let message = "\n\n\n\n\n\nDevice: \(deviceModel)\niOS: \(systemVersion)\nApp Version: \(appVersion)"
+        let message = "\(needLanguage ? "Need language: " : "")\n\n\n\n\n\nDevice: \(deviceModel)\niOS: \(systemVersion)\nApp Version: \(appVersion)"
         
         mail.setMessageBody(message, isHTML: false)
         mail.setSubject(appName)
