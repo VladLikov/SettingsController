@@ -395,7 +395,7 @@ extension SettingsController: @preconcurrency SKOverlayDelegate {
     
     public func storeOverlayDidFinishDismissal(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {
         
-        tableView.contentInset.bottom = .zero
+        tableView.contentInset.bottom = 0
     }
     
 }
