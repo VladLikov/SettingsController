@@ -275,7 +275,7 @@ extension SettingsController {
             
             let vc = premiumVC.init()
             if UIDevice.current.userInterfaceIdiom == .phone {
-                vc.modalPresentationStyle = .overFullScreen
+                vc.modalPresentationStyle = .fullScreen
             }
             present(vc, animated: true)
             
