@@ -17,15 +17,35 @@ public extension ReusableView where Self: UIView {
     }
 }
 
+public protocol NibLoadableView: AnyObject {
+    static var nibName: String { get }
+}
+
+public extension NibLoadableView where Self: UIView {
+    static var nibName: String {
+        return String(describing: Self.self)
+    }
+}
+
 extension UITableViewCell: ReusableView {}
 extension UICollectionReusableView: ReusableView {}
 
 public extension UITableView {
         
+    // MARK: - Register cells & views
+    
     func register<T: UITableViewCell>(_: T.Type) {
         register(T.self, forCellReuseIdentifier: T.reuseIdentifier)
     }
+    
+    func register<T: UITableViewCell>(_: T.Type) where T: NibLoadableView {
+        let bundle = Bundle(for: T.self)
+        let nib = UINib(nibName: T.nibName, bundle: bundle)
+        register(nib, forCellReuseIdentifier: T.reuseIdentifier)
+    }
         
+    // MARK: - Dequeue cells & views
+    
     func dequeueReusableCell<T: UITableViewCell>(ofType cellType: T.Type,
                                                  for indexPath: IndexPath) -> T {
         guard let cell = dequeueReusableCell(withIdentifier: cellType.reuseIdentifier,
@@ -43,6 +63,12 @@ public extension UICollectionView {
 
     func register<T: UICollectionViewCell>(_ cellClass: T.Type) {
         register(cellClass, forCellWithReuseIdentifier: cellClass.reuseIdentifier)
+    }
+    
+    func register<T: UICollectionViewCell>(_: T.Type) where T: NibLoadableView {
+        let bundle = Bundle(for: T.self)
+        let nib = UINib(nibName: T.nibName, bundle: bundle)
+        register(nib, forCellWithReuseIdentifier: T.reuseIdentifier)
     }
     
     func register<T: UICollectionViewCell>(_ cellClasses: [T.Type]) {
