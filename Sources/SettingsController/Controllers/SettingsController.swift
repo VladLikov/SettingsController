@@ -348,6 +348,8 @@ extension SettingsController {
             let config = SKOverlay.AppConfiguration(appIdentifier: overlayAppID, position: .bottom)
             let overlay = SKOverlay(configuration: config)
             overlay.present(in: scene)
+            
+            overlay.delegate = self
         }
     }
     
@@ -360,3 +362,21 @@ extension SettingsController: @preconcurrency MFMailComposeViewControllerDelegat
         controller.dismiss(animated: true)
     }
 }
+
+// MARK: - SKOverlayDelegate
+
+@available(iOS 14.0, *)
+extension SettingsController: @preconcurrency SKOverlayDelegate {
+  
+    public func storeOverlayDidFinishPresentation(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {
+        
+        tableView.contentInset.bottom = transitionContext.endFrame.size.height
+    }
+    
+    public func storeOverlayDidFinishDismissal(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {
+        
+        tableView.contentInset.bottom = .zero
+    }
+    
+}
+
