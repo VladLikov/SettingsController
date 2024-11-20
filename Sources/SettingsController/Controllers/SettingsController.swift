@@ -5,6 +5,7 @@ import UIKit
 import MessageUI
 import AlertKit
 import SafeSFSymbols
+import StoreKit
 
 // MARK: - SettingsControllerDelegate
 
@@ -88,7 +89,15 @@ public final class SettingsController: UITableViewController {
         clearsSelectionOnViewWillAppear = true
         
     }
+       
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
+        if #available(iOS 14.0, *) {
+            displayAppOverlayIfNeeded()
+        }
+    }
+    
 }
 
 // MARK: - Status Bar
@@ -328,6 +337,18 @@ extension SettingsController {
             UIApplication.shared.open(webURL)
         }
         
+    }
+    
+    @available(iOS 14.0, *)
+    private func displayAppOverlayIfNeeded() {
+        
+        if let overlayAppID = configuration.overlayAppID {
+            guard let scene = view.window?.windowScene else { return }
+            
+            let config = SKOverlay.AppConfiguration(appIdentifier: overlayAppID, position: .bottom)
+            let overlay = SKOverlay(configuration: config)
+            overlay.present(in: scene)
+        }
     }
     
 }
