@@ -58,6 +58,8 @@ public final class SettingsController: UITableViewController {
         UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(self.closeAction(_:)))
     }()
     
+    private var overlayAppViewDidShown: Bool = false
+    
     // MARK: Life Cycle
     
     init(configuration: SettingsConfiguration) {
@@ -350,6 +352,8 @@ extension SettingsController {
     @available(iOS 14.0, *)
     private func displayAppOverlayIfNeeded() {
         
+        guard !overlayAppViewDidShown else { return }
+        
         if let overlayAppID = configuration.overlayAppID {
             guard let scene = view.window?.windowScene else { return }
             
@@ -357,6 +361,8 @@ extension SettingsController {
             let overlay = SKOverlay(configuration: config)
             overlay.delegate = self
             overlay.present(in: scene)
+            
+            overlayAppViewDidShown = true
         }
     }
     
