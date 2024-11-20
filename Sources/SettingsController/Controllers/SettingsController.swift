@@ -98,8 +98,8 @@ public final class SettingsController: UITableViewController {
         }
     }
     
-    public override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
         
         if #available(iOS 14.0, *) {
             dismissAppOverlayIfNeeded()
