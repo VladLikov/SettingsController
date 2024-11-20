@@ -98,6 +98,14 @@ public final class SettingsController: UITableViewController {
         }
     }
     
+    public override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        if #available(iOS 14.0, *) {
+            dismissAppOverlayIfNeeded()
+        }
+    }
+    
 }
 
 // MARK: - Status Bar
@@ -347,10 +355,16 @@ extension SettingsController {
             
             let config = SKOverlay.AppConfiguration(appIdentifier: overlayAppID, position: .bottom)
             let overlay = SKOverlay(configuration: config)
-            overlay.present(in: scene)
-            
             overlay.delegate = self
+            overlay.present(in: scene)
         }
+    }
+    
+    @available(iOS 14.0, *)
+    private func dismissAppOverlayIfNeeded() {
+        
+        guard let scene = view.window?.windowScene else { return }
+        SKOverlay.dismiss(in: scene)
     }
     
 }
