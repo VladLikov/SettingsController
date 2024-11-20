@@ -357,7 +357,7 @@ extension SettingsController {
         if let overlayAppID = configuration.overlayAppID {
             guard let scene = view.window?.windowScene else { return }
             
-            let config = SKOverlay.AppConfiguration(appIdentifier: overlayAppID, position: .bottom)
+            let config = SKOverlay.AppConfiguration(appIdentifier: overlayAppID, position: .bottomRaised)
             let overlay = SKOverlay(configuration: config)
             overlay.delegate = self
             overlay.present(in: scene)
