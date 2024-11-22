@@ -109,7 +109,7 @@ extension SettingsCell {
         NSLayoutConstraint.activate([
             iconImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             iconImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            iconImageView.widthAnchor.constraint(equalToConstant: 30),
+            iconImageView.widthAnchor.constraint (equalToConstant: 30),
             iconImageView.heightAnchor.constraint(equalToConstant: 30),
 
             stackView.topAnchor.constraint(equalTo: contentView.topAnchor),

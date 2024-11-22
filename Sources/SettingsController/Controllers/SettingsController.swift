@@ -78,6 +78,7 @@ public final class SettingsController: UITableViewController {
         
         tableView?.register(SettingsCell.self)
         tableView?.rowHeight = 45
+        tableView?.separatorInset.left = 60
          
         if let topInset = configuration.topInset {
             tableView?.contentInset.top = topInset
