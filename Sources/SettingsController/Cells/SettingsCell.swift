@@ -19,15 +19,6 @@ public final class SettingsCell: UITableViewCell {
     
     // MARK: Properties [Private]
     
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 1
-        label.font = .systemFont(ofSize: 17)
-        label.textColor = .label
-        label.textAlignment = .left
-        return label
-    }()
-    
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -38,10 +29,19 @@ public final class SettingsCell: UITableViewCell {
         return imageView
     }()
     
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.numberOfLines = 1
+        label.font = .preferredFont(forTextStyle: .body)
+        label.textColor = .label
+        label.textAlignment = .left
+        return label
+    }()
+
     private let detailLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 1
-        label.font = .systemFont(ofSize: 17)
+        label.font = .preferredFont(forTextStyle: .body)
         label.textColor = .secondaryLabel
         label.textAlignment = .right
         return label
