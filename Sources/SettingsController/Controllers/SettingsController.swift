@@ -379,7 +379,11 @@ extension SettingsController {
 // MARK: - MFMailComposeViewControllerDelegate
 
 extension SettingsController: @preconcurrency MFMailComposeViewControllerDelegate {
-    public func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: (any Error)?) {
+    
+    public func mailComposeController(_ controller: MFMailComposeViewController,
+                                      didFinishWith result: MFMailComposeResult,
+                                      error: (any Error)?) {
+        
         controller.dismiss(animated: true)
     }
 }
@@ -389,12 +393,14 @@ extension SettingsController: @preconcurrency MFMailComposeViewControllerDelegat
 @available(iOS 14.0, *)
 extension SettingsController: @preconcurrency SKOverlayDelegate {
   
-    public func storeOverlayDidFinishPresentation(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {
+    public func storeOverlayDidFinishPresentation(_ overlay: SKOverlay,
+                                                  transitionContext: SKOverlay.TransitionContext) {
         
         tableView.contentInset.bottom = transitionContext.endFrame.size.height
     }
     
-    public func storeOverlayDidFinishDismissal(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {
+    public func storeOverlayDidFinishDismissal(_ overlay: SKOverlay,
+                                               transitionContext: SKOverlay.TransitionContext) {
         
         tableView.contentInset.bottom = 0
     }

@@ -61,9 +61,6 @@ public final class SettingsCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: .subtitle, reuseIdentifier: Self.reuseIdentifier)
         
-        self.accessoryType  = .disclosureIndicator
-        self.selectionStyle = .default
-        
         setupView()
         setConstraints()
     }
@@ -79,12 +76,13 @@ public final class SettingsCell: UITableViewCell {
 extension SettingsCell {
     
     public func configure(title: String, icon: SettingsIcon, detail: String? = nil) {
-        self.titleLabel.text = title
-        self.iconImageView.image = icon.image
-        self.iconImageView.backgroundColor = icon.color
-        self.detailLabel.text = detail
         
-        self.detailLabel.isHidden = detail == nil
+        titleLabel.text = title
+        iconImageView.image = icon.image
+        iconImageView.backgroundColor = icon.color
+        detailLabel.text = detail
+        
+        detailLabel.isHidden = detail == nil
     }
     
 }
@@ -94,6 +92,10 @@ extension SettingsCell {
 extension SettingsCell {
     
     private func setupView() {
+        
+        accessoryType  = .disclosureIndicator
+        selectionStyle = .default
+        
         contentView.addSubview(iconImageView)
         contentView.addSubview(stackView)
     }
