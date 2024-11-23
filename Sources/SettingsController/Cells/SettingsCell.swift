@@ -59,7 +59,7 @@ public final class SettingsCell: UITableViewCell {
     // MARK: Life Cycle
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: .subtitle, reuseIdentifier: Self.reuseIdentifier)
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         setupView()
         setConstraints()
