@@ -98,55 +98,26 @@ public final class SettingsController: UITableViewController {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-//        if needToRefreshPremiumStatus {
-//            needToRefreshPremiumStatus = false
-//            
-//            let test = sections.first {
-//                let premiumCell = $0.rows.first {
-//                    if case .defaultRow(let row) = $0 {
-//                        if case .premium(_, _, _) = row {
-//                            return true
-//                        }
-//                    }
-//                    return false
-//                }
-//                return premiumCell != nil
-//            }
-//            
-//            
-//            
-//            print("test", test)
-//            
-//        }
-        
-        let lol = sections.firstIndex {
-            let premiumIndex = $0.rows.firstIndex {
-                if case .defaultRow(let row) = $0 {
-                    if case .premium(_, _, _) = row {
-                        return true
+        if needToRefreshPremiumStatus {
+            needToRefreshPremiumStatus = false
+            
+            let premiumSectionIndex = sections.firstIndex {
+                let premium = $0.rows.first {
+                    if case .defaultRow(let row) = $0 {
+                        if case .premium(_, _, _) = row {
+                            return true
+                        }
                     }
+                    return false
                 }
-                return false
+                return premium != nil
             }
-            return premiumIndex != nil
+            
+            if let premiumSectionIndex {
+                tableView?.reloadSections(IndexSet(integer: premiumSectionIndex), with: .fade)
+            }
         }
-        
-        print("lol", lol)
-        
-//        let test = sections.firstIndex {
-//            let premiumCell = $0.rows.firstIndex {
-//                if case .defaultRow(let row) = $0 {
-//                    if case .premium(_, _, _) = row {
-//                        return true
-//                    }
-//                }
-//                return false
-//            }
-//            return premiumCell != nil
-//        }
-        
-//        print("test", test)
-        
+                
         if #available(iOS 14.0, *) {
             displayAppOverlayIfNeeded()
         }
