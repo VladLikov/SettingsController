@@ -137,7 +137,7 @@ public final class SettingsController: UITableViewController {
 
 extension SettingsController {
     public override var preferredStatusBarStyle: UIStatusBarStyle {
-        .default
+        return .default
     }
 }
 
