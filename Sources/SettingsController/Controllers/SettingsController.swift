@@ -145,7 +145,6 @@ public final class SettingsController: UITableViewController {
 //            return premiumCell != nil
 //        }
         
-        
 //        print("test", test)
         
         if #available(iOS 14.0, *) {
