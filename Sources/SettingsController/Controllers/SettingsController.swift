@@ -119,6 +119,7 @@ public final class SettingsController: UITableViewController {
 //            
 //        }
         
+        
         let test = sections.first {
             let premiumCell = $0.rows.first {
                 if case .defaultRow(let row) = $0 {
