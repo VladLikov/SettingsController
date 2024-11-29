@@ -119,9 +119,8 @@ public final class SettingsController: UITableViewController {
 //            
 //        }
         
-        
-        let test = sections.first {
-            let premiumCell = $0.rows.first {
+        let lol = sections.firstIndex {
+            let premiumIndex = $0.rows.firstIndex {
                 if case .defaultRow(let row) = $0 {
                     if case .premium(_, _, _) = row {
                         return true
@@ -129,12 +128,25 @@ public final class SettingsController: UITableViewController {
                 }
                 return false
             }
-            return premiumCell != nil
+            return premiumIndex != nil
         }
         
+        print("lol", lol)
+        
+//        let test = sections.firstIndex {
+//            let premiumCell = $0.rows.firstIndex {
+//                if case .defaultRow(let row) = $0 {
+//                    if case .premium(_, _, _) = row {
+//                        return true
+//                    }
+//                }
+//                return false
+//            }
+//            return premiumCell != nil
+//        }
         
         
-        print("test", test)
+//        print("test", test)
         
         if #available(iOS 14.0, *) {
             displayAppOverlayIfNeeded()
