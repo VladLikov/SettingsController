@@ -59,9 +59,7 @@ public final class SettingsController: UITableViewController {
     }()
     
     private var overlayAppViewDidShown: Bool = false
-    
-    private var needToRefreshPremiumStatus: Bool = false
-    
+        
     // MARK: Life Cycle
     
     init(configuration: SettingsConfiguration) {
@@ -97,7 +95,7 @@ public final class SettingsController: UITableViewController {
        
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-                
+        
         if #available(iOS 14.0, *) {
             displayAppOverlayIfNeeded()
         }
@@ -278,8 +276,6 @@ extension SettingsController {
             
         } else {
             
-            needToRefreshPremiumStatus = true
-
             let vc = premiumVC.init()
             if UIDevice.current.userInterfaceIdiom == .phone {
                 vc.modalPresentationStyle = .fullScreen
