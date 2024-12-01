@@ -127,7 +127,7 @@ extension LanguageController: @preconcurrency MFMailComposeViewControllerDelegat
     func mailComposeController(_ controller: MFMailComposeViewController,
                                didFinishWith result: MFMailComposeResult, error: Error?) {
         
-        dismiss(animated: true, completion: nil)
+        controller.dismiss(animated: true, completion: nil)
     }
     
     private func sendMail() {
