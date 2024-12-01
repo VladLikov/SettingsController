@@ -17,6 +17,7 @@ class UserCell: UITableViewCell {
     
     private lazy var userImageView: UIImageView = {
         let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.tintColor = .white
         imageView.backgroundColor = .gray
         imageView.contentMode = .scaleAspectFill
@@ -28,6 +29,7 @@ class UserCell: UITableViewCell {
     
     private lazy var userLabel: UILabel = {
         let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 1
         label.font = .boldSystemFont(ofSize: 18)
         label.textColor = .label

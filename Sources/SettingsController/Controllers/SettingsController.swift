@@ -225,9 +225,7 @@ extension SettingsController {
         if UIDevice.current.userInterfaceIdiom == .phone {
             tableView.deselectRow(at: indexPath, animated: true)
         }
-                
-        guard let cell = tableView.cellForRow(at: indexPath) as? SettingsCell else { return }
-                
+                                
         let section = indexPath.section, row = indexPath.row
                         
         let item = sections[section].rows[row]
@@ -237,8 +235,10 @@ extension SettingsController {
             
             if let vcType = row.vc {
                 
+                let title = (tableView.cellForRow(at: indexPath) as? SettingsCell)?.title
+                
                 let vc = vcType.init()
-                pushVC(vc, navigationTitle: cell.title)
+                pushVC(vc, navigationTitle: title)
 
             } else if let function = row.function {
                 tableView.deselectRow(at: indexPath, animated: true)
@@ -264,7 +264,8 @@ extension SettingsController {
                 sendMail(email)
                 
             case .language(let email):
-                pushVC(LanguageController(email: email), navigationTitle: cell.title)
+                pushVC(LanguageController(email: email),
+                       navigationTitle: NSLocalizedString("Language", bundle: .module, comment: ""))
                 
             case .telegram(let channelURL):
                 openTelegramChannel(channelURL)
@@ -273,7 +274,8 @@ extension SettingsController {
                 openVKGroup(groupID)
                 
             case .user(_, _, let vcType):
-                pushVC(vcType.init(), navigationTitle: cell.title)
+                pushVC(vcType.init(),
+                       navigationTitle: NSLocalizedString("User", bundle: .module, comment: ""))
 
             }
 

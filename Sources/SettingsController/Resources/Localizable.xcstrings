@@ -153,6 +153,16 @@
         }
       }
     },
+    "User" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пользователь"
+          }
+        }
+      }
+    },
     "VK group" : {
       "localizations" : {
         "ru" : {
