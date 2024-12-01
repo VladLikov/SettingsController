@@ -16,7 +16,7 @@ public enum SettingsRowData {
     
     public enum DefaultRow {
         
-        case user(String, UIImage, UIViewController.Type)
+        case user(String, UIImage?, UIViewController.Type)
 
         case premium(Bool, UIColor, UIViewController.Type)
 

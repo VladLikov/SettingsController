@@ -11,6 +11,9 @@ import StoreKit
 
 public protocol SettingsControllerDelegate: AnyObject {
     func settingsDidDismissed(_ initialValues: [AnyKeyPath: Any]?)
+    
+    func settingsUserInfoRequested(_ request: (User) -> Void)
+    func settingsPremiumStatusRequested(_ request: (Bool) -> Void)
 }
 
 // MARK: - SettingsController
@@ -60,6 +63,8 @@ public final class SettingsController: UITableViewController {
     
     private var overlayAppViewDidShown: Bool = false
         
+    private var indexPathToRefresh: IndexPath?
+    
     // MARK: Life Cycle
     
     init(configuration: SettingsConfiguration) {
@@ -97,6 +102,8 @@ public final class SettingsController: UITableViewController {
        
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        reloadRowsIfNeeded()
         
         if #available(iOS 14.0, *) {
             displayAppOverlayIfNeeded()
@@ -173,13 +180,14 @@ extension SettingsController {
        
        switch item {
        case .row(let row):
+           
            let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
            cell.configure(title: row.title, icon: row.icon, detail: row.detail)
            return cell
            
-       case .defaultRow(let row):
+       case .defaultRow(let defaultRow):
            
-           if case .user(let name, let image, _) = row {
+           if case .user(let name, let image, _) = defaultRow {
                let cell = tableView.dequeueReusableCell(ofType: UserCell.self, for: indexPath)
                cell.configure(title: name, avatar: image)
                return cell
@@ -189,13 +197,13 @@ extension SettingsController {
            
            var detail: String?
            
-           if case .premium(let hasPremium, _, _) = row {
+           if case .premium(let hasPremium, _, _) = defaultRow {
                detail = hasPremium ?
                NSLocalizedString("Active", bundle: .module, comment: "") :
                NSLocalizedString("Not active", bundle: .module, comment: "")
            }
            
-           cell.configure(title: row.title, icon: row.icon, detail: detail)
+           cell.configure(title: defaultRow.title, icon: defaultRow.icon, detail: detail)
 
            return cell
        }
@@ -258,6 +266,7 @@ extension SettingsController {
                 moreApps(developerID)
 
             case .premium(let hasPremium, _, let vc):
+                indexPathToRefresh = indexPath
                 presentPremium(hasPremium, premiumVC: vc)
                 
             case .contactDeveloper(let email):
@@ -274,6 +283,7 @@ extension SettingsController {
                 openVKGroup(groupID)
                 
             case .user(_, _, let vcType):
+                indexPathToRefresh = indexPath
                 pushVC(vcType.init(),
                        navigationTitle: NSLocalizedString("User", bundle: .module, comment: ""))
 
@@ -317,6 +327,28 @@ extension SettingsController {
 // MARK: - Private Methods
 
 extension SettingsController {
+    
+    private func reloadRowsIfNeeded() {
+        
+        guard let indexPathToRefresh else { return }
+        
+        let row = sections[indexPathToRefresh.section].rows[indexPathToRefresh.row]
+        
+        if case .defaultRow(let defaultRow) = row, case .premium(_, let color, let vc) = defaultRow {
+            delegate?.settingsPremiumStatusRequested { isPremium in
+                sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.premium(isPremium, color, vc))
+            }
+        } else if case .defaultRow(let defaultRow) = row, case .user(_, _, let vc) = defaultRow {
+            delegate?.settingsUserInfoRequested { user in
+                sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.user(user.name, user.avatar, vc))
+            }
+        }
+        
+        tableView?.reloadRows(at: [indexPathToRefresh], with: .fade)
+        
+        self.indexPathToRefresh = nil
+        
+    }
     
     private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type) {
         
