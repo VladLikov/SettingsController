@@ -9,6 +9,6 @@ import Foundation
 import UIKit
 
 public struct UserInfo {
-    var name: String
-    var avatar: UIImage?
+    public var name: String
+    public var avatar: UIImage?
 }
