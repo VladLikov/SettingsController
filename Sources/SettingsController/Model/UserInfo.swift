@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-public struct User {
+public struct UserInfo {
     var name: String
     var avatar: UIImage?
 }

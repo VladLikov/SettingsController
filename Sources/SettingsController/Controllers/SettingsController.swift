@@ -12,7 +12,7 @@ import StoreKit
 public protocol SettingsControllerDelegate: AnyObject {
     func settingsDidDismissed(_ initialValues: [AnyKeyPath: Any]?)
     
-    func settingsUserInfoRequested(_ request: (User) -> Void)
+    func settingsUserInfoRequested(_ request: (UserInfo) -> Void)
     func settingsPremiumStatusRequested(_ request: (Bool) -> Void)
 }
 
