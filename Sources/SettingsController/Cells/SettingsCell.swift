@@ -75,11 +75,11 @@ public final class SettingsCell: UITableViewCell {
 
 extension SettingsCell {
     
-    public func configure(title: String, icon: SettingsIcon, detail: String? = nil) {
+    public func configure(title: String?, icon: SettingsIcon?, detail: String? = nil) {
         
         titleLabel.text = title
-        iconImageView.image = icon.image
-        iconImageView.backgroundColor = icon.color
+        iconImageView.image = icon?.image
+        iconImageView.backgroundColor = icon?.color
         detailLabel.text = detail
         
         detailLabel.isHidden = detail == nil

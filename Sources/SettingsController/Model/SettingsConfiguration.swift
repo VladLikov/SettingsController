@@ -8,6 +8,7 @@
 import UIKit
 
 public struct SettingsConfiguration {
+    
     public var settingsTitle: String?
     public var topInset: CGFloat?
     public var sections: [SettingsSection]

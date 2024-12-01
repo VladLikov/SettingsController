@@ -16,6 +16,8 @@ public enum SettingsRowData {
     
     public enum DefaultRow {
         
+        case user(String, UIImage, UIViewController.Type)
+
         case premium(Bool, UIColor, UIViewController.Type)
 
         case shareApp(String)
@@ -28,28 +30,30 @@ public enum SettingsRowData {
         case telegram(String)
         case vkGroup(String)
 
-        var title: String {
+        var title: String? {
             switch self {
-            case .shareApp(_):
+            case .shareApp:
                 NSLocalizedString("Share app", bundle: .module, comment: "")
-            case .rateApp(_):
+            case .rateApp:
                 NSLocalizedString("Write a review", bundle: .module, comment: "")
-            case .moreApps(_):
+            case .moreApps:
                 NSLocalizedString("More apps", bundle: .module, comment: "")
-            case .premium(_, _, _):
+            case .premium:
                 NSLocalizedString("Premium", bundle: .module, comment: "")
-            case .contactDeveloper(_):
+            case .contactDeveloper:
                 NSLocalizedString("Contact developer", bundle: .module, comment: "")
-            case .language(_):
+            case .language:
                 NSLocalizedString("Language", bundle: .module, comment: "")
-            case .telegram(_):
+            case .telegram:
                 NSLocalizedString("Telegram channel", bundle: .module, comment: "")
-            case .vkGroup(_):
+            case .vkGroup:
                 NSLocalizedString("VK group", bundle: .module, comment: "")
+            case .user:
+                nil
             }
         }
         
-        var icon: SettingsIcon {
+        var icon: SettingsIcon? {
             switch self {
             case .shareApp(_):
                 SettingsIcon(image: UIImage(.square.andArrowUpFill),
@@ -83,6 +87,7 @@ public enum SettingsRowData {
                 SettingsIcon(image: UIImage(resource: .vk),
                              color: .systemBlue,
                              inset: .init(5))
+            default: nil
                 
             }
         }

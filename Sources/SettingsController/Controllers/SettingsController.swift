@@ -135,33 +135,68 @@ extension SettingsController {
        return sections[section].title
    }
    
+//    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+//       
+//       let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
+//                       
+//       let section = indexPath.section, row = indexPath.row
+//       let item = sections[section].rows[row]
+//       
+//       switch item {
+//       case .row(let row):
+//           cell.configure(title: row.title, icon: row.icon, detail: row.detail)
+//
+//       case .defaultRow(let action):
+//           var detail: String?
+//           
+//           if case .premium(let hasPremium, _, _) = action {
+//               detail = hasPremium ?
+//               NSLocalizedString("Active", bundle: .module, comment: "") :
+//               NSLocalizedString("Not active", bundle: .module, comment: "")
+//           }
+//           
+//           cell.configure(title: action.title, icon: action.icon, detail: detail)
+//
+//       }
+//       
+//       return cell
+//       
+//   }
+    
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-       
-       let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
-                       
+                              
        let section = indexPath.section, row = indexPath.row
-       
        let item = sections[section].rows[row]
        
        switch item {
        case .row(let row):
+           let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
            cell.configure(title: row.title, icon: row.icon, detail: row.detail)
-
-       case .defaultRow(let action):
+           return cell
+           
+       case .defaultRow(let row):
+           
+           if case .user(let name, let image, _) = row {
+               let cell = tableView.dequeueReusableCell(ofType: UserCell.self, for: indexPath)
+               cell.configure(title: name, avatar: image)
+               return cell
+           }
+           
+           let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
+           
            var detail: String?
            
-           if case .premium(let hasPremium, _, _) = action {
+           if case .premium(let hasPremium, _, _) = row {
                detail = hasPremium ?
                NSLocalizedString("Active", bundle: .module, comment: "") :
                NSLocalizedString("Not active", bundle: .module, comment: "")
            }
            
-           cell.configure(title: action.title, icon: action.icon, detail: detail)
+           cell.configure(title: row.title, icon: row.icon, detail: detail)
 
+           return cell
        }
-       
-       return cell
-       
+              
    }
     
 }
@@ -170,6 +205,18 @@ extension SettingsController {
 
 extension SettingsController {
         
+    public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        
+        let section = indexPath.section, row = indexPath.row
+        let item = sections[section].rows[row]
+        
+        if case .defaultRow(let row) = item, case .user = row {
+            return 65
+        }
+        
+        return 45
+    }
+    
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         if UIDevice.current.userInterfaceIdiom == .phone {
@@ -222,6 +269,9 @@ extension SettingsController {
             case .vkGroup(let groupID):
                 openVKGroup(groupID)
                 
+            case .user(_, _, let vcType):
+                pushVC(vcType.init(), navigationTitle: cell.title)
+
             }
 
         }
