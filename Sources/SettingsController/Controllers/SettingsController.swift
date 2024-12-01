@@ -77,6 +77,8 @@ public final class SettingsController: UITableViewController {
         title = configuration.settingsTitle
         
         tableView?.register(SettingsCell.self)
+        tableView?.register(UserCell.self)
+
         tableView?.rowHeight = 45
         tableView?.separatorInset.left = 60
          
