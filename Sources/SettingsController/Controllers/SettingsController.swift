@@ -143,35 +143,6 @@ extension SettingsController {
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
        return sections[section].title
    }
-   
-    
-//    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//       
-//       let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
-//                       
-//       let section = indexPath.section, row = indexPath.row
-//       let item = sections[section].rows[row]
-//       
-//       switch item {
-//       case .row(let row):
-//           cell.configure(title: row.title, icon: row.icon, detail: row.detail)
-//
-//       case .defaultRow(let action):
-//           var detail: String?
-//           
-//           if case .premium(let hasPremium, _, _) = action {
-//               detail = hasPremium ?
-//               NSLocalizedString("Active", bundle: .module, comment: "") :
-//               NSLocalizedString("Not active", bundle: .module, comment: "")
-//           }
-//           
-//           cell.configure(title: action.title, icon: action.icon, detail: detail)
-//
-//       }
-//       
-//       return cell
-//       
-//   }
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
                               
@@ -209,6 +180,34 @@ extension SettingsController {
        }
               
    }
+    
+    //    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    //
+    //       let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
+    //
+    //       let section = indexPath.section, row = indexPath.row
+    //       let item = sections[section].rows[row]
+    //
+    //       switch item {
+    //       case .row(let row):
+    //           cell.configure(title: row.title, icon: row.icon, detail: row.detail)
+    //
+    //       case .defaultRow(let action):
+    //           var detail: String?
+    //
+    //           if case .premium(let hasPremium, _, _) = action {
+    //               detail = hasPremium ?
+    //               NSLocalizedString("Active", bundle: .module, comment: "") :
+    //               NSLocalizedString("Not active", bundle: .module, comment: "")
+    //           }
+    //
+    //           cell.configure(title: action.title, icon: action.icon, detail: detail)
+    //
+    //       }
+    //
+    //       return cell
+    //
+    //   }
     
 }
 
