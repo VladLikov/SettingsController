@@ -135,6 +135,7 @@ extension SettingsController {
        return sections[section].title
    }
    
+    
 //    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 //       
 //       let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
