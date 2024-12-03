@@ -19,7 +19,7 @@ public extension UIImage {
         let targetSize = CGSize(width: targetWidth, height: targetHeight)
         let targetOrigin = CGPoint(x: insets.left, y: insets.top)
         let format = UIGraphicsImageRendererFormat()
-        format.scale = self.scale * self.scale // maybe need to delete
+//        format.scale = self.scale * self.scale // maybe need to delete
         let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
         return renderer.image { _ in
             draw(in: CGRect(origin: targetOrigin, size: size))
