@@ -37,7 +37,7 @@ public final class SettingsController: UITableViewController {
             
             let splitViewController = SplitController.getDefault(for: settingsNavController)
             
-            splitViewController.modalPresentationStyle = .overFullScreen
+            splitViewController.modalPresentationStyle = .fullScreen
             
             fromVC.present(splitViewController, animated: true)
             
