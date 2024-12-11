@@ -229,13 +229,17 @@ extension SettingsController {
     
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            tableView.deselectRow(at: indexPath, animated: true)
-        }
-                                
         let section = indexPath.section, row = indexPath.row
                         
         let item = sections[section].rows[row]
+        
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            tableView.deselectRow(at: indexPath, animated: true)
+        } else {
+            if case .defaultRow(let row) = item, case .premium = row {
+                tableView.deselectRow(at: indexPath, animated: true)
+            }
+        }
 
         switch item {
         case .row(let row):
