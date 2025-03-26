@@ -8,6 +8,7 @@
 import Foundation
 
 public struct Inset {
+    
     public var value: CGFloat
     
     public init(_ value: CGFloat = 4) {

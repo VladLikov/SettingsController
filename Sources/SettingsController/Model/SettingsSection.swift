@@ -8,6 +8,7 @@
 import Foundation
 
 public struct SettingsSection {
+    
     var title: String? = nil
     var rows: [SettingsRowData]
     

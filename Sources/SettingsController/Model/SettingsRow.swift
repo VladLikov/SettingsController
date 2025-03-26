@@ -9,22 +9,25 @@ import Foundation
 import UIKit.UIViewController
 
 public struct SettingsRow {
+    
+    public typealias SettingsAction = ((_ indexPath: IndexPath, _ tableView: UITableView) -> Void)
+    
     var title: String
     var detail: String?
     var icon: SettingsIcon
     var vc: UIViewController.Type?
-    var function: ((_ indexPath: IndexPath, _ tableView: UITableView) -> Void)?
+    var action: SettingsAction?
     
     public init(title: String,
                 detail: String? = nil,
                 icon: SettingsIcon,
                 vc: UIViewController.Type? = nil,
-                function: ((_ indexPath: IndexPath, _ tableView: UITableView) -> Void)? = nil) {
+                action: SettingsAction? = nil) {
         
         self.title = title
         self.detail = detail
         self.icon = icon
         self.vc = vc
-        self.function = function
+        self.action = action
     }
 }

@@ -251,9 +251,9 @@ extension SettingsController {
                 let vc = vcType.init()
                 pushVC(vc, navigationTitle: title)
 
-            } else if let function = row.function {
+            } else if let action = row.action {
                 tableView.deselectRow(at: indexPath, animated: true)
-                function(indexPath, tableView)
+                action(indexPath, tableView)
             }
 
         case .defaultRow(let row):

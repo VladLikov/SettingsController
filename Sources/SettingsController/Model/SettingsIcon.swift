@@ -8,6 +8,7 @@
 import UIKit
 
 public struct SettingsIcon {
+    
     var image: UIImage?
     var color: UIColor
     

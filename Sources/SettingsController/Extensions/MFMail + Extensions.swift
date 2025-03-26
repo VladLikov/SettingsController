@@ -7,8 +7,10 @@
 
 import MessageUI
 
-extension MFMailComposeViewController {
+public extension MFMailComposeViewController {
+    
     static func getDefault(for email: String, needLanguage: Bool = false) -> MFMailComposeViewController {
+        
         let mail = MFMailComposeViewController()
         
         let deviceModel = UIDevice.current.model
