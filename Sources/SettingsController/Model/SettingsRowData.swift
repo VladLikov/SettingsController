@@ -16,9 +16,11 @@ public enum SettingsRowData {
     
     public enum DefaultRow {
         
+        public typealias PremiumAction = (_ fromVC: UIViewController) -> Void
+        
         case user(String, UIImage?, UIViewController.Type)
 
-        case premium(Bool, UIColor, UIViewController.Type?, ((_ fromVC: UIViewController) -> Void)?)
+        case premium(Bool, UIColor, UIViewController.Type?, PremiumAction?)
 
         case shareApp(String)
         case rateApp(String)

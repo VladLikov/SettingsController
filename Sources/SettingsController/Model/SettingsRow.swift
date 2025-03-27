@@ -10,7 +10,9 @@ import UIKit.UIViewController
 
 public struct SettingsRow {
     
-    public typealias SettingsAction = ((_ indexPath: IndexPath, _ tableView: UITableView) -> Void)
+    public typealias SettingsAction = ((_ indexPath: IndexPath,
+                                        _ tableView: UITableView,
+                                        _ vc: UIViewController) -> Void)
     
     var title: String
     var detail: String?

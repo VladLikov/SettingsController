@@ -252,7 +252,7 @@ extension SettingsController {
 
             } else if let action = row.action {
                 tableView.deselectRow(at: indexPath, animated: true)
-                action(indexPath, tableView)
+                action(indexPath, tableView, self)
             }
 
         case .defaultRow(let row):
@@ -352,7 +352,9 @@ extension SettingsController {
         
     }
     
-    private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type?, action: ((_ fromVC: UIViewController) -> Void)?) {
+    private func presentPremium(_ hasPremium: Bool,
+                                premiumVC: UIViewController.Type?,
+                                action: SettingsRowData.DefaultRow.PremiumAction?) {
         
         if hasPremium {
             
