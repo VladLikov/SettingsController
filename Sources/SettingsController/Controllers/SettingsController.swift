@@ -79,7 +79,7 @@ public final class SettingsController: UITableViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = configuration.settingsTitle
+        title = configuration.title
         
         tableView?.register(SettingsCell.self)
         tableView?.register(UserCell.self)
@@ -97,7 +97,6 @@ public final class SettingsController: UITableViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         
         clearsSelectionOnViewWillAppear = true
-        
     }
        
     public override func viewDidAppear(_ animated: Bool) {
@@ -168,7 +167,7 @@ extension SettingsController {
            
            var detail: String?
            
-           if case .premium(let hasPremium, _, _) = defaultRow {
+           if case .premium(let hasPremium, _, _, _) = defaultRow {
                detail = hasPremium ?
                NSLocalizedString("Active", bundle: .module, comment: "") :
                NSLocalizedString("Not active", bundle: .module, comment: "")
@@ -268,9 +267,9 @@ extension SettingsController {
             case .moreApps(let developerID):
                 moreApps(developerID)
 
-            case .premium(let hasPremium, _, let vc):
+            case .premium(let hasPremium, _, let vc, let action):
                 indexPathToRefresh = indexPath
-                presentPremium(hasPremium, premiumVC: vc)
+                presentPremium(hasPremium, premiumVC: vc, action: action)
                 
             case .contactDeveloper(let email):
                 sendMail(email)
@@ -337,9 +336,9 @@ extension SettingsController {
         
         let row = sections[indexPathToRefresh.section].rows[indexPathToRefresh.row]
         
-        if case .defaultRow(let defaultRow) = row, case .premium(_, let color, let vc) = defaultRow {
+        if case .defaultRow(let defaultRow) = row, case .premium(_, let color, let vc, let action) = defaultRow {
             delegate?.settingsPremiumStatusRequested { isPremium in
-                sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.premium(isPremium, color, vc))
+                sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.premium(isPremium, color, vc, action))
             }
         } else if case .defaultRow(let defaultRow) = row, case .user(_, _, let vc) = defaultRow {
             delegate?.settingsUserInfoRequested { user in
@@ -353,7 +352,7 @@ extension SettingsController {
         
     }
     
-    private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type) {
+    private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type?, action: (() -> Void)?) {
         
         if hasPremium {
             
@@ -364,7 +363,7 @@ extension SettingsController {
                 haptic: .success
             )
             
-        } else {
+        } else if let premiumVC {
             
             let vc = premiumVC.init()
             if UIDevice.current.userInterfaceIdiom == .phone {
@@ -372,6 +371,8 @@ extension SettingsController {
             }
             present(vc, animated: true)
                         
+        } else if let action {
+            action()
         }
         
     }

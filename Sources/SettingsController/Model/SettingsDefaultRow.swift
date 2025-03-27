@@ -18,7 +18,7 @@ public enum SettingsRowData {
         
         case user(String, UIImage?, UIViewController.Type)
 
-        case premium(Bool, UIColor, UIViewController.Type)
+        case premium(Bool, UIColor, UIViewController.Type?, (() -> Void)?)
 
         case shareApp(String)
         case rateApp(String)
@@ -67,7 +67,7 @@ public enum SettingsRowData {
                 SettingsIcon(image: UIImage(.square.stack_3dUpFill),
                              color: .systemIndigo,
                              inset: .init())
-            case .premium(_, let color, _):
+            case .premium(_, let color, _, _):
                 SettingsIcon(image: UIImage(.star.fill),
                              color: color,
                              inset: .init())
