@@ -18,7 +18,7 @@ public enum SettingsRowData {
         
         case user(String, UIImage?, UIViewController.Type)
 
-        case premium(Bool, UIColor, UIViewController.Type?, (() -> Void)?)
+        case premium(Bool, UIColor, UIViewController.Type?, ((_ fromVC: UIViewController) -> Void)?)
 
         case shareApp(String)
         case rateApp(String)

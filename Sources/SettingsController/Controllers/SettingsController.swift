@@ -352,7 +352,7 @@ extension SettingsController {
         
     }
     
-    private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type?, action: (() -> Void)?) {
+    private func presentPremium(_ hasPremium: Bool, premiumVC: UIViewController.Type?, action: ((_ fromVC: UIViewController) -> Void)?) {
         
         if hasPremium {
             
@@ -372,7 +372,7 @@ extension SettingsController {
             present(vc, animated: true)
                         
         } else if let action {
-            action()
+            action(self)
         }
         
     }
