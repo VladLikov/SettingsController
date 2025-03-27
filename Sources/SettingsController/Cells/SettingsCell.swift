@@ -10,7 +10,7 @@ import UIKit
 // MARK: - SettingsCell
 
 public final class SettingsCell: UITableViewCell {
-    
+     
     // MARK: Properties [Public]
     
     public var title: String? {
