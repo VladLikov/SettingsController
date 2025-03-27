@@ -10,7 +10,7 @@ import UIKit
 import SafeSFSymbols
 
 public enum SettingsRowData {
-    
+     
     case row(SettingsRow)
     case defaultRow(DefaultRow)
     
