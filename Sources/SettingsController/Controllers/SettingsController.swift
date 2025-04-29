@@ -10,7 +10,7 @@ import StoreKit
 // MARK: - SettingsControllerDelegate
 
 public protocol SettingsControllerDelegate: AnyObject {
-    func settingsDidDismissed(_ initialValues: [AnyKeyPath: Any]?)
+    func settingsDidDismiss(_ initialValues: [AnyKeyPath: Any]?)
     
     func settingsUserInfoRequested(_ request: (UserInfo) -> Void)
     func settingsPremiumStatusRequested(_ request: (Bool) -> Void)
@@ -43,12 +43,6 @@ public final class SettingsController: UITableViewController {
             
             return settingsController
         }
-    }
-    
-    // MARK: Is Taptic Engine Supported
-    
-    public func isTapticEngineSupported() -> Bool {
-        return (UIDevice.current.value(forKey: "_feedbackSupportLevel") as? NSNumber)?.boolValue ?? false
     }
     
     // MARK: Properties [Private]
@@ -136,7 +130,7 @@ extension SettingsController {
    }
    
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-       return sections[section].rows.count
+        return sections[section].rows.count
    }
    
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -319,7 +313,7 @@ extension SettingsController {
         
         navigationController?.dismiss(animated: true, completion: { [weak self] in
             guard let self else { return }
-            delegate?.settingsDidDismissed(configuration.initialValues)
+            delegate?.settingsDidDismiss(configuration.initialValues)
         })
                 
     }
@@ -337,12 +331,12 @@ extension SettingsController {
         let row = sections[indexPathToRefresh.section].rows[indexPathToRefresh.row]
         
         if case .defaultRow(let defaultRow) = row, case .premium(_, let color, let vc, let action) = defaultRow {
-            delegate?.settingsPremiumStatusRequested { isPremium in
-                sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.premium(isPremium, color, vc, action))
+            delegate?.settingsPremiumStatusRequested { [weak self]  isPremium in
+                self?.sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.premium(isPremium, color, vc, action))
             }
         } else if case .defaultRow(let defaultRow) = row, case .user(_, _, let vc) = defaultRow {
-            delegate?.settingsUserInfoRequested { user in
-                sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.user(user.name, user.avatar, vc))
+            delegate?.settingsUserInfoRequested { [weak self] user in
+                self?.sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.user(user.name, user.avatar, vc))
             }
         }
         
@@ -381,7 +375,7 @@ extension SettingsController {
 
     private func sendMail(_ email: String) {
         
-        guard MFMailComposeViewController.canSendMail() else { return }
+        guard MFMailComposeViewController.canSendEmail() else { return }
         
         let mail = MFMailComposeViewController.getDefault(for: email)
         

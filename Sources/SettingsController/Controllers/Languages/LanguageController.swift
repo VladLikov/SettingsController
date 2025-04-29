@@ -88,7 +88,7 @@ extension LanguageController {
             
             cell.textLabel?.text = NSLocalizedString("Need other language", bundle: .module, comment: "")
             cell.textLabel?.textAlignment = .center
-            cell.textLabel?.textColor = UIApplication.shared.windows.first?.tintColor
+            cell.textLabel?.textColor = self.view.tintColor
             
             return cell
         }
@@ -133,7 +133,7 @@ extension LanguageController: @preconcurrency MFMailComposeViewControllerDelegat
     
     private func sendMail() {
         
-        guard MFMailComposeViewController.canSendMail() else { return }
+        guard MFMailComposeViewController.canSendEmail() else { return }
 
         let mail = MFMailComposeViewController.getDefault(for: email, needLanguage: true)
         

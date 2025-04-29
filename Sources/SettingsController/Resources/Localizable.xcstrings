@@ -66,6 +66,9 @@
         }
       }
     },
+    "Mail is not installed." : {
+
+    },
     "More apps" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -98,6 +101,9 @@
           }
         }
       }
+    },
+    "Our apps" : {
+
     },
     "Premium" : {
       "extractionState" : "manual",

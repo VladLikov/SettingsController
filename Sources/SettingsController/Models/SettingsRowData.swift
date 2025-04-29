@@ -62,7 +62,7 @@ public enum SettingsRowData {
                              color: .systemOrange,
                              inset: .init())
             case .rateApp(_):
-                SettingsIcon(image: UIImage(.heart.fill),
+                SettingsIcon(image: UIImage(.heart.fill, pointSize: 5, weight: .medium),
                              color: .systemRed,
                              inset: .init())
             case .moreApps(_):

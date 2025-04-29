@@ -6,8 +6,25 @@
 //
 
 import MessageUI
+import AlertKit
 
 public extension MFMailComposeViewController {
+    
+    static func canSendEmail() -> Bool {
+        
+        let canSendMail = MFMailComposeViewController.canSendMail()
+        
+        if !canSendMail {
+            AlertKitAPI.present(
+                title: NSLocalizedString("Mail is not installed.", bundle: .module, comment: ""),
+                icon: .error,
+                style: .iOS17AppleMusic,
+                haptic: .error
+            )
+        }
+        
+        return canSendMail
+    }
     
     static func getDefault(for email: String, needLanguage: Bool = false) -> MFMailComposeViewController {
         
