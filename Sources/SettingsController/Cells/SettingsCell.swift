@@ -26,6 +26,12 @@ public final class SettingsCell: UITableViewCell {
         imageView.backgroundColor = .gray
         imageView.contentMode = .scaleAspectFit
         imageView.layer.cornerRadius = round(CGFloat(30 / 4))
+        
+        imageView.preferredSymbolConfiguration =
+              UIImage.SymbolConfiguration(pointSize: 22, weight: .regular, scale: .medium)
+        imageView.contentMode = .center
+        imageView.directionalLayoutMargins = .init(top: 6, leading: 6, bottom: 6, trailing: 6)
+        
         return imageView
     }()
     
@@ -81,7 +87,7 @@ extension SettingsCell {
         iconImageView.image = icon?.image
         iconImageView.backgroundColor = icon?.color
         detailLabel.text = detail
-        
+
         detailLabel.isHidden = detail == nil
     }
     
