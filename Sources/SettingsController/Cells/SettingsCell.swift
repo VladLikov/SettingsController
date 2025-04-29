@@ -28,7 +28,7 @@ public final class SettingsCell: UITableViewCell {
         imageView.layer.cornerRadius = round(CGFloat(30 / 4))
         
         imageView.preferredSymbolConfiguration =
-              UIImage.SymbolConfiguration(pointSize: 22, weight: .regular, scale: .medium)
+              UIImage.SymbolConfiguration(pointSize: 12, weight: .regular, scale: .medium)
         imageView.contentMode = .center
         imageView.directionalLayoutMargins = .init(top: 6, leading: 6, bottom: 6, trailing: 6)
         
