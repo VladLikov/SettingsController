@@ -14,7 +14,8 @@ public struct SettingsIcon {
     
     public init(image: UIImage?, color: UIColor, inset: Inset? = nil) {
         if let inset {
-            self.image = image?.inset(inset.value)
+//            self.image = image?.inset(inset.value)
+            self.image = image?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 10, weight: .medium))
         } else {
             self.image = image
         }
