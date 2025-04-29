@@ -59,28 +59,22 @@ public enum SettingsRowData {
             switch self {
             case .shareApp(_):
                 SettingsIcon(image: UIImage(.square.andArrowUpFill),
-                             color: .systemOrange,
-                             inset: .init())
+                             color: .systemOrange)
             case .rateApp(_):
-                SettingsIcon(image: UIImage(.heart.fill, pointSize: 5, weight: .medium),
-                             color: .systemRed,
-                             inset: .init())
+                SettingsIcon(image: UIImage(.heart.fill),
+                             color: .systemRed)
             case .moreApps(_):
                 SettingsIcon(image: UIImage(.square.stack_3dUpFill),
-                             color: .systemIndigo,
-                             inset: .init())
+                             color: .systemIndigo)
             case .premium(_, let color, _, _):
                 SettingsIcon(image: UIImage(.star.fill),
-                             color: color,
-                             inset: .init())
+                             color: color)
             case .contactDeveloper(_):
                 SettingsIcon(image: UIImage(.envelope.fill),
-                             color: .systemBlue,
-                             inset: .init())
+                             color: .systemBlue)
             case .language(_):
                 SettingsIcon(image: UIImage(.globe),
-                             color: .gray,
-                             inset: .init())
+                             color: .gray)
             case .telegram(_):
                 SettingsIcon(image: UIImage(resource: .telegram),
                              color: .init(hex: "0091FF"),

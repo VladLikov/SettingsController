@@ -24,14 +24,11 @@ public final class SettingsCell: UITableViewCell {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.tintColor = .white
         imageView.backgroundColor = .gray
-        imageView.contentMode = .scaleAspectFit
         imageView.layer.cornerRadius = round(CGFloat(30 / 4))
-        
-        imageView.preferredSymbolConfiguration =
-              UIImage.SymbolConfiguration(pointSize: 12, weight: .regular, scale: .medium)
         imageView.contentMode = .center
+        imageView.preferredSymbolConfiguration =
+              UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .medium)
         imageView.directionalLayoutMargins = .init(top: 6, leading: 6, bottom: 6, trailing: 6)
-        
         return imageView
     }()
     
@@ -125,7 +122,5 @@ extension SettingsCell {
             stackView.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 15),
             stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8)
         ])
-        
     }
-    
 }
