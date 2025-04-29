@@ -36,18 +36,29 @@ extension UIImage {
             print("return cached image")
             return cached
         }
-
-        let newSize = CGSize(width: size.width + inset.left + inset.right,
-                             height: size.height + inset.top + inset.bottom)
-
-        let format = UIGraphicsImageRendererFormat.default()
-        format.scale = scale
-        format.opaque = false
-        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
-
+        
+        let targetWidth  = size.width  + inset.left + inset.right
+        let targetHeight = size.height + inset.top  + inset.bottom
+        let targetSize = CGSize(width: targetWidth, height: targetHeight)
+        let targetOrigin = CGPoint(x: inset.left, y: inset.top)
+        let format = UIGraphicsImageRendererFormat()
+//        format.scale = self.scale * self.scale // maybe need to delete
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
         let rendered = renderer.image { _ in
-            draw(at: CGPoint(x: inset.left, y: inset.top))
-        }.withRenderingMode(renderingMode)
+            draw(in: CGRect(origin: targetOrigin, size: size))
+        }.withRenderingMode(.alwaysTemplate)
+
+//        let newSize = CGSize(width: size.width + inset.left + inset.right,
+//                             height: size.height + inset.top + inset.bottom)
+//
+//        let format = UIGraphicsImageRendererFormat.default()
+//        format.scale = scale
+//        format.opaque = false
+//        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
+//
+//        let rendered = renderer.image { _ in
+//            draw(at: CGPoint(x: inset.left, y: inset.top))
+//        }.withRenderingMode(renderingMode)
 
         await UIImage.insetCache.setImage(rendered, forKey: cacheKey)
         
