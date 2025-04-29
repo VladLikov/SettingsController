@@ -7,13 +7,24 @@
 
 import Foundation
 
+public enum SettingsSectionKind {
+    /// Статический набор строк (старое поведение)
+    case rows([SettingsRowData])
+
+    /// Автоматическая витрина App Store-приложений вашего dev-аккаунта
+    /// - Parameters:
+    ///   - developerID: id разработчика в App Store
+    ///   - limit:  cколько приложений показать
+    case ourApps(developerID: String, limit: Int)
+}
+
 public struct SettingsSection {
       
     var title: String? = nil
-    var rows: [SettingsRowData]
+    var kind: SettingsSectionKind
     
-    public init(title: String? = nil, rows: [SettingsRowData]) {
+    public init(title: String? = nil, kind: SettingsSectionKind) {
         self.title = title
-        self.rows = rows
+        self.kind = kind
     }
 }

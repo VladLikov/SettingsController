@@ -18,7 +18,10 @@ let package = Package(
     targets: [
         .target(
             name: "SettingsController",
-            dependencies: ["AlertKit", "SafeSFSymbols"],
+            dependencies: [
+                "AlertKit",
+                "SafeSFSymbols",
+            ],
             resources: [.process("Resources")]),
     ]
 )

@@ -13,6 +13,7 @@ public enum SettingsRowData {
      
     case row(SettingsRow)
     case defaultRow(DefaultRow)
+    case app(AppRow)
     
     public enum DefaultRow {
         
@@ -20,17 +21,17 @@ public enum SettingsRowData {
         
         case user(String, UIImage?, UIViewController.Type)
 
-        case premium(Bool, UIColor, UIViewController.Type?, PremiumAction?)
+        case premium(isPremium: Bool, tintColor: UIColor, vc: UIViewController.Type?, action: PremiumAction?)
 
-        case shareApp(String)
-        case rateApp(String)
-        case moreApps(String)
+        case shareApp(appID: String)
+        case rateApp(appID: String)
+        case moreApps(developerID: String)
         
-        case contactDeveloper(String)
+        case contactDeveloper(email: String)
         case language(String)
 
-        case telegram(String)
-        case vkGroup(String)
+        case telegram(id: String)
+        case vkGroup(id: String)
 
         var title: String? {
             switch self {
@@ -59,30 +60,44 @@ public enum SettingsRowData {
             switch self {
             case .shareApp(_):
                 SettingsIcon(image: UIImage(.square.andArrowUpFill),
-                             color: .systemOrange)
+                             color: .systemOrange,
+                             inset: .init())
+
             case .rateApp(_):
                 SettingsIcon(image: UIImage(.heart.fill),
-                             color: .systemRed)
+                             color: .systemRed,
+                             inset: .init())
+
             case .moreApps(_):
                 SettingsIcon(image: UIImage(.square.stack_3dUpFill),
-                             color: .systemIndigo)
+                             color: .systemIndigo,
+                             inset: .init())
+
             case .premium(_, let color, _, _):
                 SettingsIcon(image: UIImage(.star.fill),
-                             color: color)
+                             color: color,
+                             inset: .init())
+                
             case .contactDeveloper(_):
                 SettingsIcon(image: UIImage(.envelope.fill),
-                             color: .systemBlue)
+                             color: .systemBlue,
+                             inset: .init())
+                
             case .language(_):
                 SettingsIcon(image: UIImage(.globe),
-                             color: .gray)
+                             color: .gray,
+                             inset: .init())
+                
             case .telegram(_):
                 SettingsIcon(image: UIImage(resource: .telegram),
                              color: .init(hex: "0091FF"),
-                             inset: .init(top: 1, left: 1, bottom: 1, right: 1))
+                             inset: .init(1))
+                
             case .vkGroup(_):
                 SettingsIcon(image: UIImage(resource: .vk),
                              color: .systemBlue,
-                             inset: .init(top: 20, left: 20, bottom: 20, right: 20))
+                             inset: .init(5))
+                
             default: nil
                 
             }

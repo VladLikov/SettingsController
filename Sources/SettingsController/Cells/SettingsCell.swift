@@ -17,22 +17,19 @@ public final class SettingsCell: UITableViewCell {
         titleLabel.text
     }
     
-    // MARK: Properties [Private]
+    // MARK: UI Elements [Private]
     
-    private let iconImageView: UIImageView = {
+    private lazy var iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.tintColor = .white
         imageView.backgroundColor = .gray
-        imageView.layer.cornerRadius = round(CGFloat(30 / 4))
-        imageView.contentMode = .center
-        imageView.preferredSymbolConfiguration =
-              UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .medium)
-        imageView.directionalLayoutMargins = .init(top: 6, leading: 6, bottom: 6, trailing: 6)
+        imageView.layer.cornerRadius = 7.5 // round(CGFloat(30 / 4))
+        imageView.contentMode = .scaleAspectFit
         return imageView
     }()
     
-    private let titleLabel: UILabel = {
+    private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 1
         label.font = .preferredFont(forTextStyle: .body)
@@ -41,7 +38,7 @@ public final class SettingsCell: UITableViewCell {
         return label
     }()
 
-    private let detailLabel: UILabel = {
+    private lazy var detailLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 1
         label.font = .preferredFont(forTextStyle: .body)
@@ -71,7 +68,6 @@ public final class SettingsCell: UITableViewCell {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
-    
 }
 
 // MARK: - Configure
@@ -90,7 +86,6 @@ extension SettingsCell {
 
         detailLabel.isHidden = detail == nil
     }
-    
 }
 
 // MARK: - Setup View
@@ -105,7 +100,6 @@ extension SettingsCell {
         contentView.addSubview(iconImageView)
         contentView.addSubview(stackView)
     }
-    
 }
 
 // MARK: - Set Constraints

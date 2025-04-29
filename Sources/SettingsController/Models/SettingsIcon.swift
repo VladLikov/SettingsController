@@ -8,40 +8,22 @@
 import UIKit
 
 public struct SettingsIcon {
-
-    public let color: UIColor
-    private let base: UIImage
-    private let inset: UIEdgeInsets
-
-    public func generateImage() async -> UIImage {
-        if inset == .zero {
-            return base
+        
+    let base: UIImage?
+    let color: UIColor
+    let inset: Inset?
+        
+    public func generateImage() async -> UIImage? {
+        if let inset {
+            return await base?.inset(inset.edgeInsets)
         } else {
-            return await base.inset(inset)
+            return base
         }
     }
-
-    public init(image: UIImage,
-                color: UIColor,
-                inset: UIEdgeInsets = .zero) {
+    
+    public init(image: UIImage?, color: UIColor, inset: Inset? = nil) {
         self.base  = image
         self.color = color
         self.inset = inset
     }
 }
-
-//
-//public struct SettingsIcon {
-//    
-//    var image: UIImage?
-//    var color: UIColor
-//    
-//    public init(image: UIImage?, color: UIColor, inset: Inset? = nil) {
-//        if let inset {
-//            self.image = image?.inset(inset.value)
-//        } else {
-//            self.image = image
-//        }
-//        self.color = color
-//    }
-//}

@@ -77,8 +77,8 @@ public final class SettingsController: UITableViewController {
         
         tableView?.register(SettingsCell.self)
         tableView?.register(UserCell.self)
-
-        tableView?.rowHeight = 45
+        tableView?.register(AppCell.self)
+        
         tableView?.separatorInset.left = 60
          
         if let topInset = configuration.topInset {
@@ -91,6 +91,12 @@ public final class SettingsController: UITableViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         
         clearsSelectionOnViewWillAppear = true
+        
+        for (idx, section) in sections.enumerated() {
+            if case .ourApps = section.kind {
+                loadOurApps(for: idx)
+            }
+        }
     }
        
     public override func viewDidAppear(_ animated: Bool) {
@@ -100,7 +106,7 @@ public final class SettingsController: UITableViewController {
         
         if #available(iOS 14.0, *) {
             displayAppOverlayIfNeeded()
-        }
+        } 
     }
     
     public override func viewWillDisappear(_ animated: Bool) {
@@ -111,6 +117,29 @@ public final class SettingsController: UITableViewController {
         }
     }
     
+    private func loadOurApps(for sectionIndex: Int) {
+        
+        let section = sections[sectionIndex]
+
+        guard case let .ourApps(developerID, limit) = section.kind else {
+            return
+        }
+
+        Task { @MainActor in
+            do {
+                let apps = try await AppsService.fetch(developerId: developerID, limit: limit)
+
+                let rows = apps.map { SettingsRowData.app(.loaded($0)) }
+
+                sections[sectionIndex].kind = .rows(rows)
+                tableView.reloadSections(IndexSet(integer: sectionIndex), with: .automatic)
+
+            } catch {
+                sections[sectionIndex].kind = .rows([.app(.failed)])
+                tableView.reloadSections(IndexSet(integer: sectionIndex), with: .automatic)
+            }
+        }
+    }
 }
 
 // MARK: - Status Bar
@@ -130,7 +159,12 @@ extension SettingsController {
    }
    
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return sections[section].rows.count
+        switch sections[section].kind {
+        case .rows(let rows):
+            return rows.count
+        case .ourApps(_, let limit):
+            return limit
+        }
    }
    
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -139,69 +173,58 @@ extension SettingsController {
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
                               
-       let section = indexPath.section, row = indexPath.row
-       let item = sections[section].rows[row]
-       
-       switch item {
-       case .row(let row):
-           
-           let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
-           cell.configure(title: row.title, icon: row.icon, detail: row.detail)
-           return cell
-           
-       case .defaultRow(let defaultRow):
-           
-           if case .user(let name, let image, _) = defaultRow {
-               let cell = tableView.dequeueReusableCell(ofType: UserCell.self, for: indexPath)
-               cell.configure(title: name, avatar: image)
-               return cell
-           }
-           
-           let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
-           
-           var detail: String?
-           
-           if case .premium(let hasPremium, _, _, _) = defaultRow {
-               detail = hasPremium ?
-               NSLocalizedString("Active", bundle: .module, comment: "") :
-               NSLocalizedString("Not active", bundle: .module, comment: "")
-           }
-           
-           cell.configure(title: defaultRow.title, icon: defaultRow.icon, detail: detail)
+       let section = indexPath.section
+        
+        switch sections[section].kind {
+            
+        case .rows(let rows):
+            switch rows[indexPath.row] {
+            case .row(let row):
+                
+                let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
+                cell.configure(title: row.title, icon: row.icon, detail: row.detail)
+                return cell
+                
+            case .defaultRow(let defaultRow):
+                
+                if case .user(let name, let image, _) = defaultRow {
+                    let cell = tableView.dequeueReusableCell(ofType: UserCell.self, for: indexPath)
+                    cell.configure(title: name, avatar: image)
+                    return cell
+                }
+                
+                let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
+                
+                var detail: String?
+                
+                if case .premium(let hasPremium, _, _, _) = defaultRow {
+                    detail = hasPremium ?
+                    NSLocalizedString("Active", bundle: .module, comment: "") :
+                    NSLocalizedString("Not active", bundle: .module, comment: "")
+                }
+                
+                cell.configure(title: defaultRow.title, icon: defaultRow.icon, detail: detail)
+                
+                return cell
 
-           return cell
-       }
-              
+            case .app(let appRow):
+                return makeAppCell(for: tableView, at: indexPath, appRow: appRow)
+                
+            }
+            
+        case .ourApps:
+            return makeAppCell(for: tableView, at: indexPath, appRow: .placeholder)
+            
+        }
    }
     
-    //    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    //
-    //       let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
-    //
-    //       let section = indexPath.section, row = indexPath.row
-    //       let item = sections[section].rows[row]
-    //
-    //       switch item {
-    //       case .row(let row):
-    //           cell.configure(title: row.title, icon: row.icon, detail: row.detail)
-    //
-    //       case .defaultRow(let action):
-    //           var detail: String?
-    //
-    //           if case .premium(let hasPremium, _, _) = action {
-    //               detail = hasPremium ?
-    //               NSLocalizedString("Active", bundle: .module, comment: "") :
-    //               NSLocalizedString("Not active", bundle: .module, comment: "")
-    //           }
-    //
-    //           cell.configure(title: action.title, icon: action.icon, detail: detail)
-    //
-    //       }
-    //
-    //       return cell
-    //
-    //   }
-    
+    private func makeAppCell(for tableView: UITableView,
+                             at indexPath: IndexPath,
+                             appRow: AppRow) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(ofType: AppCell.self, for: indexPath)
+        cell.configure(with: appRow)
+        return cell
+    }
 }
 
 // MARK: - UITableViewDelegate
@@ -211,10 +234,15 @@ extension SettingsController {
     public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         
         let section = indexPath.section, row = indexPath.row
-        let item = sections[section].rows[row]
         
-        if case .defaultRow(let row) = item, case .user = row {
-            return 65
+        switch sections[section].kind {
+        case .rows(let rows):
+            if case .defaultRow(let row) = rows[row], case .user = row {
+                return 65
+            }
+            
+        default:
+            break
         }
         
         return 45
@@ -223,71 +251,82 @@ extension SettingsController {
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         let section = indexPath.section, row = indexPath.row
-                        
-        let item = sections[section].rows[row]
-        
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            tableView.deselectRow(at: indexPath, animated: true)
-        } else {
-            if case .defaultRow(let row) = item, case .premium = row {
-                tableView.deselectRow(at: indexPath, animated: true)
-            }
-        }
-
-        switch item {
-        case .row(let row):
+                    
+        switch sections[section].kind {
+        case .rows(let rows):
+            let item = rows[row]
             
-            if let vcType = row.vc {
-                
-                let title = (tableView.cellForRow(at: indexPath) as? SettingsCell)?.title
-                
-                let vc = vcType.init()
-                pushVC(vc, navigationTitle: title)
-
-            } else if let action = row.action {
+            if UIDevice.current.userInterfaceIdiom == .phone {
                 tableView.deselectRow(at: indexPath, animated: true)
-                action(indexPath, tableView, self)
+            } else {
+                if case .defaultRow(let row) = item, case .premium = row {
+                    tableView.deselectRow(at: indexPath, animated: true)
+                }
             }
 
-        case .defaultRow(let row):
+            switch item {
+            case .row(let row):
+                
+                if let vcType = row.vc {
+                    
+                    let title = (tableView.cellForRow(at: indexPath) as? SettingsCell)?.title
+                    
+                    let vc = vcType.init()
+                    pushVC(vc, navigationTitle: title)
+
+                } else if let action = row.action {
+                    tableView.deselectRow(at: indexPath, animated: true)
+                    action(indexPath, tableView, self)
+                }
+
+            case .defaultRow(let row):
+                
+                switch row {
+                case .shareApp(let appID):
+                    shareApp(appID, at: indexPath)
+                    
+                case .rateApp(let appID):
+                    rateApp(appID)
+                    
+                case .moreApps(let developerID):
+                    moreApps(developerID)
+
+                case .premium(let hasPremium, _, let vc, let action):
+                    indexPathToRefresh = indexPath
+                    presentPremium(hasPremium, premiumVC: vc, action: action)
+                    
+                case .contactDeveloper(let email):
+                    sendMail(email)
+                    
+                case .language(let email):
+                    pushVC(LanguageController(email: email),
+                           navigationTitle: NSLocalizedString("Language", bundle: .module, comment: ""))
+                    
+                case .telegram(let channelURL):
+                    openTelegramChannel(channelURL)
+                    
+                case .vkGroup(let groupID):
+                    openVKGroup(groupID)
+                    
+                case .user(_, _, let vcType):
+                    indexPathToRefresh = indexPath
+                    pushVC(vcType.init(),
+                           navigationTitle: NSLocalizedString("User", bundle: .module, comment: ""))
+
+                }
+     
+            case .app(.loaded(let app)):
+                openApp(app.id)
+                
+            default:
+                break
+                
+            }
             
-            switch row {
-            case .shareApp(let appID):
-                shareApp(appID, at: indexPath)
-                
-            case .rateApp(let appID):
-                rateApp(appID)
-                
-            case .moreApps(let developerID):
-                moreApps(developerID)
-
-            case .premium(let hasPremium, _, let vc, let action):
-                indexPathToRefresh = indexPath
-                presentPremium(hasPremium, premiumVC: vc, action: action)
-                
-            case .contactDeveloper(let email):
-                sendMail(email)
-                
-            case .language(let email):
-                pushVC(LanguageController(email: email),
-                       navigationTitle: NSLocalizedString("Language", bundle: .module, comment: ""))
-                
-            case .telegram(let channelURL):
-                openTelegramChannel(channelURL)
-                
-            case .vkGroup(let groupID):
-                openVKGroup(groupID)
-                
-            case .user(_, _, let vcType):
-                indexPathToRefresh = indexPath
-                pushVC(vcType.init(),
-                       navigationTitle: NSLocalizedString("User", bundle: .module, comment: ""))
-
-            }
-
+        default:
+            break
         }
-
-                        
+                
     }
     
     private func pushVC(_ vc: UIViewController, navigationTitle: String?) {
@@ -302,6 +341,15 @@ extension SettingsController {
                 
     }
     
+    private func openApp(_ id: Int) {
+        
+        let vc = SKStoreProductViewController()
+        Task { @MainActor in
+            let loaded = try await vc.loadProduct(withParameters: [SKStoreProductParameterITunesItemIdentifier: id])
+            guard loaded else { return }
+            present(vc, animated: true)
+        }
+    }
 }
 
 // MARK: - Actions
@@ -325,26 +373,69 @@ extension SettingsController {
 extension SettingsController {
     
     private func reloadRowsIfNeeded() {
-        
-        guard let indexPathToRefresh else { return }
-        
-        let row = sections[indexPathToRefresh.section].rows[indexPathToRefresh.row]
-        
-        if case .defaultRow(let defaultRow) = row, case .premium(_, let color, let vc, let action) = defaultRow {
-            delegate?.settingsPremiumStatusRequested { [weak self]  isPremium in
-                self?.sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.premium(isPremium, color, vc, action))
+        guard let indexPath = indexPathToRefresh else { return }
+
+        // Получаем секцию
+        let section = sections[indexPath.section]
+
+        // Проверяем, что она содержит .rows
+        guard case var .rows(rows) = section.kind else { return }
+
+        let row = rows[indexPath.row]
+
+        switch row {
+
+        case .defaultRow(let defaultRow):
+            switch defaultRow {
+
+            case .premium(_, let color, let vc, let action):
+                delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
+                    guard let self else { return }
+                    rows[indexPath.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: color, vc: vc, action: action))
+                    self.sections[indexPath.section].kind = .rows(rows)
+                    self.tableView?.reloadRows(at: [indexPath], with: .fade)
+                    self.indexPathToRefresh = nil
+                }
+
+            case .user(_, _, let vc):
+                delegate?.settingsUserInfoRequested { [weak self] user in
+                    guard let self else { return }
+                    rows[indexPath.row] = .defaultRow(.user(user.name, user.avatar, vc))
+                    self.sections[indexPath.section].kind = .rows(rows)
+                    self.tableView?.reloadRows(at: [indexPath], with: .fade)
+                    self.indexPathToRefresh = nil
+                }
+
+            default:
+                break
             }
-        } else if case .defaultRow(let defaultRow) = row, case .user(_, _, let vc) = defaultRow {
-            delegate?.settingsUserInfoRequested { [weak self] user in
-                self?.sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.user(user.name, user.avatar, vc))
-            }
+
+        default:
+            break
         }
-        
-        tableView?.reloadRows(at: [indexPathToRefresh], with: .fade)
-        
-        self.indexPathToRefresh = nil
-        
     }
+    
+//    private func reloadRowsIfNeeded() {
+//        
+//        guard let indexPathToRefresh else { return }
+//
+//        let row = sections[indexPathToRefresh.section].rows[indexPathToRefresh.row]
+//        
+//        if case .defaultRow(let defaultRow) = row, case .premium(_, let color, let vc, let action) = defaultRow {
+//            delegate?.settingsPremiumStatusRequested { [weak self]  isPremium in
+//                self?.sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: color, vc: vc, action: action))
+//            }
+//        } else if case .defaultRow(let defaultRow) = row, case .user(_, _, let vc) = defaultRow {
+//            delegate?.settingsUserInfoRequested { [weak self] user in
+//                self?.sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.user(user.name, user.avatar, vc))
+//            }
+//        }
+//        
+//        tableView?.reloadRows(at: [indexPathToRefresh], with: .fade)
+//        
+//        self.indexPathToRefresh = nil
+//        
+//    }
     
     private func presentPremium(_ hasPremium: Bool,
                                 premiumVC: UIViewController.Type?,
