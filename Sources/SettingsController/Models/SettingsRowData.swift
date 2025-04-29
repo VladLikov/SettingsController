@@ -78,11 +78,11 @@ public enum SettingsRowData {
             case .telegram(_):
                 SettingsIcon(image: UIImage(resource: .telegram),
                              color: .init(hex: "0091FF"),
-                             inset: .init(1))
+                             inset: .init(top: 1, left: 1, bottom: 1, right: 1))
             case .vkGroup(_):
                 SettingsIcon(image: UIImage(resource: .vk),
                              color: .systemBlue,
-                             inset: .init(5))
+                             inset: .init(top: 5, left: 5, bottom: 5, right: 5))
             default: nil
                 
             }

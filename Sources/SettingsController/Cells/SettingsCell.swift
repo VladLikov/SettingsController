@@ -80,8 +80,11 @@ extension SettingsCell {
     
     public func configure(title: String?, icon: SettingsIcon?, detail: String? = nil) {
         
+        Task { [weak self] in
+            self?.iconImageView.image = await icon?.generateImage()
+        }
+        
         titleLabel.text = title
-        iconImageView.image = icon?.image
         iconImageView.backgroundColor = icon?.color
         detailLabel.text = detail
 
