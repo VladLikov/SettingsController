@@ -23,7 +23,7 @@ Powered by Swift Package Manager. Designed to be dropped in and used in minutes.
 Using [Swift Package Manager](https://developer.apple.com/documentation/swift_packages):
 
 ```swift
-.package(url: "https://github.com/vladlikov/SettingsController.git", from: "1.0.0")
+.package(url: "https://github.com/vladlikov/SettingsController.git", from: "2.0.0")
 ```
 
 Then add "SettingsController" to your target dependencies.
