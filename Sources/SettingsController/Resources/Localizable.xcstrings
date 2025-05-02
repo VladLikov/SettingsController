@@ -23,12 +23,92 @@
         }
       }
     },
+    "Adds taptic feedback to various actions in the app." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавляет тактильную отдачу на различные действия в приложении."
+          }
+        }
+      }
+    },
+    "App color" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цвет приложения"
+          }
+        }
+      }
+    },
+    "Appearance" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Внешний вид"
+          }
+        }
+      }
+    },
+    "Automatically" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Автоматически"
+          }
+        }
+      }
+    },
+    "Blue" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синий"
+          }
+        }
+      }
+    },
     "Contact developer" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Связаться с разработчиком"
+          }
+        }
+      }
+    },
+    "Dark Theme" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всегда тёмная"
+          }
+        }
+      }
+    },
+    "Green" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зеленый"
+          }
+        }
+      }
+    },
+    "Hard" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сильная"
           }
         }
       }
@@ -66,8 +146,55 @@
         }
       }
     },
+    "Light" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лёгкая"
+          }
+        }
+      }
+    },
+    "Light & Dark theme" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Светлая и Тёмная тема"
+          }
+        }
+      }
+    },
+    "Light Theme" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всегда светлая"
+          }
+        }
+      }
+    },
     "Mail is not installed." : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Почта не установлена."
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Средняя"
+          }
+        }
+      }
     },
     "More apps" : {
       "extractionState" : "manual",
@@ -102,6 +229,26 @@
         }
       }
     },
+    "Orange" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оранжевый"
+          }
+        }
+      }
+    },
+    "Pink" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розовый"
+          }
+        }
+      }
+    },
     "Premium" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -124,6 +271,26 @@
         }
       }
     },
+    "Purple" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фиолетовый"
+          }
+        }
+      }
+    },
+    "Red" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Красный"
+          }
+        }
+      }
+    },
     "Select an item" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -142,6 +309,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Поделиться приложением"
+          }
+        }
+      }
+    },
+    "Taptic Engine" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тактильная отдача"
+          }
+        }
+      }
+    },
+    "Taptic Force" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сила отдачи"
           }
         }
       }
@@ -176,6 +363,16 @@
         }
       }
     },
+    "When the switch is on, the system appearance is used." : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "При включенном индикаторе повторяется системное оформление."
+          }
+        }
+      }
+    },
     "Write a review" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -183,6 +380,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оставить отзыв"
+          }
+        }
+      }
+    },
+    "Yellow" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Желтый"
           }
         }
       }

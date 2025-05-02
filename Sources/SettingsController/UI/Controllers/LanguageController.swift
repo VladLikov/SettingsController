@@ -32,7 +32,7 @@ class LanguageController: UITableViewController {
         super.viewDidLoad()
         
         tableView.register(UITableViewCell.self)
-        tableView.register(SubtitleTableViewCell.self)
+        tableView.register(SubtitleCell.self)
         
         navigationItem.largeTitleDisplayMode = .never
     }
@@ -67,7 +67,7 @@ extension LanguageController {
                     
         if section == 0 {
             
-            let cell = tableView.dequeueReusableCell(ofType: SubtitleTableViewCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(ofType: SubtitleCell.self, for: indexPath)
             
             let languageCode = languages[row]
             

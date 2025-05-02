@@ -28,13 +28,20 @@ public enum SettingsRowData {
         case moreApps(developerID: String)
         
         case contactDeveloper(email: String)
-        case language(String)
+        case language(email: String)
 
         case telegram(id: String)
         case vkGroup(id: String)
 
+        case appearance(theme: ThemeStorage)
+        case tapticEngine(taptic: TapticStorage)
+
         var title: String? {
             switch self {
+            case .appearance:
+                NSLocalizedString("Appearance", bundle: .module, comment: "")
+            case .tapticEngine:
+                NSLocalizedString("Taptic Engine", bundle: .module, comment: "")
             case .shareApp:
                 NSLocalizedString("Share app", bundle: .module, comment: "")
             case .rateApp:
@@ -58,43 +65,53 @@ public enum SettingsRowData {
         
         var icon: SettingsIcon? {
             switch self {
+            case .appearance:
+                SettingsIcon(image: .init(.lightbulb.fill),
+                             color: .systemIndigo,
+                             inset: .init())
+                
+            case .tapticEngine:
+                SettingsIcon(image: .init(.sun.minFill),
+                             color: .systemOrange,
+                             inset: .init())
+                
             case .shareApp(_):
-                SettingsIcon(image: UIImage(.square.andArrowUpFill),
+                SettingsIcon(image: .init(.square.andArrowUpFill),
                              color: .systemOrange,
                              inset: .init())
 
             case .rateApp(_):
-                SettingsIcon(image: UIImage(.heart.fill),
+                SettingsIcon(image: .init(.heart.fill),
                              color: .systemRed,
                              inset: .init())
 
             case .moreApps(_):
-                SettingsIcon(image: UIImage(.square.stack_3dUpFill),
+                SettingsIcon(image: .init(.square.stack_3dUpFill),
                              color: .systemIndigo,
                              inset: .init())
 
             case .premium(_, let color, _, _):
-                SettingsIcon(image: UIImage(.star.fill),
+                SettingsIcon(image: .init(.star.fill),
                              color: color,
                              inset: .init())
                 
             case .contactDeveloper(_):
-                SettingsIcon(image: UIImage(.envelope.fill),
+                SettingsIcon(image: .init(.envelope.fill),
                              color: .systemBlue,
                              inset: .init())
                 
             case .language(_):
-                SettingsIcon(image: UIImage(.globe),
+                SettingsIcon(image: .init(.globe),
                              color: .gray,
                              inset: .init())
                 
             case .telegram(_):
-                SettingsIcon(image: UIImage(resource: .telegram),
+                SettingsIcon(image: .init(resource: .telegram),
                              color: .init(hex: "0091FF"),
                              inset: .init(1))
                 
             case .vkGroup(_):
-                SettingsIcon(image: UIImage(resource: .vk),
+                SettingsIcon(image: .init(resource: .vk),
                              color: .systemBlue,
                              inset: .init(5))
                 

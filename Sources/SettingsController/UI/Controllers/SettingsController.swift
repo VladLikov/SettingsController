@@ -7,23 +7,10 @@ import AlertKit
 import SafeSFSymbols
 import StoreKit
 
-// MARK: - SettingsControllerDelegate
-
-public protocol SettingsControllerDelegate: AnyObject {
-    func settingsDidDismiss(_ initialValues: [AnyKeyPath: Any]?)
-    
-    func settingsUserInfoRequested(_ request: (UserInfo) -> Void)
-    func settingsPremiumStatusRequested(_ request: (Bool) -> Void)
-}
-
 // MARK: - SettingsController
 
 public final class SettingsController: UITableViewController {
-    
-    // MARK: Properties [Public]
-
-    public weak var delegate: SettingsControllerDelegate?
-        
+            
     // MARK: Present Settings
     
     @discardableResult
@@ -92,6 +79,8 @@ public final class SettingsController: UITableViewController {
         
         clearsSelectionOnViewWillAppear = true
         
+        setNotifications()
+        
         for (idx, section) in sections.enumerated() {
             if case .ourApps = section.kind {
                 loadOurApps(for: idx)
@@ -127,7 +116,7 @@ public final class SettingsController: UITableViewController {
 
         Task { @MainActor in
             do {
-                let apps = try await AppsService.fetch(developerId: developerID, limit: limit)
+                let apps = try await AppsLoader.fetch(developerId: developerID, limit: limit)
 
                 let rows = apps.map { SettingsRowData.app(.loaded($0)) }
 
@@ -302,6 +291,10 @@ extension SettingsController {
                     pushVC(LanguageController(email: email),
                            navigationTitle: NSLocalizedString("Language", bundle: .module, comment: ""))
                     
+                case .appearance(let theme):
+                    pushVC(AppearanceController(themeStorage: theme),
+                           navigationTitle: NSLocalizedString("Appearance", bundle: .module, comment: ""))
+                    
                 case .telegram(let channelURL):
                     openTelegramChannel(channelURL)
                     
@@ -313,6 +306,9 @@ extension SettingsController {
                     pushVC(vcType.init(),
                            navigationTitle: NSLocalizedString("User", bundle: .module, comment: ""))
 
+                case .tapticEngine(let taptic):
+                    pushVC(TapticEngineController(tapticStorage: taptic),
+                           navigationTitle: NSLocalizedString("Taptic Engine", bundle: .module, comment: ""))
                 }
      
             case .app(.loaded(let app)):
@@ -361,7 +357,7 @@ extension SettingsController {
         
         navigationController?.dismiss(animated: true, completion: { [weak self] in
             guard let self else { return }
-            delegate?.settingsDidDismiss(configuration.initialValues)
+            configuration.delegate?.settingsDidDismiss(configuration.initialValues)
         })
                 
     }
@@ -389,16 +385,16 @@ extension SettingsController {
             switch defaultRow {
 
             case .premium(_, let color, let vc, let action):
-                delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
+                configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
                     guard let self else { return }
                     rows[indexPath.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: color, vc: vc, action: action))
                     self.sections[indexPath.section].kind = .rows(rows)
                     self.tableView?.reloadRows(at: [indexPath], with: .fade)
                     self.indexPathToRefresh = nil
                 }
-
+                
             case .user(_, _, let vc):
-                delegate?.settingsUserInfoRequested { [weak self] user in
+                configuration.delegate?.settingsUserInfoRequested { [weak self] user in
                     guard let self else { return }
                     rows[indexPath.row] = .defaultRow(.user(user.name, user.avatar, vc))
                     self.sections[indexPath.section].kind = .rows(rows)
@@ -583,5 +579,44 @@ extension SettingsController: @preconcurrency SKOverlayDelegate {
         tableView.contentInset.bottom = 0
     }
     
+}
+
+// MARK: - Set Notifications
+
+extension SettingsController {
+    
+    private func setNotifications() {
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleThemeChange(_:)),
+            name: .themeDidChange,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTapticChange(_:)),
+            name: .tapticDidChange,
+            object: nil
+        )
+    }
+}
+
+// MARK: - Handle Notifications
+
+extension SettingsController {
+    
+    @objc
+    private func handleThemeChange(_ notification: Notification) {
+        guard let theme = notification.object as? ThemeStorage else { return }
+        configuration.delegate?.settingsDidUpdateTheme(theme)
+    }
+    
+    @objc
+    private func handleTapticChange(_ notification: Notification) {
+        guard let taptic = notification.object as? TapticStorage else { return }
+        configuration.delegate?.settingsDidUpdateTaptic(taptic)
+    }
 }
 

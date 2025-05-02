@@ -7,25 +7,7 @@
 
 import Foundation
 
-public struct AppItem: Sendable {
-    let id: Int
-    let name: String
-    let iconURL: URL
-    let storeURL: URL
-}
-
-private struct LookupResponse: Decodable {
-    let results: [Raw]
-    struct Raw: Decodable {
-        let kind: String?
-        let trackId: Int?
-        let trackName: String?
-        let artworkUrl100: String?
-        let trackViewUrl: String?
-    }
-}
-
-public enum AppsService {
+public enum AppsLoader {
     
     public static func fetch(developerId: String, limit: Int) async throws -> [AppItem] {
         
@@ -47,5 +29,16 @@ public enum AppsService {
             }
             .prefix(limit)
             .map { $0 }
+    }
+}
+
+private struct LookupResponse: Decodable {
+    let results: [Raw]
+    struct Raw: Decodable {
+        let kind: String?
+        let trackId: Int?
+        let trackName: String?
+        let artworkUrl100: String?
+        let trackViewUrl: String?
     }
 }
