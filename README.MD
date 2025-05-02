@@ -1,9 +1,3 @@
-Вот готовый README.md для твоей библиотеки SettingsController, заточенный под SwiftPM, UIKit и твоё имя (vladlikov) на GitHub. Включает пример использования, ссылку на делегат и всё, что нужно для подключения.
-
-⸻
-
-
-
 # SettingsController
 
 🎛️ A modular, customizable UIKit settings screen for iOS apps.  
