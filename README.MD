@@ -24,6 +24,7 @@ Using [Swift Package Manager](https://developer.apple.com/documentation/swift_pa
 
 ```swift
 .package(url: "https://github.com/vladlikov/SettingsController.git", from: "1.0.0")
+```
 
 Then add "SettingsController" to your target dependencies.
 
