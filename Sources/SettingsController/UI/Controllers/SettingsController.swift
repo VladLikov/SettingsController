@@ -446,7 +446,7 @@ extension SettingsController {
             AlertKitAPI.present(
                 title: NSLocalizedString("Premium is active", bundle: .module, comment: ""),
                 icon: .custom(UIImage(.star.fill)),
-                style: .iOS16AppleMusic,
+                style: .iOS17AppleMusic,
                 haptic: .success
             )
             
