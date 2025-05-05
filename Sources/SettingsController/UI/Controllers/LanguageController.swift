@@ -6,7 +6,9 @@
 //
 
 import UIKit
+#if canImport(MessageUI)
 import MessageUI
+#endif
 
 // MARK: - LanguageController
 
@@ -114,7 +116,9 @@ extension LanguageController {
                 UIApplication.shared.open(url)
             }
         } else if section == 1 {
+#if canImport(MessageUI)
             sendMail()
+#endif
         }
                 
     }
@@ -122,7 +126,7 @@ extension LanguageController {
 }
 
 // MARK: - Mail
-
+#if canImport(MessageUI)
 extension LanguageController: @preconcurrency MFMailComposeViewControllerDelegate {
     
     func mailComposeController(_ controller: MFMailComposeViewController,
@@ -143,3 +147,4 @@ extension LanguageController: @preconcurrency MFMailComposeViewControllerDelegat
                 
     }
 }
+#endif
