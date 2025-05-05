@@ -5,7 +5,6 @@
 //  Created by Влад Лыков on 12.09.2024.
 //
 
-#if canImport(MessageUI)
 import MessageUI
 import AlertKit
 
@@ -46,4 +45,3 @@ public extension MFMailComposeViewController {
         return mail
     }
 }
-#endif
