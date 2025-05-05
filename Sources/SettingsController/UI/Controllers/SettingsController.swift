@@ -2,10 +2,13 @@
 // https://docs.swift.org/swift-book
 
 import UIKit
-import MessageUI
 import AlertKit
 import SafeSFSymbols
 import StoreKit
+
+#if canImport(MessageUI)
+import MessageUI
+#endif
 
 // MARK: - SettingsController
 
@@ -285,7 +288,9 @@ extension SettingsController {
                     presentPremium(hasPremium, premiumVC: vc, action: action)
                     
                 case .contactDeveloper(let email):
+#if canImport(MessageUI)
                     sendMail(email)
+#endif
                     
                 case .language(let email):
                     pushVC(LanguageController(email: email),
@@ -464,6 +469,7 @@ extension SettingsController {
         
     }
 
+#if canImport(MessageUI)
     private func sendMail(_ email: String) {
         
         guard MFMailComposeViewController.canSendEmail() else { return }
@@ -475,6 +481,7 @@ extension SettingsController {
         present(mail, animated: true)
         
     }
+#endif
     
     private func shareApp(_ appID: String, at indexPath: IndexPath) {
         guard let cell = tableView.cellForRow(at: indexPath) as? SettingsCell else { return }
@@ -556,6 +563,7 @@ extension SettingsController {
 
 // MARK: - MFMailComposeViewControllerDelegate
 
+#if canImport(MessageUI)
 extension SettingsController: @preconcurrency MFMailComposeViewControllerDelegate {
     
     public func mailComposeController(_ controller: MFMailComposeViewController,
@@ -565,6 +573,7 @@ extension SettingsController: @preconcurrency MFMailComposeViewControllerDelegat
         controller.dismiss(animated: true)
     }
 }
+#endif
 
 // MARK: - SKOverlayDelegate
 
