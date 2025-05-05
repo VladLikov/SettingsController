@@ -312,7 +312,7 @@ extension SettingsController {
                 }
      
             case .app(.loaded(let app)):
-                openApp(app.id)
+                openApp(app.id, url: app.storeURL)
                 
             default:
                 break
@@ -337,14 +337,18 @@ extension SettingsController {
                 
     }
     
-    private func openApp(_ id: Int) {
+    private func openApp(_ id: Int, url: URL) {
         
+#if !os(visionOS)
         let vc = SKStoreProductViewController()
         Task { @MainActor in
             let loaded = try await vc.loadProduct(withParameters: [SKStoreProductParameterITunesItemIdentifier: id])
             guard loaded else { return }
             present(vc, animated: true)
         }
+#else
+        UIApplication.shared.open(url)
+#endif
     }
 }
 
@@ -569,8 +573,9 @@ extension SettingsController: @preconcurrency SKOverlayDelegate {
   
     public func storeOverlayDidFinishPresentation(_ overlay: SKOverlay,
                                                   transitionContext: SKOverlay.TransitionContext) {
-        
+#if !os(visionOS)
         tableView.contentInset.bottom = transitionContext.endFrame.size.height
+#endif
     }
     
     public func storeOverlayDidFinishDismissal(_ overlay: SKOverlay,
