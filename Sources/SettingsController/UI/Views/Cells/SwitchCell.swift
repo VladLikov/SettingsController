@@ -15,7 +15,7 @@ class SwitchCell: UITableViewCell {
 //        return switchControl
 //    }()
     
-#if targetEnvironment(tvOS)
+#if os(tvOS)
     public lazy var switchControl: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("OFF", for: .normal)
