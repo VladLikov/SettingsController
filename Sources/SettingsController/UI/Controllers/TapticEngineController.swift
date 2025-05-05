@@ -139,7 +139,9 @@ extension TapticEngineController {
             taptic.tapticStyle = indexPath.row
             SettingsNotifier.didChangeTaptic(taptic)
             
+#if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()
+#endif
         }
         
     }

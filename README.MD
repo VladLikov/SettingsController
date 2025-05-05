@@ -1,9 +1,3 @@
-Вот готовый README.md для твоей библиотеки SettingsController, заточенный под SwiftPM, UIKit и твоё имя (vladlikov) на GitHub. Включает пример использования, ссылку на делегат и всё, что нужно для подключения.
-
-⸻
-
-
-
 # SettingsController
 
 🎛️ A modular, customizable UIKit settings screen for iOS apps.  
@@ -29,7 +23,8 @@ Powered by Swift Package Manager. Designed to be dropped in and used in minutes.
 Using [Swift Package Manager](https://developer.apple.com/documentation/swift_packages):
 
 ```swift
-.package(url: "https://github.com/vladlikov/SettingsController.git", from: "1.0.0")
+.package(url: "https://github.com/vladlikov/SettingsController.git", from: "2.0.0")
+```
 
 Then add "SettingsController" to your target dependencies.
 
@@ -39,6 +34,7 @@ Then add "SettingsController" to your target dependencies.
 
 1. Create config
 
+```swift
 import SettingsController
 
 let config = SettingsConfiguration(
@@ -60,10 +56,13 @@ let config = SettingsConfiguration(
     initialValues: .init(appColorIndex: 0, tapticStyle: 1),
     delegate: self
 )
+```
 
 2. Present controller
 
+```swift
 SettingsController.present(from: self, with: config)
+```
 
 ✅ Can be presented modally or pushed into navigation stack.
 
@@ -71,6 +70,7 @@ SettingsController.present(from: self, with: config)
 
 👤 Implement Delegate
 
+```swift
 extension YourViewController: SettingsControllerDelegate {
     func settingsUserInfoRequested() -> UserInfo? {
         .init(name: "John Appleseed", avatar: UIImage(named: "avatar"))
@@ -84,16 +84,19 @@ extension YourViewController: SettingsControllerDelegate {
         dismiss(animated: true)
     }
 }
+```
 
 More hooks available:
+```swift
 settingsAppColorDidChange(_:), settingsTapticStyleDidChange(_:), settingsIsPremiumRequested()
-
+```
 ⸻
 
 🌙 Appearance & Haptics
 
 You control app theme & haptics via two protocols:
 
+```swift
 protocol ThemeStorage {
     var appColor: UIColor { get set }
     var appColorIndex: Int { get set }
@@ -105,6 +108,7 @@ protocol TapticStorage {
     var tapticStyle: Int { get set }
     var tapticEngine: Bool { get set }
 }
+```
 
 Provide your own storage, e.g. backed by UserDefaults.
 

@@ -167,7 +167,9 @@ extension AppearanceController {
                 tableView.reloadSections(IndexSet(integer: 2), with: .fade)
             }
             
+#if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()
+#endif
                         
         } else if indexPath.section == 2 {
             
@@ -179,7 +181,9 @@ extension AppearanceController {
             theme.interfaceStyle = indexPath.row + 1
             SettingsNotifier.didChangeTheme(theme)
             
+#if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()
+#endif
 
         }
                 
