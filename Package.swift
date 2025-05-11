@@ -12,7 +12,7 @@ let package = Package(
             targets: ["SettingsController"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/VladLikov/AlertKit.git", .upToNextMajor(from: "5.1.9")),
+        .package(url: "https://github.com/sparrowcode/AlertKit.git", .upToNextMajor(from: "5.1.9")),
         .package(url: "https://github.com/sparrowcode/SafeSFSymbols.git", .upToNextMajor(from: "2.0.1")),
     ],
     targets: [
