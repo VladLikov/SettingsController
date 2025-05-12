@@ -14,9 +14,9 @@ enum TapticEngineStyle: Int, CaseIterable {
     
     var title: String {
         switch self {
-        case .light:  NSLocalizedString("Light", comment: "")
-        case .medium: NSLocalizedString("Medium", comment: "")
-        case .hard:   NSLocalizedString("Hard", comment: "")
+        case .light:  NSLocalizedString("Light", bundle: .module, comment: "")
+        case .medium: NSLocalizedString("Medium", bundle: .module, comment: "")
+        case .hard:   NSLocalizedString("Hard", bundle: .module, comment: "")
         }
     }
 }

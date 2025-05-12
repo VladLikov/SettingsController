@@ -65,7 +65,7 @@ extension TapticEngineController {
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         
         if section == 1 {
-            return NSLocalizedString("Taptic Force", comment: "")
+            return NSLocalizedString("Taptic Force", bundle: .module, comment: "")
         }
         
         return nil
@@ -75,7 +75,7 @@ extension TapticEngineController {
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         
         if section == 0 {
-            return NSLocalizedString("Adds taptic feedback to various actions in the app.", comment: "")
+            return NSLocalizedString("Adds taptic feedback to various actions in the app.", bundle: .module, comment: "")
         }
         
         return nil

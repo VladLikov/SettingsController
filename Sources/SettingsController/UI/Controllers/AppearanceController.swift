@@ -61,16 +61,16 @@ extension AppearanceController {
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if section == 0 {
-            return NSLocalizedString("App color", comment: "")
+            return NSLocalizedString("App color", bundle: .module, comment: "")
         } else if section == 1 {
-            return NSLocalizedString("Light & Dark theme", comment: "")
+            return NSLocalizedString("Light & Dark theme", bundle: .module, comment: "")
         }
         return nil
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if section == 2 {
-            return NSLocalizedString("When the switch is on, the system appearance is used.", comment: "")
+            return NSLocalizedString("When the switch is on, the system appearance is used.", bundle: .module, comment: "")
         }
         return nil
     }
@@ -97,7 +97,7 @@ extension AppearanceController {
             
             let cell = tableView.dequeueReusableCell(ofType: SwitchCell.self, for: indexPath)
             
-            cell.textLabel?.text = NSLocalizedString("Automatically", comment: "")
+            cell.textLabel?.text = NSLocalizedString("Automatically", bundle: .module, comment: "")
             
             cell.switchControl.isOn = theme.autoTheme
             cell.switchControl.onTintColor = theme.appColor
@@ -115,8 +115,8 @@ extension AppearanceController {
             cell.selectionStyle = .none
             
             cell.textLabel?.text =
-            [NSLocalizedString("Light Theme", comment: ""),
-             NSLocalizedString("Dark Theme", comment: "")
+            [NSLocalizedString("Light Theme", bundle: .module, comment: ""),
+             NSLocalizedString("Dark Theme", bundle: .module, comment: "")
             ][row]
             
             let isSelected = row == theme.interfaceStyle - 1
