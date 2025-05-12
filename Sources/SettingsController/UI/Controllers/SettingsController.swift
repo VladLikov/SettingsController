@@ -110,7 +110,7 @@ public final class SettingsController: UITableViewController {
         
         let section = sections[sectionIndex]
 
-        guard case let .ourApps(developerID, limit) = section.kind else {
+        guard case let .ourApps(developerID, limit, appID) = section.kind else {
             return
         }
 
@@ -118,7 +118,9 @@ public final class SettingsController: UITableViewController {
             do {
                 let apps = try await AppsLoader.fetch(developerId: developerID, limit: limit)
 
-                let rows = apps.map { SettingsRowData.app(.loaded($0)) }
+                let filteredApps = apps.filter { String($0.id) != appID }
+                
+                let rows = filteredApps.map { SettingsRowData.app(.loaded($0)) }
 
                 sections[sectionIndex].kind = .rows(rows)
                 tableView.reloadSections(IndexSet(integer: sectionIndex), with: .automatic)
@@ -151,7 +153,7 @@ extension SettingsController {
         switch sections[section].kind {
         case .rows(let rows):
             return rows.count
-        case .ourApps(_, let limit):
+        case .ourApps(_, let limit, _):
             return limit
         }
    }
