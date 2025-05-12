@@ -143,11 +143,12 @@ extension AppearanceController {
         
         if indexPath.section == 0 {
                         
-            guard let oldAppColor = AppColor(rawValue: theme.appColorIndex) else {
+            guard let oldAppColor = AppColor(rawValue: theme.appColorRawValue),
+                  let oldIndex = appColorArray.firstIndex(where: { $0 == oldAppColor }) else {
                 return
             }
             
-            let oldIndexPath = IndexPath(row: oldAppColor.rawValue, section: indexPath.section)
+            let oldIndexPath = IndexPath(row: oldIndex, section: indexPath.section)
 
             tableView.cellForRow(at: oldIndexPath)?.accessoryType = .none
             tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
