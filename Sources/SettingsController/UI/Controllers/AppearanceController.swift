@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import ReviewHelper
 
 // MARK: - AppearanceController
 
@@ -39,7 +40,6 @@ class AppearanceController: UITableViewController {
 
         navigationItem.largeTitleDisplayMode = .never
     }
-    
 }
 
 // MARK: - UITableViewDataSource
@@ -167,6 +167,8 @@ extension AppearanceController {
             if !theme.autoTheme {
                 tableView.reloadSections(IndexSet(integer: 2), with: .fade)
             }
+            
+            AppReview().requestImmediately()
             
 #if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()

@@ -1,5 +1,5 @@
 {
-  "originHash" : "648197f08269b5d1c43ca21d436737720599cfbd49e5e92e7f2ad03213107f9d",
+  "originHash" : "b6499efe0024af0e06d4fd864fb1a02947e26e3aa4e193cb5917c97ea96e0d42",
   "pins" : [
     {
       "identity" : "alertkit",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "3b73be8db5a7e7efaf474c6ed919f5a437d843c9",
         "version" : "5.1.9"
+      }
+    },
+    {
+      "identity" : "reviewhelper",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/VladLikov/ReviewHelper.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "cbe8551f17b6bceff6ff3b3d840150e54dcc9944"
       }
     },
     {
