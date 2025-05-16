@@ -22,7 +22,7 @@ let package = Package(
             dependencies: [
                 "AlertKit",
                 "SafeSFSymbols",
-                "AppReview",
+                "ReviewHelper",
             ],
             resources: [.process("Resources")]),
     ]
