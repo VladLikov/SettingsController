@@ -57,6 +57,10 @@ public final class SettingsController: UITableViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -74,7 +78,10 @@ public final class SettingsController: UITableViewController {
                 
         navigationItem.largeTitleDisplayMode = .automatic
         
-        if presentationController != nil {
+        if let nav = navigationController,
+           nav.presentingViewController != nil,
+           nav.viewControllers.first === self
+        {
             navigationItem.rightBarButtonItem = closeButton
         }
         
@@ -368,9 +375,7 @@ extension SettingsController {
             guard let self else { return }
             configuration.delegate?.settingsDidDismiss(configuration.initialValues)
         })
-                
     }
-    
 }
 
 // MARK: - Private Methods
@@ -419,28 +424,6 @@ extension SettingsController {
             break
         }
     }
-    
-//    private func reloadRowsIfNeeded() {
-//        
-//        guard let indexPathToRefresh else { return }
-//
-//        let row = sections[indexPathToRefresh.section].rows[indexPathToRefresh.row]
-//        
-//        if case .defaultRow(let defaultRow) = row, case .premium(_, let color, let vc, let action) = defaultRow {
-//            delegate?.settingsPremiumStatusRequested { [weak self]  isPremium in
-//                self?.sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: color, vc: vc, action: action))
-//            }
-//        } else if case .defaultRow(let defaultRow) = row, case .user(_, _, let vc) = defaultRow {
-//            delegate?.settingsUserInfoRequested { [weak self] user in
-//                self?.sections[indexPathToRefresh.section].rows[indexPathToRefresh.row] = .defaultRow(.user(user.name, user.avatar, vc))
-//            }
-//        }
-//        
-//        tableView?.reloadRows(at: [indexPathToRefresh], with: .fade)
-//        
-//        self.indexPathToRefresh = nil
-//        
-//    }
     
     private func presentPremium(_ hasPremium: Bool,
                                 premiumVC: UIViewController.Type?,
