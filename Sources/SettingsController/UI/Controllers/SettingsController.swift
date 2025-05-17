@@ -73,8 +73,11 @@ public final class SettingsController: UITableViewController {
         }
                 
         navigationItem.largeTitleDisplayMode = .automatic
-        navigationItem.rightBarButtonItem = closeButton
-
+        
+        if presentationController != nil {
+            navigationItem.rightBarButtonItem = closeButton
+        }
+        
         navigationController?.navigationBar.prefersLargeTitles = true
         
         clearsSelectionOnViewWillAppear = true
