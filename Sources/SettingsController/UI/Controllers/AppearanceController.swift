@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import ReviewHelper
 
 // MARK: - AppearanceController
 
@@ -168,7 +167,7 @@ extension AppearanceController {
                 tableView.reloadSections(IndexSet(integer: 2), with: .fade)
             }
             
-            AppReview().requestImmediately()
+            Helpers.requestReview()
             
 #if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()
