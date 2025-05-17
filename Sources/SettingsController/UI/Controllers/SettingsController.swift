@@ -48,7 +48,7 @@ public final class SettingsController: UITableViewController {
     
     // MARK: Life Cycle
     
-    init(configuration: SettingsConfiguration) {
+    public init(configuration: SettingsConfiguration) {
         self.configuration = configuration
         super.init(style: .insetGrouped)
     }
