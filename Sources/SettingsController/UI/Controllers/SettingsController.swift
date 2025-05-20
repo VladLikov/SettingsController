@@ -89,7 +89,7 @@ public final class SettingsController: UITableViewController {
         }
         
         if let bottomInset = configuration.insets?.bottom {
-            tableView?.contentInset.top = bottomInset
+            tableView?.contentInset.bottom = bottomInset
         }
                 
         navigationItem.largeTitleDisplayMode = .automatic
