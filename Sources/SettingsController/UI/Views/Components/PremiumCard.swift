@@ -164,7 +164,7 @@ struct StarFlashBackground: View {
     // MARK: – создаём 1–3 звезды, каждая со своим offset’ом
     private func spawn() {
         let count = [1,1,1,1,1,1,1,1,2,3].randomElement()!
-        var newStars = (0..<count).map { _ in Star.random }
+        let newStars = (0..<count).map { _ in Star.random }
 
         for index in newStars.indices {
             let starID = newStars[index].id

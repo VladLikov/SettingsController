@@ -7,7 +7,7 @@
 
 import UIKit
 
-class SwitchCell: UITableViewCell {
+public class SwitchCell: UITableViewCell {
     
     public lazy var switchControl: UISwitch = {
         let switchControl = UISwitch()
@@ -15,7 +15,7 @@ class SwitchCell: UITableViewCell {
         return switchControl
     }()
     
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         setupView()
