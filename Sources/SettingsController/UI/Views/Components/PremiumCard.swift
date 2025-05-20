@@ -49,7 +49,7 @@ struct PremiumCard: View {
                 image
                     .resizable()
                     .renderingMode(.template)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(.white.opacity(0.93))
                     .frame(width: 25, height: 25)
                     .padding(.leading, 20)
 
