@@ -224,6 +224,7 @@ extension SettingsController {
             cell.configure(image: payload.image,
                            title: payload.title,
                            subtitle: payload.subtitle) { [weak self] in
+                self?.indexPathToRefresh = indexPath
                 self?.presentPremium(payload.isPremium, premiumVC: payload.vc, action: payload.action)
             }
             return cell
@@ -400,12 +401,23 @@ extension SettingsController {
 
         // Получаем секцию
         let section = sections[indexPath.section]
-
+        
         // Проверяем, что она содержит .rows
         guard case var .rows(rows) = section.kind else { return }
 
         let row = rows[indexPath.row]
 
+        if case .premiumCard(let item) = section.kind {
+            configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
+                guard let self else { return }
+                rows[indexPath.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: item.color, vc: item.vc, action: item.action))
+                self.sections[indexPath.section].kind = .rows(rows)
+                self.tableView?.reloadRows(at: [indexPath], with: .fade)
+                self.indexPathToRefresh = nil
+            }
+            return
+        }
+        
         switch row {
 
         case .defaultRow(let defaultRow):
