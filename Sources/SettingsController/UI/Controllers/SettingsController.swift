@@ -201,8 +201,8 @@ extension SettingsController {
                 
                 var detail: String?
                  
-                if case .premium(let hasPremium, _, _, _) = defaultRow {
-                    detail = hasPremium ?
+                if case .premium(let payload) = defaultRow {
+                    detail = payload.isPremium ?
                     NSLocalizedString("Active", bundle: .module, comment: "") :
                     NSLocalizedString("Not active", bundle: .module, comment: "")
                 }
@@ -221,11 +221,9 @@ extension SettingsController {
             
         case .premiumCard(let payload):
             let cell = tableView.dequeueReusableCell(ofType: PremiumCell.self, for: indexPath)
-            cell.configure(image: payload.image,
-                           title: payload.title,
-                           subtitle: payload.subtitle) { [weak self] in
+            cell.configure(payload: payload) { [weak self] in
                 self?.indexPathToRefresh = indexPath
-                self?.presentPremium(payload.isPremium, premiumVC: payload.vc, action: payload.action)
+                self?.presentPremium(payload.base)
             }
             return cell
         }
@@ -306,9 +304,9 @@ extension SettingsController {
                 case .moreApps(let developerID):
                     moreApps(developerID)
 
-                case .premium(let hasPremium, _, let vc, let action):
+                case .premium(let payload):
                     indexPathToRefresh = indexPath
-                    presentPremium(hasPremium, premiumVC: vc, action: action)
+                    presentPremium(payload)
                     
                 case .contactDeveloper(let email):
                     sendMail(email)
@@ -407,10 +405,11 @@ extension SettingsController {
 
         let row = rows[indexPath.row]
 
-        if case .premiumCard(let item) = section.kind {
+        if case .premiumCard(let payloadCard) = section.kind {
             configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
                 guard let self else { return }
-                rows[indexPath.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: item.color, vc: item.vc, action: item.action))
+                let payload = payloadCard.base
+                rows[indexPath.row] = .defaultRow(.premium(.init(isPremium: isPremium, color: payload.color, vc: payload.vc, action: payload.action)))
                 self.sections[indexPath.section].kind = .rows(rows)
                 self.tableView?.reloadRows(at: [indexPath], with: .fade)
                 self.indexPathToRefresh = nil
@@ -423,10 +422,11 @@ extension SettingsController {
         case .defaultRow(let defaultRow):
             switch defaultRow {
 
-            case .premium(_, let color, let vc, let action):
+            case .premium(let payload):
                 configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
                     guard let self else { return }
-                    rows[indexPath.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: color, vc: vc, action: action))
+//                    rows[indexPath.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: color, vc: vc, action: action))
+                    rows[indexPath.row] = .defaultRow(.premium(.init(isPremium: isPremium, color: payload.color, vc: payload.vc, action: payload.action)))
                     self.sections[indexPath.section].kind = .rows(rows)
                     self.tableView?.reloadRows(at: [indexPath], with: .fade)
                     self.indexPathToRefresh = nil
@@ -450,11 +450,9 @@ extension SettingsController {
         }
     }
     
-    private func presentPremium(_ hasPremium: Bool,
-                                premiumVC: UIViewController.Type?,
-                                action: SettingsRowData.DefaultRow.PremiumAction?) {
+    private func presentPremium(_ payload: PremiumPayload) {
         
-        if hasPremium {
+        if payload.isPremium {
             
             AlertKitAPI.present(
                 title: NSLocalizedString("Premium is active", bundle: .module, comment: ""),
@@ -463,7 +461,7 @@ extension SettingsController {
                 haptic: .success
             )
             
-        } else if let premiumVC {
+        } else if let premiumVC = payload.vc {
             
             let vc = premiumVC.init()
             if UIDevice.current.userInterfaceIdiom == .phone {
@@ -471,7 +469,7 @@ extension SettingsController {
             }
             present(vc, animated: true)
                         
-        } else if let action {
+        } else if let action = payload.action {
             action(self)
         }
         

@@ -11,20 +11,18 @@ struct PremiumCard: View {
     var image: Image
     var title: String
     var subtitle: String
+    var color: UIColor
     var onUpgrade: () -> Void
 
     @State private var isPressed = false
     @State private var hologramPhase = 0.0
-
+    
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [
-                            Color(red: 0.2196, green: 0.0078, blue: 0.8549),
-                            Color(red: 0.3647, green: 0.0666, blue: 0.9686)
-                        ],
+                        colors: makeGradientColors(from: color),
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -78,6 +76,24 @@ struct PremiumCard: View {
                 .padding(.trailing, 14)
             }
         }
+    }
+    
+    private func makeGradientColors(from color: UIColor) -> [Color] {
+        guard let components = color.cgColor.components, components.count >= 3 else {
+            return [Color(color), Color(color)] // fallback
+        }
+        let r = components[0]
+        let g = components[1]
+        let b = components[2]
+        
+        // Чуть осветляем второй цвет для верхней части
+        let lightTop = UIColor(
+            red: min(r + 0.07, 1.0),
+            green: min(g + 0.12, 1.0),
+            blue: min(b + 0.18, 1.0),
+            alpha: 1
+        )
+        return [Color(color), Color(lightTop)]
     }
 }
 

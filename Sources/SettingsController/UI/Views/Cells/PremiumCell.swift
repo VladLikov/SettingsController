@@ -31,6 +31,7 @@ final class PremiumCell: UITableViewCell {
             image: Image(uiImage: UIImage(systemName: "bolt.circle.fill")!),
             title: "Checker+",
             subtitle: "One-time purchase",
+            color: .systemBlue,
             onUpgrade: { print("Upgrade tapped") }
         )
         let host = UIHostingController(rootView: swiftUIView)
@@ -48,12 +49,13 @@ final class PremiumCell: UITableViewCell {
     }
     
     // MARK: - Поддержка переиспользования (если нужно динамически менять данные)
-    func configure(image: UIImage, title: String, subtitle: String, onUpgrade: @escaping () -> Void) {
+    func configure(payload: PremiumCardPayload, onUpgrade: @escaping () -> Void) {
         // Пересоздавать rootView — единственный нормальный способ для HostingController
         host?.rootView = PremiumCard(
-            image: Image(uiImage: image),
-            title: title,
-            subtitle: subtitle,
+            image: Image(uiImage: payload.image),
+            title: payload.title,
+            subtitle: payload.subtitle,
+            color: payload.base.color,
             onUpgrade: onUpgrade
         )
     }

@@ -8,21 +8,17 @@
 import UIKit
 
 public struct PremiumCardPayload {
-    let isPremium: Bool
-    let color: UIColor
+    
     let image: UIImage
     let title: String
     let subtitle: String
-    let vc: UIViewController.Type?
-    let action: SettingsRowData.DefaultRow.PremiumAction?
     
-    public init(isPremium: Bool, color: UIColor, image: UIImage, title: String, subtitle: String, vc: UIViewController.Type?, action: SettingsRowData.DefaultRow.PremiumAction?) {
-        self.isPremium = isPremium
-        self.color = color
+    let base: PremiumPayload
+    
+    public init(image: UIImage, title: String, subtitle: String, base: PremiumPayload) {
         self.image = image
         self.title = title
         self.subtitle = subtitle
-        self.vc = vc
-        self.action = action
+        self.base = base
     }
 }

@@ -16,12 +16,10 @@ public enum SettingsRowData {
     case app(AppRow)
     
     public enum DefaultRow {
-        
-        public typealias PremiumAction = (_ fromVC: UIViewController) -> Void
-        
+                
         case user(String, UIImage?, UIViewController.Type)
 
-        case premium(isPremium: Bool, tintColor: UIColor, vc: UIViewController.Type?, action: PremiumAction?)
+        case premium(PremiumPayload)
 
         case shareApp(appID: String)
         case rateApp(appID: String)
@@ -90,9 +88,9 @@ public enum SettingsRowData {
                              color: .systemIndigo,
                              inset: .init())
 
-            case .premium(_, let color, _, _):
+            case .premium(let payload):
                 SettingsIcon(image: .init(.star.fill),
-                             color: color,
+                             color: payload.color,
                              inset: .init())
                 
             case .contactDeveloper(_):
