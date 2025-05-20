@@ -165,6 +165,8 @@ extension SettingsController {
             return rows.count
         case .ourApps(_, let limit, _):
             return limit
+        case .premiumCard(_):
+            return 1
         }
    }
    
@@ -216,6 +218,14 @@ extension SettingsController {
         case .ourApps:
             return makeAppCell(for: tableView, at: indexPath, appRow: .placeholder)
             
+        case .premiumCard(let payload):
+            let cell = tableView.dequeueReusableCell(ofType: PremiumCell.self, for: indexPath)
+            cell.configure(image: payload.image,
+                           title: payload.title,
+                           subtitle: payload.subtitle) { [weak self] in
+                self?.presentPremium(payload.isPremium, premiumVC: payload.vc, action: payload.action)
+            }
+            return cell
         }
    }
     

@@ -343,6 +343,9 @@
         }
       }
     },
+    "Upgrade" : {
+
+    },
     "User" : {
       "localizations" : {
         "ru" : {
