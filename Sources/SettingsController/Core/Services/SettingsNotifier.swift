@@ -12,7 +12,7 @@ enum SettingsNotifier {
     static func didChangeTheme(_ theme: ThemeStorage) {
         NotificationCenter.default.post(name: .themeDidChange, object: theme)
     }
-    
+     
     static func didChangeTaptic(_ taptic: TapticStorage) {
         NotificationCenter.default.post(name: .tapticDidChange, object: taptic)
     }
