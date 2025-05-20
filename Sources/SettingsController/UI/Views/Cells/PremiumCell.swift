@@ -23,6 +23,10 @@ final class PremiumCell: UITableViewCell {
     }
 
     private func setupHost() {
+        
+        backgroundColor = .clear
+        selectionStyle = .none
+        
         let swiftUIView = PremiumCard(
             image: Image(uiImage: UIImage(systemName: "bolt.circle.fill")!),
             title: "Checker+",

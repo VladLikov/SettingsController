@@ -253,7 +253,7 @@ extension SettingsController {
                 return 65
             }
         case .premiumCard:
-            return 200
+            return 100
             
         default:
             break
