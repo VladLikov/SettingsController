@@ -69,7 +69,8 @@ public final class SettingsController: UITableViewController {
         tableView?.register(SettingsCell.self)
         tableView?.register(UserCell.self)
         tableView?.register(AppCell.self)
-        
+        tableView?.register(PremiumCell.self)
+
         tableView?.separatorInset.left = 60
          
         if let topInset = configuration.topInset {
@@ -251,6 +252,8 @@ extension SettingsController {
             if case .defaultRow(let row) = rows[row], case .user = row {
                 return 65
             }
+        case .premiumCard:
+            return 200
             
         default:
             break
