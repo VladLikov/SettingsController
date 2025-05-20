@@ -32,6 +32,17 @@ public final class SettingsController: UITableViewController {
         }
     }
     
+    public static func getSplitPresentationSettingsController(configuration: SettingsConfiguration) -> UIViewController {
+        
+        DispatchQueue.anywayOnMain {
+            
+            let settingsController = SettingsController(configuration: configuration)
+            let settingsNavController = UINavigationController(rootViewController: settingsController)
+                                                
+            return SplitController.getDefault(for: settingsNavController)
+        }
+    }
+    
     // MARK: Properties [Private]
     
     private var configuration: SettingsConfiguration
