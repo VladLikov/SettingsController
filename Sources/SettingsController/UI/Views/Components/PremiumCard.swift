@@ -38,7 +38,7 @@ struct PremiumCard: View {
                     .renderingMode(.template)
                     .foregroundColor(.white.opacity(0.8))
                     .frame(width: 25, height: 25)
-                    .padding(.leading, 14)
+                    .padding(.leading, 20)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -47,8 +47,9 @@ struct PremiumCard: View {
                         .shadow(color: .black.opacity(0.08), radius: 2, x: 0, y: 1)
                     Text(subtitle)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(.white.opacity(0.7))
                 }
+
 
                 Spacer()
 
@@ -56,7 +57,7 @@ struct PremiumCard: View {
                     Text("Upgrade")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundColor(.white)
-                        .frame(width: 90, height: 35)
+                        .frame(width: 100, height: 35)
                         .background(
                             RoundedRectangle(cornerRadius: 22, style: .continuous)
                                 .fill(.white.opacity(0.14))
@@ -73,7 +74,7 @@ struct PremiumCard: View {
                         hologramPhase = 1
                     }
                 }
-                .padding(.trailing, 14)
+                .padding(.trailing, 20)
             }
         }
     }
