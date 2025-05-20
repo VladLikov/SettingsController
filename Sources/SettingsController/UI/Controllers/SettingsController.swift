@@ -200,7 +200,7 @@ extension SettingsController {
                 let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
                 
                 var detail: String?
-                
+                 
                 if case .premium(let hasPremium, _, _, _) = defaultRow {
                     detail = hasPremium ?
                     NSLocalizedString("Active", bundle: .module, comment: "") :
