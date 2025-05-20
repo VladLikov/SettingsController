@@ -7,31 +7,44 @@
 
 import SwiftUI
 
+// MARK: - PremiumCard
 struct PremiumCard: View {
+    // Public API
     var image: Image
     var title: String
     var subtitle: String
     var color: UIColor
     var onUpgrade: () -> Void
 
+    // UI State
     @State private var isPressed = false
     @State private var hologramPhase = 0.0
-    
+
+    // Cache gradient once
+    private let gradient: LinearGradient
+    init(image: Image, title: String, subtitle: String, color: UIColor, onUpgrade: @escaping () -> Void) {
+        self.image = image
+        self.title = title
+        self.subtitle = subtitle
+        self.color = color
+        self.onUpgrade = onUpgrade
+        self.gradient = LinearGradient(
+            colors: Self.makeGradientColors(from: color),
+            startPoint: .top, endPoint: .bottom)
+    }
+
     var body: some View {
         ZStack {
+            // Background card
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: makeGradientColors(from: color),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .fill(gradient)
                 .shadow(color: .black.opacity(0.10), radius: 6, x: 0, y: 2)
 
+            // Tiny star sparkle
             StarFlashBackground()
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
 
+            // Content stack
             HStack(spacing: 20) {
                 image
                     .resizable()
@@ -50,8 +63,7 @@ struct PremiumCard: View {
                         .foregroundColor(.white.opacity(0.7))
                 }
 
-
-                Spacer()
+                Spacer(minLength: 0)
 
                 Button(action: onUpgrade) {
                     Text("Upgrade")
@@ -59,11 +71,11 @@ struct PremiumCard: View {
                         .foregroundColor(.white)
                         .frame(width: 100, height: 35)
                         .background(
-                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            RoundedRectangle(cornerRadius: 22)
                                 .fill(.white.opacity(0.14))
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            RoundedRectangle(cornerRadius: 22)
                                 .stroke(.white.opacity(0.42), lineWidth: 1)
                                 .holographicOverlay(phase: hologramPhase)
                         )
@@ -78,26 +90,20 @@ struct PremiumCard: View {
             }
         }
     }
-    
-    private func makeGradientColors(from color: UIColor) -> [Color] {
-        guard let components = color.cgColor.components, components.count >= 3 else {
-            return [Color(color), Color(color)] // fallback
-        }
-        let r = components[0]
-        let g = components[1]
-        let b = components[2]
-        
-        // Чуть осветляем второй цвет для верхней части
-        let lightTop = UIColor(
-            red: min(r + 0.07, 1.0),
-            green: min(g + 0.12, 1.0),
-            blue: min(b + 0.18, 1.0),
-            alpha: 1
-        )
-        return [Color(color), Color(lightTop)]
+
+    // MARK: Private helpers
+    private static func makeGradientColors(from ui: UIColor) -> [Color] {
+        guard let c = ui.cgColor.components, c.count >= 3 else { return [.init(ui), .init(ui)] }
+        let light = UIColor(
+            red: min(c[0] + 0.07, 1),
+            green: min(c[1] + 0.12, 1),
+            blue: min(c[2] + 0.18, 1),
+            alpha: 1)
+        return [.init(ui), .init(light)]
     }
 }
 
+// MARK: - HolographicButtonStyle
 struct HolographicButtonStyle: ButtonStyle {
     @Binding var isPressed: Bool
     func makeBody(configuration: Configuration) -> some View {
@@ -106,137 +112,119 @@ struct HolographicButtonStyle: ButtonStyle {
             .animation(.interactiveSpring(), value: configuration.isPressed)
             .background(
                 RoundedRectangle(cornerRadius: 22)
-                    .fill(
-                        AngularGradient(colors: [.white.opacity(0.3), .white.opacity(0.3)], center: .center)
-                    )
-                    .blur(radius: 20)
+                    .fill(AngularGradient(colors: [.white.opacity(0.25), .white.opacity(0.25)], center: .center))
+                    .blur(radius: 10)
                     .opacity(0.5)
+                    .compositingGroup()
                     .scaleEffect(configuration.isPressed ? 1.2 : 1)
             )
     }
 }
 
+// MARK: - View+HolographicBorderOverlay
 extension View {
     func holographicOverlay(phase: Double) -> some View {
         overlay(
-            AngularGradient(
-                colors: [.clear, .white.opacity(0.3), .white.opacity(0.3), .clear],
-                center: .center,
-                startAngle: .degrees(phase * 360),
-                endAngle:   .degrees(phase * 360 + 180)
-            )
-            .blendMode(.screen)
-            .mask(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(lineWidth: 1)
-            )
+            AngularGradient(colors: [.clear, .white.opacity(0.3), .white.opacity(0.3), .clear],
+                             center: .center,
+                             startAngle: .degrees(phase * 360),
+                             endAngle:   .degrees(phase * 360 + 180))
+                .blendMode(.screen)
+                .mask(RoundedRectangle(cornerRadius: 22).stroke(lineWidth: 1))
         )
     }
 }
 
-struct StarFlashBackground: View {
-    @State private var stars: [Star] = []
-    @State private var batchID = 0          // перезапуск «залпа»
+// MARK: - StarFlashBackground (one star, 5–8 s pause)
+// MARK: - StarFlashBackground (fills full card)
+private struct StarFlashBackground: View {
+    @State private var star: Star? = nil
+    @State private var size: CGSize = .zero
 
     var body: some View {
         GeometryReader { geo in
-            if #available(iOS 14.0, *) {
-                ZStack {
-                    ForEach(stars) { star in
-                        Image(systemName: "star.fill")
-                            .font(.system(size: star.font))
-                            .foregroundColor(.white.opacity(star.opacity))
-                            .shadow(color: .white, radius: 4)
-                            .scaleEffect(star.visible ? star.scale : 0.1)
-                            .rotationEffect(.degrees(star.angle))
-                            .position(x: geo.size.width  * star.x,
-                                      y: geo.size.height * star.y)
-                            .opacity(star.visible ? 1 : 0)
-                    }
+            ZStack {
+                if let s = star {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: s.font))
+                        .foregroundColor(.white.opacity(s.opacity))
+                        .scaleEffect(s.visible ? s.scale : 0.1)
+                        .rotationEffect(.degrees(s.angle))
+                        .position(x: s.x, y: s.y)
+                        .opacity(s.visible ? 1 : 0)
                 }
-                .onAppear { spawn() }
-                .onChange(of: batchID) { _ in spawn() }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .contentShape(Rectangle())
+            .onAppear {
+                size = geo.size
+                loop()
             }
         }
         .allowsHitTesting(false)
     }
-
-    // MARK: – создаём 1–3 звезды, каждая со своим offset’ом
-    private func spawn() {
-        let count = [1,1,1,1,1,1,1,1,2,3].randomElement()!
-        let newStars = (0..<count).map { _ in Star.random }
-
-        for index in newStars.indices {
-            let starID = newStars[index].id
-
-            // Добавляем в массив до анимаций
-            stars.append(newStars[index])
-
-            // Тайминги
-            let spawnDelay = Double.random(in: 0...0.35)
-            let fadeIn     = 0.12
-            let hold       = Double.random(in: 0.3...0.5)
-            let fadeOut    = 0.18
-            let lifeSpan   = spawnDelay + fadeIn + hold + fadeOut
-
-            // Появление
-            DispatchQueue.main.asyncAfter(deadline: .now() + spawnDelay) {
-                if let i = stars.firstIndex(where: { $0.id == starID }) {
-                    withAnimation(.easeOut(duration: fadeIn)) {
-                        stars[i].visible = true
-                        stars[i].scale   = 1.25
-                    }
-                    withAnimation(.easeOut(duration: 0.15).delay(fadeIn)) {
-                        stars[i].scale = 1.0
-                    }
-                    withAnimation(.linear(duration: lifeSpan - spawnDelay)) {
-                        stars[i].angle += 20
-                    }
-                }
-            }
-
-            // Исчезновение
-            let vanishTime = spawnDelay + fadeIn + hold
-            DispatchQueue.main.asyncAfter(deadline: .now() + vanishTime) {
-                if let i = stars.firstIndex(where: { $0.id == starID }) {
-                    withAnimation(.easeIn(duration: fadeOut)) {
-                        stars[i].visible = false
-                        stars[i].scale   = 0.1
-                    }
-                }
-            }
-
-            // Удаление из массива (по желанию)
-            let removeTime = vanishTime + fadeOut + 0.1
-            DispatchQueue.main.asyncAfter(deadline: .now() + removeTime) {
-                stars.removeAll { $0.id == starID }
-            }
-        }
-
-        // Следующий залп
-        let pause = Double.random(in: 3...4.5)
-        DispatchQueue.main.asyncAfter(deadline: .now() + pause) {
-            batchID += 1
+    
+    // MARK: Animation loop
+    private func loop() {
+        guard star == nil, size != .zero else { return }
+        star = Star.random(in: size)
+        
+        Task { @MainActor in
+            withAnimation(.easeOut(duration: 0.12)) { update { $0.visible = true; $0.scale = 1.15 } }
+            try await Task.sleep(nanoseconds: 120_000_000)   // 120 ms
+            withAnimation(.easeOut(duration: 0.1)) { update { $0.scale = 1 } }
+            withAnimation(.linear(duration: 0.6)) { update { $0.angle += 20 } }
+            try await Task.sleep(nanoseconds: 600_000_000)   // 600 ms
+            withAnimation(.easeIn(duration: 0.18)) { update { $0.visible = false; $0.scale = 0.1 } }
+            try await Task.sleep(nanoseconds: 200_000_000)   // 200 ms
+            star = nil
+            // pause 5–8 s
+            let pause = UInt64(Int.random(in: 5...8)) * 1_000_000_000
+            try await Task.sleep(nanoseconds: pause)
+            loop()
         }
     }
+    
+    private func update(_ change: (inout Star) -> Void) {
+        guard var s = star else { return }; change(&s); star = s
+    }
 
-    // MARK: – модель
-    struct Star: Identifiable {
+    // MARK: Star model
+    private struct Star: Identifiable {
         let id = UUID()
-        let x, y: CGFloat
-        let font: CGFloat          // 4 – 10 pt
-        let opacity: Double        // 0.5 – 0.8
-        var scale:   CGFloat = 0.1
-        var angle:   Double  = 0
-        var visible: Bool    = false
-
-        static var random: Star {
-            .init(
-                x:       .random(in: 0.15...0.85),
-                y:       .random(in: 0.20...0.80),
-                font:    .random(in: 4...10),
-                opacity: .random(in: 0.5...0.8)
-            )
+        var x, y: CGFloat
+        let font: CGFloat
+        let opacity: Double
+        var scale: CGFloat = 0.1
+        var angle: Double = 0
+        var visible: Bool = false
+        static func random(in size: CGSize) -> Star {
+            .init(x: size.width  * .random(in: 0.15...0.85),
+                   y: size.height * .random(in: 0.2 ... 0.8),
+                   font: .random(in: 4...10),
+                   opacity: .random(in: 0.5...0.8))
         }
     }
 }
+
+// MARK: - View+Conditional modifier helper
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition { transform(self) } else { self }
+    }
+}
+// MARK: - Preview
+#if DEBUG
+#Preview {
+    PremiumCard(
+        image: Image(systemName: "star.fill"),
+        title: "StepsGo+",
+        subtitle: "Unlock all features",
+        color: .systemBlue,
+        onUpgrade: {}
+    )
+    .padding()
+    .frame(height: 150)
+}
+#endif
