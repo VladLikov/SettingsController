@@ -237,8 +237,7 @@ extension SettingsController {
         case .premiumCard(let payload):
             let cell = tableView.dequeueReusableCell(ofType: PremiumCell.self, for: indexPath)
             cell.configure(payload: payload) { [weak self] in
-                self?.indexPathToRefresh = indexPath
-                self?.presentPremium(payload.base)
+                self?.premiumCardDidTap(payload: payload, with: indexPath)
             }
             return cell
         }
@@ -358,6 +357,9 @@ extension SettingsController {
                 
             }
             
+        case .premiumCard(let payload):
+            self.premiumCardDidTap(payload: payload, with: indexPath)
+
         default:
             break
         }
@@ -408,6 +410,12 @@ extension SettingsController {
 // MARK: - Private Methods
 
 extension SettingsController {
+    
+    private func premiumCardDidTap(payload: PremiumCardPayload, with indexPath: IndexPath) {
+        
+        indexPathToRefresh = indexPath
+        presentPremium(payload.base)
+    }
     
     private func reloadRowsIfNeeded() {
         guard let indexPath = indexPathToRefresh else { return }
