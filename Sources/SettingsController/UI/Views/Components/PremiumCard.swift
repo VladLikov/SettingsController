@@ -179,7 +179,7 @@ private struct StarFlashBackground: View {
             try await Task.sleep(nanoseconds: 200_000_000)   // 200 ms
             star = nil
             // pause 5–8 s
-            let pause = UInt64(Int.random(in: 5...8)) * 1_000_000_000
+            let pause = UInt64(Int.random(in: 3...5)) * 1_000_000_000
             try await Task.sleep(nanoseconds: pause)
             loop()
         }
