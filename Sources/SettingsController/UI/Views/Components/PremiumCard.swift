@@ -77,10 +77,7 @@ struct PremiumCard: View {
                 }
                 .padding(.trailing, 14)
             }
-            .padding(.vertical, 18)
         }
-        .padding(.horizontal, 24)
-        .frame(height: 100)
     }
 }
 
