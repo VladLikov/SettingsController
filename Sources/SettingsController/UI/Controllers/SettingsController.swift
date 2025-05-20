@@ -84,8 +84,12 @@ public final class SettingsController: UITableViewController {
 
         tableView?.separatorInset.left = 60
          
-        if let topInset = configuration.topInset {
+        if let topInset = configuration.insets?.top {
             tableView?.contentInset.top = topInset
+        }
+        
+        if let bottomInset = configuration.insets?.bottom {
+            tableView?.contentInset.top = bottomInset
         }
                 
         navigationItem.largeTitleDisplayMode = .automatic

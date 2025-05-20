@@ -24,7 +24,7 @@ public protocol SettingsControllerDelegate: AnyObject {
 public final class SettingsConfiguration {
     
     public var title: String?
-    public var topInset: CGFloat?
+    public var insets: SettingsInsets?
     public var sections: [SettingsSection]
     public var overlayAppID: String?
         
@@ -34,7 +34,7 @@ public final class SettingsConfiguration {
     
     public init(title: String? = nil,
                 initialValues: [AnyKeyPath: Any]? = nil,
-                topInset: CGFloat? = nil,
+                insets: SettingsInsets? = nil,
                 overlayAppID: String? = nil,
                 sections: [SettingsSection],
                 delegate: SettingsControllerDelegate? = nil) {
@@ -42,7 +42,7 @@ public final class SettingsConfiguration {
         self.title = title
         self.initialValues = initialValues
         self.sections = sections
-        self.topInset = topInset
+        self.insets = insets
         self.overlayAppID = overlayAppID
         self.delegate = delegate
     }
