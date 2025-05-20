@@ -63,7 +63,7 @@ struct PremiumCard: View {
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                .stroke(.white.opacity(0.42), lineWidth: 2)
+                                .stroke(.white.opacity(0.42), lineWidth: 1)
                                 .holographicOverlay(phase: hologramPhase)
                         )
                 }
@@ -127,7 +127,7 @@ extension View {
             .blendMode(.screen)
             .mask(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(lineWidth: 2)
+                    .stroke(lineWidth: 1)
             )
         )
     }
