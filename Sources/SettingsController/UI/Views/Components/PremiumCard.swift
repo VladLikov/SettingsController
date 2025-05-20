@@ -162,48 +162,57 @@ struct StarFlashBackground: View {
 
     // MARK: – создаём 1–3 звезды, каждая со своим offset’ом
     private func spawn() {
-        let count = [1,1,1,1,1,1,1,1,2,3].randomElement()!  // 80 % →1, 15 % →2, 5 % →3
-        stars = (0..<count).map { _ in .random }            // базовые параметры
+        let count = [1,1,1,1,1,1,1,1,2,3].randomElement()!
+        var newStars = (0..<count).map { _ in Star.random }
 
-        for i in stars.indices {
-            // индивидуальные тайминги
-            let spawnDelay = Double.random(in: 0...0.35)    // сдвиг старта
+        for index in newStars.indices {
+            let starID = newStars[index].id
+
+            // Добавляем в массив до анимаций
+            stars.append(newStars[index])
+
+            // Тайминги
+            let spawnDelay = Double.random(in: 0...0.35)
             let fadeIn     = 0.12
-            let hold       = Double.random(in: 0.3...0.5)   // тоже слегка разное
+            let hold       = Double.random(in: 0.3...0.5)
             let fadeOut    = 0.18
             let lifeSpan   = spawnDelay + fadeIn + hold + fadeOut
 
-            // начальные состояния
-            stars[i].scale   = 0.1
-            stars[i].angle   = .random(in: 0...360)
-            stars[i].visible = false
-
-            // появление (scale 0.1 → 1.25 → 1.0)
+            // Появление
             DispatchQueue.main.asyncAfter(deadline: .now() + spawnDelay) {
-                withAnimation(.easeOut(duration: fadeIn)) {
-                    stars[i].visible = true
-                    stars[i].scale   = 1.25
-                }
-                withAnimation(.easeOut(duration: 0.15).delay(fadeIn)) {
-                    stars[i].scale = 1.0
-                }
-                // плавный полуоборот за всю жизнь
-                withAnimation(.linear(duration: lifeSpan - spawnDelay)) {
-                    stars[i].angle += 20
+                if let i = stars.firstIndex(where: { $0.id == starID }) {
+                    withAnimation(.easeOut(duration: fadeIn)) {
+                        stars[i].visible = true
+                        stars[i].scale   = 1.25
+                    }
+                    withAnimation(.easeOut(duration: 0.15).delay(fadeIn)) {
+                        stars[i].scale = 1.0
+                    }
+                    withAnimation(.linear(duration: lifeSpan - spawnDelay)) {
+                        stars[i].angle += 20
+                    }
                 }
             }
 
-            // исчезновение (scale 1 → 0.1 + fade)
+            // Исчезновение
             let vanishTime = spawnDelay + fadeIn + hold
             DispatchQueue.main.asyncAfter(deadline: .now() + vanishTime) {
-                withAnimation(.easeIn(duration: fadeOut)) {
-                    stars[i].visible = false
-                    stars[i].scale   = 0.1
+                if let i = stars.firstIndex(where: { $0.id == starID }) {
+                    withAnimation(.easeIn(duration: fadeOut)) {
+                        stars[i].visible = false
+                        stars[i].scale   = 0.1
+                    }
                 }
+            }
+
+            // Удаление из массива (по желанию)
+            let removeTime = vanishTime + fadeOut + 0.1
+            DispatchQueue.main.asyncAfter(deadline: .now() + removeTime) {
+                stars.removeAll { $0.id == starID }
             }
         }
 
-        // пауза перед следующим залпом
+        // Следующий залп
         let pause = Double.random(in: 3...4.5)
         DispatchQueue.main.asyncAfter(deadline: .now() + pause) {
             batchID += 1
