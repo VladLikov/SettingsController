@@ -419,26 +419,25 @@ extension SettingsController {
     
     private func reloadRowsIfNeeded() {
         guard let indexPath = indexPathToRefresh else { return }
+        self.indexPathToRefresh = nil
 
         // Получаем секцию
         let section = sections[indexPath.section]
+        
+        if case .premiumCard(let payloadCard) = section.kind {
+            configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
+                guard let self else { return }
+                let payload = payloadCard.base
+                sections[indexPath.section].kind = .rows([.defaultRow(.premium(.init(isPremium: isPremium, color: payload.color, vc: payload.vc, action: payload.action)))])
+                tableView?.reloadRows(at: [indexPath], with: .fade)
+            }
+            return
+        }
         
         // Проверяем, что она содержит .rows
         guard case var .rows(rows) = section.kind else { return }
 
         let row = rows[indexPath.row]
-
-        if case .premiumCard(let payloadCard) = section.kind {
-            configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
-                guard let self else { return }
-                let payload = payloadCard.base
-                rows[indexPath.row] = .defaultRow(.premium(.init(isPremium: isPremium, color: payload.color, vc: payload.vc, action: payload.action)))
-                self.sections[indexPath.section].kind = .rows(rows)
-                self.tableView?.reloadRows(at: [indexPath], with: .fade)
-                self.indexPathToRefresh = nil
-            }
-            return
-        }
         
         switch row {
 
@@ -448,20 +447,17 @@ extension SettingsController {
             case .premium(let payload):
                 configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
                     guard let self else { return }
-//                    rows[indexPath.row] = .defaultRow(.premium(isPremium: isPremium, tintColor: color, vc: vc, action: action))
                     rows[indexPath.row] = .defaultRow(.premium(.init(isPremium: isPremium, color: payload.color, vc: payload.vc, action: payload.action)))
-                    self.sections[indexPath.section].kind = .rows(rows)
-                    self.tableView?.reloadRows(at: [indexPath], with: .fade)
-                    self.indexPathToRefresh = nil
+                    sections[indexPath.section].kind = .rows(rows)
+                    tableView?.reloadRows(at: [indexPath], with: .fade)
                 }
                 
             case .user(_, _, let vc):
                 configuration.delegate?.settingsUserInfoRequested { [weak self] user in
                     guard let self else { return }
                     rows[indexPath.row] = .defaultRow(.user(user.name, user.avatar, vc))
-                    self.sections[indexPath.section].kind = .rows(rows)
-                    self.tableView?.reloadRows(at: [indexPath], with: .fade)
-                    self.indexPathToRefresh = nil
+                    sections[indexPath.section].kind = .rows(rows)
+                    tableView?.reloadRows(at: [indexPath], with: .fade)
                 }
 
             default:
@@ -477,10 +473,18 @@ extension SettingsController {
         
         if payload.isPremium {
             
+            var style: AlertViewStyle
+            
+#if os(visionOS)
+            style = .iOS17AppleMusic
+#else
+            style = .iOS16AppleMusic
+#endif
+            
             AlertKitAPI.present(
                 title: NSLocalizedString("Premium is active", bundle: .module, comment: ""),
                 icon: .custom(UIImage(.star.fill)),
-                style: .iOS17AppleMusic,
+                style: style,
                 haptic: .success
             )
             
