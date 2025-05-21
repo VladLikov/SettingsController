@@ -427,6 +427,7 @@ extension SettingsController {
         if case .premiumCard(let payloadCard) = section.kind {
             configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
                 guard let self else { return }
+                guard payloadCard.base.isPremium != isPremium else { return }
                 let payload = payloadCard.base
                 sections[indexPath.section].kind = .rows([.defaultRow(.premium(.init(isPremium: isPremium, color: payload.color, vc: payload.vc, action: payload.action)))])
                 tableView?.reloadRows(at: [indexPath], with: .fade)
