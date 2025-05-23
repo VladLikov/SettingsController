@@ -6,16 +6,17 @@
 //
 
 import UIKit
+import SwiftUI
 
 public struct PremiumCardPayload {
     
-    let image: UIImage
+    let image: Image
     let title: String
     let subtitle: String
     
     let base: PremiumPayload
     
-    public init(image: UIImage, title: String, subtitle: String, base: PremiumPayload) {
+    public init(image: Image, title: String, subtitle: String, base: PremiumPayload) {
         self.image = image
         self.title = title
         self.subtitle = subtitle
