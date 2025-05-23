@@ -22,7 +22,7 @@ public struct PremiumCard: View {
 
     // Cache gradient once
     private let gradient: LinearGradient
-    init(image: Image, title: String, subtitle: String, color: UIColor, onUpgrade: @escaping () -> Void) {
+    public init(image: Image, title: String, subtitle: String, color: UIColor, onUpgrade: @escaping () -> Void) {
         self.image = image
         self.title = title
         self.subtitle = subtitle

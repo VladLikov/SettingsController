@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import SafeSFSymbols
 
 final class PremiumCell: UITableViewCell {
     // MARK: - Инициализация SwiftUI view через HostingController
@@ -28,7 +29,7 @@ final class PremiumCell: UITableViewCell {
         selectionStyle = .none
         
         let swiftUIView = PremiumCard(
-            image: Image(uiImage: UIImage(systemName: "bolt.circle.fill")!),
+            image: Image(.bolt.circleFill),
             title: "Checker+",
             subtitle: "One-time purchase",
             color: .systemBlue,
