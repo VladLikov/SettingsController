@@ -13,13 +13,15 @@ public struct PremiumCardPayload {
     let image: Image
     let title: String
     let subtitle: String
-    
+    let buttonTitle: String
+
     let base: PremiumPayload
     
-    public init(image: Image, title: String, subtitle: String, base: PremiumPayload) {
+    public init(image: Image, title: String, subtitle: String, buttonTitle: String, base: PremiumPayload) {
         self.image = image
         self.title = title
         self.subtitle = subtitle
+        self.buttonTitle = buttonTitle
         self.base = base
     }
 }

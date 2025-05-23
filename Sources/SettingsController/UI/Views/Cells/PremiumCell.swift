@@ -7,7 +7,6 @@
 
 import UIKit
 import SwiftUI
-import SafeSFSymbols
 
 final class PremiumCell: UITableViewCell {
     private var host: UIHostingController<PremiumCard>?
@@ -24,14 +23,15 @@ final class PremiumCell: UITableViewCell {
         selectionStyle = .none
     }
 
-    func configure(payload: PremiumCardPayload, onUpgrade: @escaping () -> Void) {
+    func configure(payload: PremiumCardPayload, onTap: @escaping () -> Void) {
         
         let premiumCard = PremiumCard(
             image: payload.image,
             title: payload.title,
             subtitle: payload.subtitle,
+            buttonTitle: payload.buttonTitle,
             color: payload.base.color,
-            onUpgrade: onUpgrade
+            onTap: onTap
         )
 
         if let host = host {

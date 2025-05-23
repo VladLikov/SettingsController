@@ -13,8 +13,9 @@ public struct PremiumCard: View {
     var image: Image
     var title: String
     var subtitle: String
+    var buttonTitle: String
     var color: UIColor
-    var onUpgrade: () -> Void
+    var onTap: () -> Void
 
     // UI State
     @State private var isPressed = false
@@ -22,12 +23,13 @@ public struct PremiumCard: View {
 
     // Cache gradient once
     private let gradient: LinearGradient
-    public init(image: Image, title: String, subtitle: String, color: UIColor, onUpgrade: @escaping () -> Void) {
+    public init(image: Image, title: String, subtitle: String, buttonTitle: String, color: UIColor, onTap: @escaping () -> Void) {
         self.image = image
         self.title = title
         self.subtitle = subtitle
+        self.buttonTitle = buttonTitle
         self.color = color
-        self.onUpgrade = onUpgrade
+        self.onTap = onTap
         self.gradient = LinearGradient(
             colors: Self.makeGradientColors(from: color),
             startPoint: .top, endPoint: .bottom)
@@ -62,10 +64,10 @@ public struct PremiumCard: View {
                         .foregroundColor(.white.opacity(0.7))
                 }
 
-                Spacer(minLength: 0)
+//                Spacer(minLength: 0)
 
-                Button(action: onUpgrade) {
-                    Text("Upgrade")
+                Button(action: onTap) {
+                    Text(buttonTitle)
                         .font(.system(size: 17, weight: .bold))
                         .foregroundColor(.white)
                         .frame(width: 100, height: 35)
@@ -86,6 +88,9 @@ public struct PremiumCard: View {
                     }
                 }
                 .padding(.trailing, 20)
+            }
+            .onTapGesture {
+                onTap()
             }
         }
     }
@@ -220,8 +225,9 @@ private extension View {
         image: Image(systemName: "star.fill"),
         title: "StepsGo+",
         subtitle: "Unlock all features",
+        buttonTitle: "Upgrade",
         color: .systemBlue,
-        onUpgrade: {}
+        onTap: {}
     )
     .padding()
     .frame(height: 150)
