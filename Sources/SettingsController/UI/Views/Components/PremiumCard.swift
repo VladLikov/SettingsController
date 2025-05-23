@@ -8,7 +8,7 @@
 import SwiftUI
 
 // MARK: - PremiumCard
-struct PremiumCard: View {
+public struct PremiumCard: View {
     // Public API
     var image: Image
     var title: String
@@ -33,7 +33,7 @@ struct PremiumCard: View {
             startPoint: .top, endPoint: .bottom)
     }
 
-    var body: some View {
+    public var body: some View {
         ZStack {
             // Background card
             RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -47,10 +47,9 @@ struct PremiumCard: View {
             // Content stack
             HStack(spacing: 20) {
                 image
-                    .resizable()
                     .renderingMode(.template)
                     .foregroundColor(.white.opacity(0.93))
-                    .frame(width: 25, height: 25)
+                    .font(.system(size: 25, weight: .regular))
                     .padding(.leading, 20)
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -104,7 +103,7 @@ struct PremiumCard: View {
 }
 
 // MARK: - HolographicButtonStyle
-struct HolographicButtonStyle: ButtonStyle {
+private struct HolographicButtonStyle: ButtonStyle {
     @Binding var isPressed: Bool
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -122,7 +121,7 @@ struct HolographicButtonStyle: ButtonStyle {
 }
 
 // MARK: - View+HolographicBorderOverlay
-extension View {
+private extension View {
     func holographicOverlay(phase: Double) -> some View {
         overlay(
             AngularGradient(colors: [.clear, .white.opacity(0.3), .white.opacity(0.3), .clear],
