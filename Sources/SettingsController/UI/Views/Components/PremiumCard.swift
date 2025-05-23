@@ -49,7 +49,7 @@ public struct PremiumCard: View {
                 image
                     .renderingMode(.template)
                     .foregroundColor(.white.opacity(0.93))
-                    .font(.system(size: 25, weight: .regular))
+                    .font(.system(size: 40, weight: .regular))
                     .padding(.leading, 20)
 
                 VStack(alignment: .leading, spacing: 2) {
