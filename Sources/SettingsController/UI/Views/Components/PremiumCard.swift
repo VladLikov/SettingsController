@@ -64,7 +64,7 @@ public struct PremiumCard: View {
                         .foregroundColor(.white.opacity(0.7))
                 }
 
-//                Spacer(minLength: 0)
+                Spacer(minLength: 0)
 
                 Button(action: onTap) {
                     Text(buttonTitle)
