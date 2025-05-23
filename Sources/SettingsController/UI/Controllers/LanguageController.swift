@@ -67,7 +67,7 @@ extension LanguageController {
                     
         if section == 0 {
             
-            let cell = tableView.dequeueReusableCell(ofType: SubtitleCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(withClass: SubtitleCell.self, for: indexPath)
             
             let languageCode = languages[row]
             
@@ -84,7 +84,7 @@ extension LanguageController {
             
         } else if section == 1 && row == 0 {
             
-            let cell = tableView.dequeueReusableCell(ofType: UITableViewCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
             
             cell.textLabel?.text = NSLocalizedString("Need other language", bundle: .module, comment: "")
             cell.textLabel?.textAlignment = .center

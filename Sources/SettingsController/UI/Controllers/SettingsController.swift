@@ -6,6 +6,7 @@ import AlertKit
 import SafeSFSymbols
 import StoreKit
 import MessageUI
+import SwiftBoost
 
 // MARK: - SettingsController
 
@@ -200,19 +201,19 @@ extension SettingsController {
             switch rows[indexPath.row] {
             case .row(let row):
                 
-                let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
+                let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
                 cell.configure(title: row.title, icon: row.icon, detail: row.detail)
                 return cell
                 
             case .defaultRow(let defaultRow):
                 
                 if case .user(let name, let image, _) = defaultRow {
-                    let cell = tableView.dequeueReusableCell(ofType: UserCell.self, for: indexPath)
+                    let cell = tableView.dequeueReusableCell(withClass: UserCell.self, for: indexPath)
                     cell.configure(title: name, avatar: image)
                     return cell
                 }
                 
-                let cell = tableView.dequeueReusableCell(ofType: SettingsCell.self, for: indexPath)
+                let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
                 
                 var detail: String?
                  
@@ -235,7 +236,7 @@ extension SettingsController {
             return makeAppCell(for: tableView, at: indexPath, appRow: .placeholder)
             
         case .premiumCard(let payload):
-            let cell = tableView.dequeueReusableCell(ofType: PremiumCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(withClass: PremiumCell.self, for: indexPath)
             cell.configure(payload: payload) { [weak self] in
                 self?.premiumCardDidTap(payload: payload, with: indexPath)
             }
@@ -246,7 +247,7 @@ extension SettingsController {
     private func makeAppCell(for tableView: UITableView,
                              at indexPath: IndexPath,
                              appRow: AppRow) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(ofType: AppCell.self, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withClass: AppCell.self, for: indexPath)
         cell.configure(with: appRow)
         return cell
     }

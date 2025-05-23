@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftBoost
 
 // MARK: - AppearanceController
 
@@ -80,7 +81,7 @@ extension AppearanceController {
         
         if section == 0 {
             
-            let cell = tableView.dequeueReusableCell(ofType: ColorCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(withClass: ColorCell.self, for: indexPath)
                         
             let appColor = appColorArray[row]
             
@@ -94,7 +95,7 @@ extension AppearanceController {
             
         } else if section == 1 && row == 0 {
             
-            let cell = tableView.dequeueReusableCell(ofType: SwitchCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(withClass: SwitchCell.self, for: indexPath)
             
             cell.textLabel?.text = NSLocalizedString("Automatically", bundle: .module, comment: "")
             
@@ -109,7 +110,7 @@ extension AppearanceController {
             
         } else if section == 2 {
             
-            let cell = tableView.dequeueReusableCell(ofType: UITableViewCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
             
             cell.selectionStyle = .none
             

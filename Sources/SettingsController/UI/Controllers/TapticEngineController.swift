@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftBoost
 
 // MARK: - TapticEngineController
 
@@ -88,7 +89,7 @@ extension TapticEngineController {
         
         if section == 0 && row == 0 {
             
-            let cell = tableView.dequeueReusableCell(ofType: SwitchCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(withClass: SwitchCell.self, for: indexPath)
             
             cell.textLabel?.text = "Taptic Engine"
             cell.switchControl.onTintColor = view.tintColor //settings.appColor
@@ -101,7 +102,7 @@ extension TapticEngineController {
             
         } else if section == 1 {
             
-            let cell = tableView.dequeueReusableCell(ofType: UITableViewCell.self, for: indexPath)
+            let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
             cell.selectionStyle = .none
 
             let tapticStyle = tapticArray[row]

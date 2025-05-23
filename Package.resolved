@@ -1,5 +1,5 @@
 {
-  "originHash" : "648197f08269b5d1c43ca21d436737720599cfbd49e5e92e7f2ad03213107f9d",
+  "originHash" : "64a93fd1ec5e2b7c69b6df3766e0d0b1e19605a909137b843ba91e1a2cbf8012",
   "pins" : [
     {
       "identity" : "alertkit",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "07f11f923b53f26cf9214800f8a397a87865f3ef",
         "version" : "2.0.1"
+      }
+    },
+    {
+      "identity" : "swiftboost",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sparrowcode/SwiftBoost",
+      "state" : {
+        "revision" : "890ed0782b18baf1e2bafdfbbb8369faa105e5d2",
+        "version" : "4.0.18"
       }
     }
   ],
