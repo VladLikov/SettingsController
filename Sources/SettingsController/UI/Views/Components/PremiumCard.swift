@@ -59,6 +59,7 @@ public struct PremiumCard: View {
                         .font(.system(size: 22, weight: .bold))
                         .foregroundColor(.white)
                         .shadow(color: .black.opacity(0.08), radius: 2, x: 0, y: 1)
+                        .lineLimit(1)
                     Text(subtitle)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.white.opacity(0.7))
