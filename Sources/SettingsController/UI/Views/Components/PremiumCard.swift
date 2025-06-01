@@ -47,7 +47,7 @@ public struct PremiumCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
 
             // Content stack
-            HStack(spacing: 20) {
+            HStack(spacing: 8) {
                 image
                     .renderingMode(.template)
                     .foregroundColor(.white.opacity(0.93))
@@ -63,7 +63,9 @@ public struct PremiumCard: View {
                     Text(subtitle)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.white.opacity(0.7))
+                        .lineLimit(2)
                 }
+                .padding(.leading, 2)
 
                 Spacer(minLength: 0)
 
@@ -224,8 +226,8 @@ private extension View {
 #Preview {
     PremiumCard(
         image: Image(systemName: "star.fill"),
-        title: "StepsGo+",
-        subtitle: "Unlock all features",
+        title: "StepsGo+asdlkasl;dmas;lmd;lasmdl;amsl;dml;a",
+        subtitle: "Unlock all featuresnkdnfksdnf",
         buttonTitle: "Upgrade",
         color: .systemBlue,
         onTap: {}
