@@ -18,6 +18,8 @@ class AppearanceController: UITableViewController {
     
     private var theme: ThemeStorage
     
+    private var reviewRequested: Bool = false
+    
     // MARK: Life Cycle
     
     init(themeStorage: ThemeStorage) {
@@ -168,8 +170,11 @@ extension AppearanceController {
                 tableView.reloadSections(IndexSet(integer: 2), with: .fade)
             }
             
-            Helpers.requestReview()
-            
+            if !reviewRequested {
+                reviewRequested = true
+                Helpers.requestReview()
+            }
+                        
 #if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()
 #endif
