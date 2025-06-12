@@ -344,6 +344,7 @@
       }
     },
     "User" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ru" : {
           "stringUnit" : {

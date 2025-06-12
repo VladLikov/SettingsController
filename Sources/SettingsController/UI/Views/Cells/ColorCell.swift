@@ -39,7 +39,7 @@ class ColorCell: UITableViewCell {
         super.init(coder: coder)
     }
     
-    public func configure(appColor: AppColor) {
+    public func configure(appColor: any AppColorType) {
         
         titleLabel.text = appColor.title
         colorView.backgroundColor = appColor.color

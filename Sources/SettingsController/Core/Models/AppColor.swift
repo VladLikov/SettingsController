@@ -7,7 +7,7 @@
 
 import UIKit
 
-public enum AppColor: String, CaseIterable {
+public enum AppColor: String, CaseIterable, AppColorType {
     case purple, blue, pink, green, red, orange, yellow
     
     public var title: String {

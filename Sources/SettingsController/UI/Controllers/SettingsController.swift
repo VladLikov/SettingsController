@@ -329,12 +329,11 @@ extension SettingsController {
                     sendMail(email)
                     
                 case .language(let email):
-                    pushVC(LanguageController(email: email),
-                           navigationTitle: NSLocalizedString("Language", bundle: .module, comment: ""))
-                    
-                case .appearance(let theme):
-                    pushVC(AppearanceController(themeStorage: theme),
-                           navigationTitle: NSLocalizedString("Appearance", bundle: .module, comment: ""))
+                    pushVC(LanguageController(email: email), navigationTitle: row.title)
+
+                case .appearance(let theme, let colors):
+                    pushVC(AppearanceController(themeStorage: theme, colors: colors),
+                           navigationTitle: row.title)
                     
                 case .telegram(let channelURL):
                     openTelegramChannel(channelURL)
@@ -344,12 +343,10 @@ extension SettingsController {
                     
                 case .user(_, _, let vcType):
                     indexPathToRefresh = indexPath
-                    pushVC(vcType.init(),
-                           navigationTitle: NSLocalizedString("User", bundle: .module, comment: ""))
+                    pushVC(vcType.init(), navigationTitle: row.title)
 
                 case .tapticEngine(let taptic):
-                    pushVC(TapticEngineController(tapticStorage: taptic),
-                           navigationTitle: NSLocalizedString("Taptic Engine", bundle: .module, comment: ""))
+                    pushVC(TapticEngineController(tapticStorage: taptic), navigationTitle: row.title)
                 }
      
             case .app(.loaded(let app)):

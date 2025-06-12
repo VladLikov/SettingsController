@@ -31,9 +31,9 @@ public enum SettingsRowData {
         case telegram(id: String)
         case vkGroup(id: String)
 
-        case appearance(theme: ThemeStorage)
+        case appearance(theme: ThemeStorage, colors: [any AppColorType])
         case tapticEngine(taptic: TapticStorage)
-
+        
         var title: String? {
             switch self {
             case .appearance:

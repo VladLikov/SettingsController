@@ -14,7 +14,7 @@ class AppearanceController: UITableViewController {
     
     // MARK: Properties [Private]
 
-    private let appColorArray: [AppColor] = AppColor.allCases
+    private let colors: [any AppColorType]
     
     private var theme: ThemeStorage
     
@@ -22,8 +22,9 @@ class AppearanceController: UITableViewController {
     
     // MARK: Life Cycle
     
-    init(themeStorage: ThemeStorage) {
+    init(themeStorage: ThemeStorage, colors: [any AppColorType]) {
         self.theme = themeStorage
+        self.colors = colors
         super.init(style: .insetGrouped)
     }
     
@@ -54,7 +55,7 @@ extension AppearanceController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
-            return appColorArray.count
+            return colors.count
         } else if section == 2 {
             return 2
         }
@@ -85,7 +86,7 @@ extension AppearanceController {
             
             let cell = tableView.dequeueReusableCell(withClass: ColorCell.self, for: indexPath)
                         
-            let appColor = appColorArray[row]
+            let appColor = colors[row]
             
             cell.configure(appColor: appColor)
             
@@ -145,8 +146,13 @@ extension AppearanceController {
         
         if indexPath.section == 0 {
                         
-            guard let oldAppColor = AppColor(rawValue: theme.appColorRawValue),
-                  let oldIndex = appColorArray.firstIndex(where: { $0 == oldAppColor }) else {
+//            guard let oldAppColor = AppColor(rawValue: theme.appColorRawValue),
+//                  let oldIndex = colors.firstIndex(where: { $0 == oldAppColor }) else {
+//                return
+//            }
+            
+            let currentRaw = theme.appColorRawValue
+            guard let oldIndex = colors.firstIndex(where: { $0.rawValue == currentRaw }) else {
                 return
             }
             
@@ -155,7 +161,7 @@ extension AppearanceController {
             tableView.cellForRow(at: oldIndexPath)?.accessoryType = .none
             tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
 
-            let newAppColor = appColorArray[indexPath.row]
+            let newAppColor = colors[indexPath.row]
             
             let newColor = newAppColor.color
             
