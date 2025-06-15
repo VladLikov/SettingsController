@@ -299,10 +299,8 @@ extension SettingsController {
                 
                 if let vcType = row.vc {
                     
-                    let title = (tableView.cellForRow(at: indexPath) as? SettingsCell)?.title
-                    
                     let vc = vcType.init()
-                    pushVC(vc, navigationTitle: title)
+                    pushVC(vc, navigationTitle: row.title)
 
                 } else if let action = row.action {
                     tableView.deselectRow(at: indexPath, animated: true)
