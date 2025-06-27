@@ -25,6 +25,9 @@ public enum SettingsRowData {
         case rateApp(appID: String)
         case moreApps(developerID: String)
         
+        @available(iOS 14.0, *)
+        case redeemCode
+        
         case contactDeveloper(email: String)
         case language(email: String)
 
@@ -56,8 +59,9 @@ public enum SettingsRowData {
                 NSLocalizedString("Telegram channel", bundle: .module, comment: "")
             case .vkGroup:
                 NSLocalizedString("VK group", bundle: .module, comment: "")
-            case .user:
-                nil
+            case .redeemCode:
+                NSLocalizedString("Redeem code", bundle: .module, comment: "")
+            default: nil
             }
         }
         
@@ -111,6 +115,11 @@ public enum SettingsRowData {
             case .vkGroup(_):
                 SettingsIcon(image: .init(resource: .vk),
                              color: .systemBlue,
+                             inset: .init(5))
+                
+            case .redeemCode:
+                SettingsIcon(image: .init(.number),
+                             color: .systemOrange,
                              inset: .init(5))
                 
             default: nil

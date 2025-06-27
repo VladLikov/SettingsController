@@ -345,6 +345,12 @@ extension SettingsController {
 
                 case .tapticEngine(let taptic):
                     pushVC(TapticEngineController(tapticStorage: taptic), navigationTitle: row.title)
+                    
+                case .redeemCode:
+                    if #available(iOS 14.0, *) {
+                        redeemCode()
+                    } 
+                    
                 }
      
             case .app(.loaded(let app)):
@@ -555,6 +561,11 @@ extension SettingsController {
             UIApplication.shared.open(webURL)
         }
         
+    }
+    
+    @available(iOS 14.0, *)
+    private func redeemCode() {
+        SKPaymentQueue.default().presentCodeRedemptionSheet()
     }
     
     @available(iOS 14.0, *)

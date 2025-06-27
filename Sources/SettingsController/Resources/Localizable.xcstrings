@@ -291,6 +291,9 @@
         }
       }
     },
+    "Redeem code" : {
+
+    },
     "Select an item" : {
       "extractionState" : "manual",
       "localizations" : {
