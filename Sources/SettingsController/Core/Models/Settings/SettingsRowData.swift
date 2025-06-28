@@ -101,7 +101,7 @@ public enum SettingsRowData {
                 SettingsIcon(image: .init(.envelope.fill),
                              color: .systemBlue,
                              inset: .init())
-                
+                 
             case .language(_):
                 SettingsIcon(image: .init(.globe),
                              color: .gray,

@@ -292,7 +292,14 @@
       }
     },
     "Redeem code" : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Погасить код"
+          }
+        }
+      }
     },
     "Select an item" : {
       "extractionState" : "manual",
@@ -342,17 +349,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Telegram канал"
-          }
-        }
-      }
-    },
-    "User" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пользователь"
           }
         }
       }
