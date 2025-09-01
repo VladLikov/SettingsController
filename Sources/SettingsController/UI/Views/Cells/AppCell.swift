@@ -14,7 +14,8 @@ final class AppCell: UITableViewCell {
     private lazy var iconView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.layer.cornerRadius = 7.5 // 30 / 4
+        imageView.layer.cornerRadius = 15 // 30 / 4
+//        imageView.layer.cornerRadius = 7.5 // 30 / 4
         imageView.clipsToBounds = true
         imageView.backgroundColor = .secondarySystemBackground
         return imageView
