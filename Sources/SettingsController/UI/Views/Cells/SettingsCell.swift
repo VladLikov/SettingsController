@@ -24,8 +24,7 @@ public final class SettingsCell: UITableViewCell {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.tintColor = .white
         imageView.backgroundColor = .gray
-        imageView.layer.cornerRadius = 15 // round(CGFloat(30 / 4))
-//        imageView.layer.cornerRadius = 7.5 // round(CGFloat(30 / 4))
+        imageView.layer.cornerRadius = 7.5 // round(CGFloat(30 / 4))
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
