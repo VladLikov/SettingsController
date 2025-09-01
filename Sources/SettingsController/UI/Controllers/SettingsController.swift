@@ -62,7 +62,8 @@ public final class SettingsController: UITableViewController {
     
     public init(configuration: SettingsConfiguration) {
         self.configuration = configuration
-        super.init(style: .insetGrouped)
+        super.init(style: .plain)
+//        super.init(style: .insetGrouped)
     }
     
     required init?(coder: NSCoder) {
@@ -75,6 +76,9 @@ public final class SettingsController: UITableViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.backgroundColor = .systemGray2
+        
         
         title = configuration.title
         
