@@ -15,7 +15,7 @@ public enum SettingsSectionKind {
     /// - Parameters:
     ///   - developerID: id разработчика в App Store
     ///   - limit:  cколько приложений показать
-    case ourApps(developerID: String, limit: Int, appID: String)
+    case ourApps(developerID: String, limit: Int, excludeAppID: String)
     
     case premiumCard(_ payload: PremiumCardPayload)
 }
