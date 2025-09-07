@@ -93,6 +93,16 @@
         }
       }
     },
+    "Gray" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Серый"
+          }
+        }
+      }
+    },
     "Green" : {
       "localizations" : {
         "ru" : {

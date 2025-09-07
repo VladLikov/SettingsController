@@ -8,7 +8,7 @@
 import UIKit
 
 public enum AppColor: String, CaseIterable, AppColorType {
-    case purple, blue, pink, green, red, orange, yellow
+    case purple, blue, pink, green, red, orange, yellow, gray
     
     public var title: String {
         switch self {
@@ -19,6 +19,7 @@ public enum AppColor: String, CaseIterable, AppColorType {
         case .purple: NSLocalizedString("Purple", bundle: .module, comment: "")
         case .orange: NSLocalizedString("Orange", bundle: .module, comment: "")
         case .yellow: NSLocalizedString("Yellow", bundle: .module, comment: "")
+        case .gray:   NSLocalizedString("Gray", bundle: .module, comment: "")
         }
     }
     
@@ -31,6 +32,7 @@ public enum AppColor: String, CaseIterable, AppColorType {
         case .purple: .systemIndigo
         case .orange: .systemOrange
         case .yellow: .systemYellow
+        case .gray:   .systemGray
         }
     }
     
