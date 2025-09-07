@@ -12,14 +12,14 @@ public enum AppColor: String, CaseIterable, AppColorType {
     
     public var title: String {
         switch self {
-        case .red:    NSLocalizedString("Red", bundle: .module, comment: "")
-        case .green:  NSLocalizedString("Green", bundle: .module, comment: "")
-        case .blue:   NSLocalizedString("Blue", bundle: .module, comment: "")
-        case .pink:   NSLocalizedString("Pink", bundle: .module, comment: "")
+        case .red:    NSLocalizedString("Red",    bundle: .module, comment: "")
+        case .green:  NSLocalizedString("Green",  bundle: .module, comment: "")
+        case .blue:   NSLocalizedString("Blue",   bundle: .module, comment: "")
+        case .pink:   NSLocalizedString("Pink",   bundle: .module, comment: "")
         case .purple: NSLocalizedString("Purple", bundle: .module, comment: "")
         case .orange: NSLocalizedString("Orange", bundle: .module, comment: "")
         case .yellow: NSLocalizedString("Yellow", bundle: .module, comment: "")
-        case .gray:   NSLocalizedString("Gray", bundle: .module, comment: "")
+        case .gray:   NSLocalizedString("Gray",   bundle: .module, comment: "")
         }
     }
     
