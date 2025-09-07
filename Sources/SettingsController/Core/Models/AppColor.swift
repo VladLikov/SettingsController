@@ -8,7 +8,7 @@
 import UIKit
 
 public enum AppColor: String, CaseIterable, AppColorType {
-    case purple, blue, pink, green, red, orange, yellow, gray
+    case blue, purple, pink, green, red, orange, yellow, gray
     
     public var title: String {
         switch self {
