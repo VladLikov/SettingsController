@@ -34,6 +34,12 @@ class AppearanceController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if #available(iOS 26, *) {
+            tableView?.rowHeight = 50
+        } else {
+            tableView?.rowHeight = 45
+        }
                 
         tableView?.register(SwitchCell.self)
         tableView?.register(ColorCell.self)

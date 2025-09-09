@@ -48,6 +48,7 @@ class ColorCell: UITableViewCell {
     }
     
     private func setupView() {
+        
         selectionStyle = .none
                 
         contentView.addSubview(colorView)
