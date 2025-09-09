@@ -84,10 +84,6 @@ public final class SettingsController: UITableViewController {
         tableView?.register(PremiumCell.self)
 
         tableView?.separatorInset.left = 60
-         
-        if #available(iOS 26, *) {
-            tableView?.rowHeight = 150
-        }
         
         if let topInset = configuration.insets?.top {
             tableView?.contentInset.top = topInset
@@ -270,7 +266,11 @@ extension SettingsController {
         switch sections[section].kind {
         case .rows(let rows):
             if case .defaultRow(let row) = rows[row], case .user = row {
-                return 65
+                if #available(iOS 26, *) {
+                    return 80
+                } else {
+                    return 65
+                }
             }
         case .premiumCard:
             return 100
@@ -279,7 +279,11 @@ extension SettingsController {
             break
         }
         
-        return 45
+        if #available(iOS 26, *) {
+            return 60
+        } else {
+            return 45
+        }
     }
     
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
