@@ -267,7 +267,7 @@ extension SettingsController {
         case .rows(let rows):
             if case .defaultRow(let row) = rows[row], case .user = row {
                 if #available(iOS 26, *) {
-                    return 80
+                    return 70
                 } else {
                     return 65
                 }
@@ -280,7 +280,7 @@ extension SettingsController {
         }
         
         if #available(iOS 26, *) {
-            return 60
+            return 50
         } else {
             return 45
         }
