@@ -36,7 +36,7 @@ class AppearanceController: UITableViewController {
         super.viewDidLoad()
         
         if #available(iOS 26, *) {
-            tableView?.rowHeight = 50
+            tableView?.rowHeight = 53
         } else {
             tableView?.rowHeight = 45
         }
