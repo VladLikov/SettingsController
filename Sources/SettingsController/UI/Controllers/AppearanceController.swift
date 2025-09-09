@@ -34,9 +34,7 @@ class AppearanceController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        tableView?.rowHeight = 45
-        
+                
         tableView?.register(SwitchCell.self)
         tableView?.register(ColorCell.self)
         tableView?.register(UITableViewCell.self)
