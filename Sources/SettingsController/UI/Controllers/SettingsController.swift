@@ -86,7 +86,7 @@ public final class SettingsController: UITableViewController {
         tableView?.separatorInset.left = 60
          
         if #available(iOS 26, *) {
-            tableView?.rowHeight = 80
+            tableView?.rowHeight = 150
         }
         
         if let topInset = configuration.insets?.top {
