@@ -17,7 +17,7 @@ final class SplitController: UISplitViewController {
         
         if UIDevice.isPad {
             if #available(iOS 26, *) {
-                super.init(style: UIDevice.isPad ? .doubleColumn : .unspecified)
+                super.init(style: .doubleColumn)
             } else {
                 super.init(nibName: nil, bundle: nil)
             }
