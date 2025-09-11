@@ -14,11 +14,17 @@ final class SplitController: UISplitViewController {
     // MARK: Life Cycle
     
     init() {
-        if #available(iOS 26, *) {
-            super.init(style: UIDevice.isPad ? .doubleColumn : .unspecified)
+        
+        if UIDevice.isPad {
+            if #available(iOS 26, *) {
+                super.init(style: UIDevice.isPad ? .doubleColumn : .unspecified)
+            } else {
+                super.init(nibName: nil, bundle: nil)
+            }
         } else {
             super.init(nibName: nil, bundle: nil)
         }
+
         setupController()
     }
     
