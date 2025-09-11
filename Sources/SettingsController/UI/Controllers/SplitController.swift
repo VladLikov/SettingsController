@@ -10,12 +10,12 @@ import UIKit
 // MARK: - SplitController
 
 final class SplitController: UISplitViewController {
-    
+        
     // MARK: Life Cycle
     
     init() {
         if #available(iOS 26, *) {
-            super.init(style: .doubleColumn)
+            super.init(style: UIDevice.isPad ? .doubleColumn : .unspecified)
         } else {
             super.init(nibName: nil, bundle: nil)
         }
@@ -39,8 +39,10 @@ final class SplitController: UISplitViewController {
         delegate = self
         preferredDisplayMode = .allVisible
         
-        if #available(iOS 26, *) {
-            displayModeButtonVisibility = .never
+        if UIDevice.isPad {
+            if #available(iOS 26, *) {
+                displayModeButtonVisibility = .never
+            }
         }
     }
 }
