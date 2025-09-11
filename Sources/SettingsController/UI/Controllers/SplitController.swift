@@ -14,7 +14,11 @@ final class SplitController: UISplitViewController {
     // MARK: Life Cycle
     
     init() {
-        super.init(nibName: nil, bundle: nil)
+        if #available(iOS 14.0, *) {
+            super.init(style: .doubleColumn)
+        } else {
+            super.init(nibName: nil, bundle: nil)
+        }
         setupController()
     }
     
@@ -31,8 +35,10 @@ final class SplitController: UISplitViewController {
     // MARK: Private Methods
     
     private func setupController() {
+        
         delegate = self
         preferredDisplayMode = .allVisible
+        
         if #available(iOS 14.5, *) {
             displayModeButtonVisibility = .never
         }
