@@ -33,8 +33,10 @@ final class SplitController: UISplitViewController {
     private func setupController() {
         delegate = self
         preferredDisplayMode = .allVisible
+        if #available(iOS 14.5, *) {
+            displayModeButtonVisibility = .never
+        }
     }
-    
 }
 
 // MARK: - UISplitViewControllerDelegate
