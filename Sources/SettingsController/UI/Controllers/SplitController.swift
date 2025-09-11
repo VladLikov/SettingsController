@@ -15,12 +15,8 @@ final class SplitController: UISplitViewController {
     
     init() {
         
-        if UIDevice.isPad {
-            if #available(iOS 26, *) {
-                super.init(style: .doubleColumn)
-            } else {
-                super.init(nibName: nil, bundle: nil)
-            }
+        if UIDevice.isPad, #available(iOS 26, *) {
+            super.init(style: .doubleColumn)
         } else {
             super.init(nibName: nil, bundle: nil)
         }
@@ -45,10 +41,8 @@ final class SplitController: UISplitViewController {
         delegate = self
         preferredDisplayMode = .allVisible
         
-        if UIDevice.isPad {
-            if #available(iOS 26, *) {
-                displayModeButtonVisibility = .never
-            }
+        if UIDevice.isPad, #available(iOS 26, *) {
+            displayModeButtonVisibility = .never
         }
     }
 }
