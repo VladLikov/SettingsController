@@ -15,11 +15,12 @@ final class SplitController: UISplitViewController {
     
     init() {
         
-        if UIDevice.isPad, #available(iOS 26, *) {
-            super.init(style: .doubleColumn)
-        } else {
-            super.init(nibName: nil, bundle: nil)
-        }
+//        if UIDevice.isPad, #available(iOS 26, *) {
+//            super.init(style: .doubleColumn)
+//        } else {
+//            super.init(nibName: nil, bundle: nil)
+//        }
+        super.init(nibName: nil, bundle: nil)
 
         setupController()
     }
@@ -39,11 +40,11 @@ final class SplitController: UISplitViewController {
     private func setupController() {
         
         delegate = self
-        preferredDisplayMode = .allVisible
+        preferredDisplayMode = .oneBesideSecondary
         
-        if UIDevice.isPad, #available(iOS 26, *) {
-            displayModeButtonVisibility = .never
-        }
+//        if UIDevice.isPad, #available(iOS 26, *) {
+//            displayModeButtonVisibility = .never
+//        }
     }
 }
 
@@ -54,7 +55,6 @@ extension SplitController: UISplitViewControllerDelegate {
     func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController: UIViewController, onto primaryViewController: UIViewController) -> Bool {
         return true
     }
-    
 }
 
 // MARK: - Get Default
@@ -69,7 +69,7 @@ extension SplitController {
         
         
         let splitViewController = SplitController()
-        splitViewController.viewControllers = [vc, detailController]
+        splitViewController.viewControllers = [vc, UINavigationController(rootViewController: detailController)]
                 
         return splitViewController
         

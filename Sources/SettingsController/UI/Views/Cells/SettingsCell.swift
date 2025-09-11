@@ -95,8 +95,8 @@ extension SettingsCell {
     private func setupView() {
         
         accessoryType  = .disclosureIndicator
-        selectionStyle = .gray
-        
+        selectionStyle = .default
+
         contentView.addSubview(iconImageView)
         contentView.addSubview(stackView)
     }
