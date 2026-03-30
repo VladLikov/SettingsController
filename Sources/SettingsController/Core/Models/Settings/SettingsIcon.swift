@@ -13,6 +13,7 @@ public struct SettingsIcon {
     let color: UIColor
     let inset: Inset?
         
+    @MainActor
     public func generateImage() async -> UIImage? {
         if let inset {
             return await base?.inset(inset.edgeInsets)
