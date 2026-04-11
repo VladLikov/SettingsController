@@ -70,7 +70,7 @@ public class MailController: UITableViewController {
     
     // MARK: Life Cycle
 
-    init(type: MailType, email: String) {
+    public init(type: MailType, email: String) {
         self.type = type
         self.email = email
         
