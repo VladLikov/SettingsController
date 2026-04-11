@@ -93,7 +93,7 @@
         }
       }
     },
-    "Contact developer" : {
+    "Contact Developer" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
@@ -247,6 +247,16 @@
         }
       }
     },
+    "More Apps" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наши приложения"
+          }
+        }
+      }
+    },
     "Need other language" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -331,12 +341,12 @@
         }
       }
     },
-    "Redeem code" : {
+    "Redeem Code" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Погасить код"
+            "value" : "Погасить промокод"
           }
         }
       }
@@ -354,6 +364,16 @@
     },
     "Share app" : {
       "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться приложением"
+          }
+        }
+      }
+    },
+    "Share App" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
@@ -383,7 +403,7 @@
         }
       }
     },
-    "Telegram channel" : {
+    "Telegram Channel" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
@@ -393,7 +413,7 @@
         }
       }
     },
-    "VK group" : {
+    "VK Group" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
@@ -435,6 +455,16 @@
     },
     "Write a review" : {
       "extractionState" : "manual",
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оставить отзыв"
+          }
+        }
+      }
+    },
+    "Write a Review" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {

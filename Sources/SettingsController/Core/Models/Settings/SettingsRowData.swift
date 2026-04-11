@@ -44,23 +44,23 @@ public enum SettingsRowData {
             case .tapticEngine:
                 NSLocalizedString("Taptic Engine", bundle: .module, comment: "")
             case .shareApp:
-                NSLocalizedString("Share app", bundle: .module, comment: "")
+                NSLocalizedString("Share App", bundle: .module, comment: "")
             case .rateApp:
-                NSLocalizedString("Write a review", bundle: .module, comment: "")
+                NSLocalizedString("Write a Review", bundle: .module, comment: "")
             case .moreApps:
-                NSLocalizedString("More apps", bundle: .module, comment: "")
+                NSLocalizedString("More Apps", bundle: .module, comment: "")
             case .premium:
                 NSLocalizedString("Premium", bundle: .module, comment: "")
             case .contactDeveloper:
-                NSLocalizedString("Contact developer", bundle: .module, comment: "")
+                NSLocalizedString("Contact Developer", bundle: .module, comment: "")
             case .language:
                 NSLocalizedString("Language", bundle: .module, comment: "")
             case .telegram:
-                NSLocalizedString("Telegram channel", bundle: .module, comment: "")
+                NSLocalizedString("Telegram Channel", bundle: .module, comment: "")
             case .vkGroup:
-                NSLocalizedString("VK group", bundle: .module, comment: "")
+                NSLocalizedString("VK Group", bundle: .module, comment: "")
             case .redeemCode:
-                NSLocalizedString("Redeem code", bundle: .module, comment: "")
+                NSLocalizedString("Redeem Code", bundle: .module, comment: "")
             default: nil
             }
         }
