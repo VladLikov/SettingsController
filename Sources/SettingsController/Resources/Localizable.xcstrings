@@ -34,7 +34,14 @@
       }
     },
     "After tapping Send, you'll be redirected to the Mail app and the message will be sent from your mailbox." : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После нажатия «Отправить» вы будете перенаправлены в приложение «Почта», и сообщение будет отправлено с Вашего почтового ящика."
+          }
+        }
+      }
     },
     "App color" : {
       "localizations" : {
@@ -57,7 +64,14 @@
       }
     },
     "Ask Support a Question" : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вопрос Поддержке"
+          }
+        }
+      }
     },
     "Automatically" : {
       "localizations" : {
@@ -213,7 +227,14 @@
       }
     },
     "Message" : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщение"
+          }
+        }
+      }
     },
     "More apps" : {
       "extractionState" : "manual",
@@ -383,7 +404,14 @@
       }
     },
     "What went wrong? Add at least 10 characters. The more detail, the faster we can help." : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что пошло не так? Введите не менее 10 символов. Чем подробнее вы опишете проблему, тем быстрее мы сможем помочь."
+          }
+        }
+      }
     },
     "When the switch is on, the system appearance is used." : {
       "localizations" : {
@@ -396,7 +424,14 @@
       }
     },
     "Which language would you like to see in the app?" : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Какой язык вы хотели бы видеть в приложении?"
+          }
+        }
+      }
     },
     "Write a review" : {
       "extractionState" : "manual",
