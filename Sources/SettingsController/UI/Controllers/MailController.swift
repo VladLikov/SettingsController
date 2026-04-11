@@ -10,17 +10,17 @@ import SafeSFSymbols
 import SwiftBoost
 import MessageUI
 
-enum MailType {
+public enum MailType {
     case supportRequest, languageRequest
     
-    var placeholder: String {
+    public var placeholder: String {
         switch self {
         case .supportRequest: NSLocalizedString("What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module, comment: "")
         case .languageRequest: NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "")
         }
     }
     
-    var minCharactersCount: Int {
+    public var minCharactersCount: Int {
         switch self {
         case .supportRequest: 10
         case .languageRequest: 2
@@ -31,7 +31,7 @@ enum MailType {
 // MARK: - MailController
 
 @MainActor
-class MailController: UITableViewController {
+public class MailController: UITableViewController {
     
     // MARK: Properties [Private]
 
@@ -81,7 +81,7 @@ class MailController: UITableViewController {
         fatalError()
     }
     
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         
         setupView()
@@ -121,19 +121,19 @@ extension MailController {
 
 extension MailController {
         
-    override func numberOfSections(in tableView: UITableView) -> Int { 1 }
+    public override func numberOfSections(in tableView: UITableView) -> Int { 1 }
     
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 1 }
+    public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 1 }
     
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         NSLocalizedString("Message", bundle: .module, comment: "")
     }
     
-    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+    public override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         NSLocalizedString("After tapping Send, you'll be redirected to the Mail app and the message will be sent from your mailbox.", bundle: .module, comment: "")
     }
     
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withClass: MailCell.self, for: indexPath)
         
