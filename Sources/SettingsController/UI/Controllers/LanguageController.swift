@@ -135,11 +135,13 @@ extension LanguageController: @preconcurrency MFMailComposeViewControllerDelegat
         
         guard MFMailComposeViewController.canSendEmail() else { return }
 
-        let mail = MFMailComposeViewController.getDefault(for: email, needLanguage: true)
+//        let mail = MFMailComposeViewController.getDefault(for: email, needLanguage: true)
+//        
+//        mail.mailComposeDelegate = self
         
-        mail.mailComposeDelegate = self
+        let mailVC = MailController(type: .languageRequest, email: email)
         
-        present(mail, animated: true)
+        present(UINavigationController(rootViewController: mailVC), animated: true)
                 
     }
 }

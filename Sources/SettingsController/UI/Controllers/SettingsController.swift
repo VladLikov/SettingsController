@@ -511,12 +511,13 @@ extension SettingsController {
         
         guard MFMailComposeViewController.canSendEmail() else { return }
         
-        let mail = MFMailComposeViewController.getDefault(for: email)
+//        let mail = MFMailComposeViewController.getDefault(for: email)
+//        
+//        mail.mailComposeDelegate = self
         
-        mail.mailComposeDelegate = self
+        let mailVC = MailController(type: .supportRequest, email: email)
         
-        present(mail, animated: true)
-        
+        present(UINavigationController(rootViewController: mailVC), animated: true)
     }
     
     private func shareApp(_ appID: String, at indexPath: IndexPath) {

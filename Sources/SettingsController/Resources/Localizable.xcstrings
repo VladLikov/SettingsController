@@ -33,6 +33,9 @@
         }
       }
     },
+    "After tapping Send, you'll be redirected to the Mail app and the message will be sent from your mailbox." : {
+
+    },
     "App color" : {
       "localizations" : {
         "ru" : {
@@ -52,6 +55,9 @@
           }
         }
       }
+    },
+    "Ask Support a Question" : {
+
     },
     "Automatically" : {
       "localizations" : {
@@ -205,6 +211,9 @@
           }
         }
       }
+    },
+    "Message" : {
+
     },
     "More apps" : {
       "extractionState" : "manual",
@@ -373,6 +382,9 @@
         }
       }
     },
+    "What went wrong? Add at least 10 characters. The more detail, the faster we can help." : {
+
+    },
     "When the switch is on, the system appearance is used." : {
       "localizations" : {
         "ru" : {
@@ -382,6 +394,9 @@
           }
         }
       }
+    },
+    "Which language would you like to see in the app?" : {
+
     },
     "Write a review" : {
       "extractionState" : "manual",
