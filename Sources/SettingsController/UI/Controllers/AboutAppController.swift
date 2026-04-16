@@ -192,7 +192,7 @@ extension AboutAppController {
         titleForHeaderInSection section: Int
     ) -> String? {
         switch data[section].section {
-        case .version: return nil
+        case .version: return NSLocalizedString("Version", bundle: .module, comment: "")
         case .links: return nil
         case .parameters: return NSLocalizedString("Parameters", bundle: .module, comment: "")
         }

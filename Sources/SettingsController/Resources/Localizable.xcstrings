@@ -539,6 +539,16 @@
         }
       }
     },
+    "Version" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия"
+          }
+        }
+      }
+    },
     "VK Group" : {
       "localizations" : {
         "ru" : {
