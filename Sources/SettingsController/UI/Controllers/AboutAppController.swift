@@ -209,16 +209,17 @@ extension AboutAppController {
         config.secondaryTextProperties.color = .secondaryLabel
         
         switch item {
-
         case .privacyPolicy, .terms:
             config.text = item.title
             cell.accessoryType = .disclosureIndicator
             cell.selectionStyle = .default
                         
         case .checkForUpdate:
+            config.text = item.title
             config.textProperties.color = .systemBlue
             
         default:
+            config.text = item.title
             config.secondaryText = item.value
             cell.selectionStyle = .none
             cell.accessoryType = .none
@@ -282,6 +283,6 @@ extension AboutAppController {
     private func pushSafari(with url: URL) {
         
         let safari = SFSafariViewController(url: url)
-        navigationController?.pushViewController(safari)
+        present(safari, animated: true)
     }
 }
