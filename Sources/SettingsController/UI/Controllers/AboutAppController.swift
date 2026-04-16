@@ -148,7 +148,8 @@ private extension AboutAppController {
             (
                 .version,
                 [
-                    .currentVersion(appVersion)
+                    .currentVersion(appVersion),
+                    .checkForUpdate
                 ]
             ),
             (
@@ -217,6 +218,12 @@ extension AboutAppController {
         case .checkForUpdate:
             config.text = item.title
             config.textProperties.color = .systemBlue
+            
+        case .userID:
+            config.text = item.title
+            config.secondaryText = item.value
+            cell.selectionStyle = .default
+            cell.accessoryType = .none
             
         default:
             config.text = item.title
