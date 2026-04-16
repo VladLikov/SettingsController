@@ -34,8 +34,10 @@ public enum SettingsRowData {
         case telegram(id: String)
         case vkGroup(id: String)
 
-        case appearance(theme: ThemeStorage, colors: [any AppColorType])
+        case appearance(theme: ThemeStorage, colors: [any AppColorType] = AppColor.allCases)
         case tapticEngine(taptic: TapticStorage)
+        
+        case about(userID: String?, appID: String, privacyURL: URL, termsURL: URL)
         
         var title: String? {
             switch self {
@@ -61,6 +63,8 @@ public enum SettingsRowData {
                 NSLocalizedString("VK Group", bundle: .module, comment: "")
             case .redeemCode:
                 NSLocalizedString("Redeem Code", bundle: .module, comment: "")
+            case .about:
+                NSLocalizedString("About App", bundle: .module, comment: "")
             default: nil
             }
         }
@@ -105,6 +109,11 @@ public enum SettingsRowData {
             case .language(_):
                 SettingsIcon(image: .init(.globe),
                              color: .gray,
+                             inset: .init())
+                
+            case .about:
+                SettingsIcon(image: .init(.house.fill),
+                             color: .init(hex: "#32ADE6"),
                              inset: .init())
                 
             case .telegram(_):

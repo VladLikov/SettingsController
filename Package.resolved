@@ -1,5 +1,5 @@
 {
-  "originHash" : "64a93fd1ec5e2b7c69b6df3766e0d0b1e19605a909137b843ba91e1a2cbf8012",
+  "originHash" : "facd2fa2fb6e7a5f82b08280013757826303f9ca2a7bae8cac7684a1b25f0909",
   "pins" : [
     {
       "identity" : "alertkit",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "3b73be8db5a7e7efaf474c6ed919f5a437d843c9",
         "version" : "5.1.9"
+      }
+    },
+    {
+      "identity" : "checkupdate",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/VladLikov/CheckUpdate.git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "24bef4b49760f7b740c04f18664d85d0124c8641"
       }
     },
     {

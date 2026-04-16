@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "About App" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О приложение"
+          }
+        }
+      }
+    },
     "Active" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -53,6 +63,36 @@
         }
       }
     },
+    "App Language" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Язык приложения"
+          }
+        }
+      }
+    },
+    "App Region" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Регион приложения"
+          }
+        }
+      }
+    },
+    "App Version" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия"
+          }
+        }
+      }
+    },
     "Appearance" : {
       "localizations" : {
         "ru" : {
@@ -93,12 +133,32 @@
         }
       }
     },
+    "Check for Update" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Проверить обновления"
+          }
+        }
+      }
+    },
     "Contact Developer" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Связаться с разработчиком"
+          }
+        }
+      }
+    },
+    "Current" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущая"
           }
         }
       }
@@ -154,6 +214,16 @@
         }
       }
     },
+    "Instance" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Окружение"
+          }
+        }
+      }
+    },
     "Language" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -172,6 +242,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нужен язык: "
+          }
+        }
+      }
+    },
+    "Latest version is installed" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "У Вас последняя версия"
           }
         }
       }
@@ -289,6 +369,16 @@
         }
       }
     },
+    "Parameters" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Параметры"
+          }
+        }
+      }
+    },
     "Pink" : {
       "localizations" : {
         "ru" : {
@@ -317,6 +407,19 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Премиум активен"
+          }
+        }
+      }
+    },
+    "Privacy Policy" : {
+      "shouldTranslate" : false
+    },
+    "Pro Status" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pro статус"
           }
         }
       }
@@ -383,6 +486,16 @@
         }
       }
     },
+    "System Language" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Язык системы"
+          }
+        }
+      }
+    },
     "Taptic Engine" : {
       "localizations" : {
         "ru" : {
@@ -409,6 +522,19 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Telegram канал"
+          }
+        }
+      }
+    },
+    "Terms of Use" : {
+      "shouldTranslate" : false
+    },
+    "User ID" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ID пользователя"
           }
         }
       }
@@ -480,6 +606,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Желтый"
+          }
+        }
+      }
+    },
+    "Сopied" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скопировано"
           }
         }
       }

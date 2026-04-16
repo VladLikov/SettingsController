@@ -58,6 +58,8 @@ public final class SettingsController: UITableViewController {
         
     private var indexPathToRefresh: IndexPath?
     
+    private var isPremium: Bool = false
+    
     // MARK: Life Cycle
     
     public init(configuration: SettingsConfiguration) {
@@ -359,6 +361,14 @@ extension SettingsController {
                         redeemCode()
                     } 
                     
+                case .about(let userID, let appID, let privacyURL, let termsURL):
+                    pushVC(AboutAppController(isPremium: isPremium,
+                                              userID: userID,
+                                              appID: appID,
+                                              privacyURL: privacyURL,
+                                              termsURL: termsURL),
+                           navigationTitle: row.title)
+                    
                 }
      
             case .app(.loaded(let app)):
@@ -431,6 +441,7 @@ extension SettingsController {
         if case .premiumCard(let payloadCard) = section.kind {
             configuration.delegate?.settingsPremiumStatusRequested { [weak self] isPremium in
                 guard let self else { return }
+                self.isPremium = isPremium
                 guard payloadCard.base.isPremium != isPremium else { return }
                 let payload = payloadCard.base
                 sections[indexPath.section].kind = .rows([.defaultRow(.premium(.init(isPremium: isPremium, color: payload.color, vc: payload.vc, action: payload.action)))])

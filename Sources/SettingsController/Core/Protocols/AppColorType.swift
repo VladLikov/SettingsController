@@ -17,9 +17,3 @@ public protocol AppColorType: RawRepresentable, CaseIterable where RawValue == S
     /// Имя иконки
     var iconName: String { get }
 }
-
-public extension SettingsRowData.DefaultRow {
-    static func appearance(theme: ThemeStorage) -> Self {
-        .appearance(theme: theme, colors: AppColor.allCases)
-    }
-}
