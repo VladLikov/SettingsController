@@ -217,7 +217,7 @@ extension AboutAppController {
                         
         case .checkForUpdate:
             config.text = item.title
-            config.textProperties.color = .systemBlue
+            config.textProperties.color = view.tintColor
             
         case .userID:
             config.text = item.title
