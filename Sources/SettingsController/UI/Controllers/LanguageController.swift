@@ -86,7 +86,7 @@ extension LanguageController {
             
             let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
             
-            cell.textLabel?.text = NSLocalizedString("Need other language", bundle: .module, comment: "")
+            cell.textLabel?.text = NSLocalizedString("Need Other Language", bundle: .module, comment: "")
             cell.textLabel?.textAlignment = .center
             cell.textLabel?.textColor = self.view.tintColor
             

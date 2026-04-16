@@ -348,6 +348,16 @@
         }
       }
     },
+    "Need Other Language" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нужен другой язык"
+          }
+        }
+      }
+    },
     "Not active" : {
       "extractionState" : "manual",
       "localizations" : {
