@@ -6,7 +6,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "О приложение"
+            "value" : "О приложении"
           }
         }
       }
@@ -148,7 +148,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Связаться с разработчиком"
+            "value" : "Связаться с поддержкой"
           }
         }
       }
