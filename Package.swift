@@ -14,7 +14,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/sparrowcode/AlertKit.git", .upToNextMajor(from: "5.1.9")),
         .package(url: "https://github.com/sparrowcode/SafeSFSymbols.git", .upToNextMajor(from: "2.0.1")),
-        .package(url: "https://github.com/sparrowcode/SwiftBoost", .upToNextMajor(from: "4.0.8")),
+        .package(url: "https://github.com/sparrowcode/SwiftBoost", .upToNextMajor(from: "5.0.0")),
         .package(url: "https://github.com/VladLikov/CheckUpdate.git", branch: "main")
     ],
     targets: [
