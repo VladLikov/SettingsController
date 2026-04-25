@@ -10,20 +10,30 @@ import SafeSFSymbols
 import SwiftBoost
 import MessageUI
 
-public enum MailType {
-    case supportRequest, languageRequest
+public enum MailType: Equatable {
+    case supportRequest, languageRequest, custom(placeholder: String, minCharactersCount: Int)
     
     public var placeholder: String {
         switch self {
-        case .supportRequest: NSLocalizedString("What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module, comment: "")
-        case .languageRequest: NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "")
+        case .supportRequest:
+            return NSLocalizedString("What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module, comment: "")
+            
+        case .languageRequest:
+            return NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "")
+            
+        case .custom(let placeholder, _):
+            return placeholder
         }
     }
     
     public var minCharactersCount: Int {
         switch self {
-        case .supportRequest: 10
-        case .languageRequest: 2
+        case .supportRequest:
+            return 10
+        case .languageRequest:
+            return 2
+        case .custom(_, let minCharactersCount):
+            return minCharactersCount
         }
     }
 }
