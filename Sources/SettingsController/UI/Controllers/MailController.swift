@@ -11,9 +11,9 @@ import SwiftBoost
 import MessageUI
 
 public enum MailType: Equatable {
-    case supportRequest, languageRequest, custom(placeholder: String, minCharactersCount: Int, title: String)
+    case supportRequest, languageRequest, custom(placeholder: String, minCharactersCount: Int, navigationTitle: String)
     
-    public var title: String {
+    public var navigationTitle: String {
         switch self {
         case .supportRequest:
             return NSLocalizedString("Ask Support a Question", bundle: .module, comment: "")
@@ -21,8 +21,8 @@ public enum MailType: Equatable {
         case .languageRequest:
             return NSLocalizedString("Request a Language", bundle: .module, comment: "")
             
-        case .custom(_, _, let title):
-            return title
+        case .custom(_, _, let navigationTitle):
+            return navigationTitle
         }
     }
     
@@ -135,7 +135,7 @@ extension MailController {
     
     private func setupNavigationBar() {
         
-        title = type.title
+        title = type.navigationTitle
 
         navigationItem.largeTitleDisplayMode = .never
         
