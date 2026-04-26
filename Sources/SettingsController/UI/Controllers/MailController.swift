@@ -11,7 +11,20 @@ import SwiftBoost
 import MessageUI
 
 public enum MailType: Equatable {
-    case supportRequest, languageRequest, custom(placeholder: String, minCharactersCount: Int)
+    case supportRequest, languageRequest, custom(placeholder: String, minCharactersCount: Int, title: String)
+    
+    public var title: String {
+        switch self {
+        case .supportRequest:
+            return NSLocalizedString("Ask Support a Question", bundle: .module, comment: "")
+            
+        case .languageRequest:
+            return NSLocalizedString("Request a Language", bundle: .module, comment: "")
+            
+        case .custom(_, _, let title):
+            return title
+        }
+    }
     
     public var placeholder: String {
         switch self {
@@ -21,7 +34,7 @@ public enum MailType: Equatable {
         case .languageRequest:
             return NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "")
             
-        case .custom(let placeholder, _):
+        case .custom(let placeholder, _, _):
             return placeholder
         }
     }
@@ -32,7 +45,7 @@ public enum MailType: Equatable {
             return 10
         case .languageRequest:
             return 2
-        case .custom(_, let minCharactersCount):
+        case .custom(_, let minCharactersCount, _):
             return minCharactersCount
         }
     }
@@ -96,6 +109,15 @@ public class MailController: UITableViewController {
         
         setupView()
     }
+    
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        guard let cell = tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? MailCell else {
+            return
+        }
+        cell.textViewBecomeFirstResponder()
+    }
 }
 
 // MARK: - Setup View
@@ -113,7 +135,7 @@ extension MailController {
     
     private func setupNavigationBar() {
         
-        title = NSLocalizedString("Ask Support a Question", bundle: .module, comment: "")
+        title = type.title
 
         navigationItem.largeTitleDisplayMode = .never
         

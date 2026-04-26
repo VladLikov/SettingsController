@@ -16,7 +16,7 @@ protocol MailCellDelegate: AnyObject {
 
 // MARK: - MailCell
 
-class MailCell: UITableViewCell {
+public class MailCell: UITableViewCell {
     
     weak var delegate: MailCellDelegate?
     
@@ -71,9 +71,14 @@ class MailCell: UITableViewCell {
 
 extension MailCell {
     
-    func configure(type: MailType) {
+    public func configure(type: MailType) {
         
         placeholderLabel.text = type.placeholder
+    }
+    
+    public func textViewBecomeFirstResponder() {
+        
+        textView.becomeFirstResponder()
     }
 }
 
@@ -137,7 +142,7 @@ extension MailCell {
 
 extension MailCell: UITextViewDelegate {
     
-    func textViewDidChange(_ textView: UITextView) {
+    public func textViewDidChange(_ textView: UITextView) {
         
         let text = textView.text ?? ""
 
