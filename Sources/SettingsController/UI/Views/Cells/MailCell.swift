@@ -44,7 +44,7 @@ public class MailCell: UITableViewCell {
         let label = UILabel()
         
         label.textColor = .systemGray
-        label.font = textView.font
+//        label.font = textView.font
         label.numberOfLines = 0
         label.isHidden = false
         
@@ -73,7 +73,20 @@ extension MailCell {
     
     public func configure(type: MailType) {
         
-        placeholderLabel.text = type.placeholder
+        let paragraphStyle = textView.typingAttributes[.paragraphStyle] as? NSMutableParagraphStyle
+            ?? NSMutableParagraphStyle()
+        
+        let attributes: [NSAttributedString.Key: Any] = [
+            .paragraphStyle: paragraphStyle,
+            .font: textView.font ?? .systemFont(ofSize: 16),
+            .foregroundColor: UIColor.systemGray
+        ]
+        
+        placeholderLabel.attributedText = NSAttributedString(
+            string: type.placeholder,
+            attributes: attributes
+        )
+//        placeholderLabel.text = type.placeholder
     }
     
     public func textViewBecomeFirstResponder() {

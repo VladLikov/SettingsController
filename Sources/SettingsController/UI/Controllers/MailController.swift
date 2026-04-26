@@ -127,6 +127,7 @@ extension MailController {
     private func setupView() {
                 
         tableView.register(MailCell.self)
+        
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 100
         
