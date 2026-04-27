@@ -11,7 +11,9 @@ import SwiftBoost
 import MessageUI
 
 public enum MailType: Equatable {
-    case supportRequest, languageRequest, custom(placeholder: String, minCharactersCount: Int, navigationTitle: String)
+    case supportRequest,
+         languageRequest,
+         custom(placeholder: String, minCharactersCount: Int, navigationTitle: String, subject: String)
     
     public var navigationTitle: String {
         switch self {
@@ -21,7 +23,7 @@ public enum MailType: Equatable {
         case .languageRequest:
             return NSLocalizedString("Request a Language", bundle: .module, comment: "")
             
-        case .custom(_, _, let navigationTitle):
+        case .custom(_, _, let navigationTitle, _):
             return navigationTitle
         }
     }
@@ -34,7 +36,7 @@ public enum MailType: Equatable {
         case .languageRequest:
             return NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "")
             
-        case .custom(let placeholder, _, _):
+        case .custom(let placeholder, _, _, _):
             return placeholder
         }
     }
@@ -45,8 +47,21 @@ public enum MailType: Equatable {
             return 10
         case .languageRequest:
             return 2
-        case .custom(_, let minCharactersCount, _):
+        case .custom(_, let minCharactersCount, _, _):
             return minCharactersCount
+        }
+    }
+    
+    public var subject: String {
+        switch self {
+        case .supportRequest:
+            return NSLocalizedString("Support Request", bundle: .module, comment: "")
+
+        case .languageRequest:
+            return NSLocalizedString("Language Request", bundle: .module, comment: "")
+            
+        case .custom(_, _, _, let subject):
+            return subject
         }
     }
 }

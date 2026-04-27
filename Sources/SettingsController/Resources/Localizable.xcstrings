@@ -246,6 +246,9 @@
         }
       }
     },
+    "Language Request" : {
+
+    },
     "Latest version is installed" : {
       "localizations" : {
         "ru" : {
@@ -498,6 +501,9 @@
           }
         }
       }
+    },
+    "Support Request" : {
+
     },
     "System Language" : {
       "localizations" : {

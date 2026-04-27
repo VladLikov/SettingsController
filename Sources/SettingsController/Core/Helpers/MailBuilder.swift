@@ -77,7 +77,7 @@ enum MailBuilder {
         
         """
         
-        let subject = appName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let subject = "\(appName) \(type.subject)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         
         return "mailto:\(recipient)?subject=\(subject)&body=\(body)"
