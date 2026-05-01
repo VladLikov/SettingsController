@@ -42,60 +42,120 @@ Then add `SettingsController` to your target dependencies.
 
 ## Quick Start
 
+Create a small helper in your app and keep the settings composition in one place. In this example, `AppSettings.shared` is your app storage object that conforms to `ThemeStorage` and `TapticStorage`.
+
 ```swift
 import UIKit
+import SwiftUI
 import SettingsController
 
-final class ViewController: UIViewController {
-    private let themeStorage = AppThemeStorage()
-    private let tapticStorage = AppTapticStorage()
+struct SettingsControllerHelper {
+    private static let settings = AppSettings.shared
 
-    func openSettings() {
-        let configuration = SettingsConfiguration(
-            title: "Settings",
-            overlayAppID: "1234567890",
-            sections: [
-                SettingsSection(kind: .rows([
-                    .defaultRow(.user("Vlad Likov", UIImage(named: "avatar"), ProfileViewController.self)),
-                    .defaultRow(.premium(
-                        PremiumPayload(
-                            isPremium: false,
-                            color: .systemYellow,
-                            vc: PaywallViewController.self,
-                            action: nil
-                        )
-                    ))
-                ])),
+    static func setupTitle() -> String {
+        "Settings"
+    }
 
-                SettingsSection(title: "Preferences", kind: .rows([
-                    .defaultRow(.appearance(theme: themeStorage)),
-                    .defaultRow(.tapticEngine(taptic: tapticStorage)),
-                    .defaultRow(.language(email: "support@example.com"))
-                ])),
+    static func setupInsets() -> SettingsInsets {
+        .init(top: 25)
+    }
 
-                SettingsSection(title: "App", kind: .rows([
-                    .defaultRow(.shareApp(appID: "1234567890")),
-                    .defaultRow(.rateApp(appID: "1234567890")),
-                    .defaultRow(.contactDeveloper(email: "support@example.com")),
-                    .defaultRow(.telegram(id: "your_channel")),
-                    .defaultRow(.vkGroup(id: "123456789")),
-                    .defaultRow(.about(
-                        userID: "user-123",
-                        appID: "1234567890",
-                        privacyURL: URL(string: "https://example.com/privacy")!,
-                        termsURL: URL(string: "https://example.com/terms")!
-                    ))
-                ])),
+    static func setupInitialValues() -> [AnyKeyPath: Any] {
+        [
+            \AppSettings.appColor: settings.appColor
+        ]
+    }
 
-                SettingsSection(
-                    title: "More Apps",
-                    kind: .ourApps(developerID: "12345678", limit: 4, excludeAppID: "1234567890")
-                )
-            ],
-            delegate: self
+    static func setupOverlayAppID() -> String? {
+        "1234567890"
+    }
+
+    static func setupSections() -> [SettingsSection] {
+        let isPremium = settings.isPremium
+
+        let premiumPayload = PremiumPayload(
+            isPremium: isPremium,
+            color: settings.appColor,
+            vc: nil
+        ) { fromVC in
+            let paywall = PaywallViewController()
+            fromVC.present(paywall, animated: true)
+        }
+
+        let premiumSection: SettingsSection = isPremium
+            ? SettingsSection(kind: .rows([.defaultRow(.premium(premiumPayload))]))
+            : SettingsSection(kind: .premiumCard(.init(
+                image: Image(systemName: "star.fill"),
+                title: "Go Premium",
+                subtitle: "Unlock all features",
+                buttonTitle: "Upgrade",
+                base: premiumPayload
+            )))
+
+        return [
+            premiumSection,
+
+            SettingsSection(title: "App", kind: .rows([
+                .row(.init(
+                    title: "Notifications",
+                    icon: .init(image: UIImage(systemName: "bell.fill"), color: .systemRed, inset: .init()),
+                    vc: NotificationsViewController.self
+                )),
+                .defaultRow(.appearance(theme: settings)),
+                .defaultRow(.tapticEngine(taptic: settings)),
+                .defaultRow(.language(email: "support@example.com"))
+            ])),
+
+            SettingsSection(title: "Feedback", kind: .rows([
+                .defaultRow(.shareApp(appID: "1234567890")),
+                .defaultRow(.rateApp(appID: "1234567890")),
+                .defaultRow(.contactDeveloper(email: "support@example.com")),
+                .defaultRow(.moreApps(developerID: "12345678")),
+                .defaultRow(.telegram(id: "your_channel")),
+                .defaultRow(.vkGroup(id: "123456789")),
+                .defaultRow(.redeemCode)
+            ])),
+
+            SettingsSection(
+                title: "More Apps",
+                kind: .ourApps(developerID: "12345678", limit: 6, excludeAppID: "1234567890")
+            ),
+
+            SettingsSection(kind: .rows([
+                .defaultRow(.about(
+                    userID: settings.userID,
+                    appID: "1234567890",
+                    privacyURL: URL(string: "https://example.com/privacy")!,
+                    termsURL: URL(string: "https://example.com/terms")!
+                ))
+            ]))
+        ]
+    }
+}
+
+extension SettingsConfiguration {
+    static func setup(delegate: SettingsControllerDelegate?) -> SettingsConfiguration {
+        .init(
+            title: SettingsControllerHelper.setupTitle(),
+            initialValues: SettingsControllerHelper.setupInitialValues(),
+            insets: SettingsControllerHelper.setupInsets(),
+            overlayAppID: SettingsControllerHelper.setupOverlayAppID(),
+            sections: SettingsControllerHelper.setupSections(),
+            delegate: delegate
         )
+    }
+}
+```
 
-        SettingsController.present(configuration: configuration, from: self)
+Then present settings from any view controller:
+
+```swift
+final class ViewController: UIViewController {
+    func openSettings() {
+        SettingsController.present(
+            configuration: .setup(delegate: self),
+            from: self
+        )
     }
 }
 ```
