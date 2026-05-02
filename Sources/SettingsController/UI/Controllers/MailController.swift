@@ -132,7 +132,7 @@ public class MailController: UITableViewController {
             return
         }
         cell.textViewBecomeFirstResponder()
-    }
+    } 
 }
 
 // MARK: - Setup View
