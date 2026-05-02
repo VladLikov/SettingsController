@@ -33,6 +33,7 @@ public class MailCell: UITableViewCell {
         textView.textColor = .label
         textView.autocapitalizationType = .sentences
         textView.delegate = self
+        textView.backgroundColor = .clear
 
         textView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -47,7 +48,8 @@ public class MailCell: UITableViewCell {
         label.font = textView.font
         label.numberOfLines = 0
         label.isHidden = false
-        
+        label.backgroundColor = .clear
+
         label.translatesAutoresizingMaskIntoConstraints = false
         
         return label
