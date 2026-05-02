@@ -1,140 +1,406 @@
 # SettingsController
 
-🎛️ A modular, customizable UIKit settings screen for iOS apps.  
-Powered by Swift Package Manager. Designed to be dropped in and used in minutes.
+SettingsController is a modular UIKit settings screen for iOS apps. It gives you a ready-to-present `UITableViewController` with common settings flows: appearance, haptics, language, premium, support, App Store actions, social links, app metadata, and an App Store "more apps" section.
 
----
+The package is built with Swift Package Manager and is intended to be configured from your app code without subclassing the settings controller.
 
-## ✨ Features
+## Features
 
-- 📱 Ready-to-use settings controller (`SettingsController`)
-- 🧩 Supports appearance (themes), haptics, language selection, premium actions, and more
-- 🧍 User profile section
-- 🛍 App Store integration (rate app, share app, "our apps")
-- 💬 Social/contact rows: Telegram, VK, email
-- 💻 iPad split-screen support
-- 🎯 Delegate-based customization (no subclassing)
-- 📦 Fully modular SwiftPM package
+- UIKit-first `SettingsController` based on `UITableViewController`
+- iPhone modal presentation and iPad split-view presentation
+- Built-in rows for appearance, haptics, language, premium, support email, Telegram, VK, App Store review/share, redeem code, and about screen
+- Custom rows with your own icon, detail text, action, or destination controller
+- Optional user profile row
+- Premium row and premium card support
+- App Store "our apps" section loaded by developer id
+- Theme and taptic updates reported through delegate callbacks
+- Localized resources via Swift Package resources
 
----
+## Requirements
 
-## 📦 Installation
+- iOS 14.0+
+- Swift 6.0+
+- UIKit
+- Swift Package Manager
 
-Using [Swift Package Manager](https://developer.apple.com/documentation/swift_packages):
+## Installation
 
-```swift
-.package(url: "https://github.com/vladlikov/SettingsController.git", from: "2.0.0")
+Add the package in Xcode:
+
+```text
+File -> Add Package Dependencies...
+https://github.com/VladLikov/SettingsController.git
 ```
 
-Then add "SettingsController" to your target dependencies.
-
-⸻
-
-🚀 Quick Start
-
-1. Create config
+Or add it to `Package.swift`:
 
 ```swift
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "2.8.8")
+```
+
+Then add `SettingsController` to your target dependencies.
+
+## Quick Start
+
+Create a small helper in your app and keep the settings composition in one place. In this example, `AppSettings.shared` is your app storage object that conforms to `ThemeStorage` and `TapticStorage`.
+
+```swift
+import UIKit
+import SwiftUI
 import SettingsController
 
-let config = SettingsConfiguration(
-    title: "Settings",
-    sections: [
-        SettingsSection(title: "Interface", kind: .rows([
-            .defaultRow(.appearance),
-            .defaultRow(.tapticEngine),
-            .defaultRow(.language("support@example.com"))
-        ])),
-        SettingsSection(title: "Info", kind: .rows([
-            .defaultRow(.contactDeveloper("support@example.com")),
-            .defaultRow(.telegram(id: "@yourchannel")),
-            .defaultRow(.vkGroup(id: "vkclub123"))
-        ])),
-        SettingsSection(title: "More", kind: .ourApps(developerId: "12345678", limit: 4))
-    ],
-    overlayAppID: "1234567890",
-    initialValues: .init(appColorIndex: 0, tapticStyle: 1),
-    delegate: self
+struct SettingsControllerHelper {
+    private static let settings = AppSettings.shared
+
+    static func setupTitle() -> String {
+        "Settings"
+    }
+
+    static func setupInsets() -> SettingsInsets {
+        .init(top: 25)
+    }
+
+    static func setupInitialValues() -> [AnyKeyPath: Any] {
+        [
+            \AppSettings.appColor: settings.appColor
+        ]
+    }
+
+    static func setupOverlayAppID() -> String? {
+        "1234567890"
+    }
+
+    static func setupSections() -> [SettingsSection] {
+        let isPremium = settings.isPremium
+
+        let premiumPayload = PremiumPayload(
+            isPremium: isPremium,
+            color: settings.appColor,
+            vc: nil
+        ) { fromVC in
+            let paywall = PaywallViewController()
+            fromVC.present(paywall, animated: true)
+        }
+
+        let premiumSection: SettingsSection = isPremium
+            ? SettingsSection(kind: .rows([.defaultRow(.premium(premiumPayload))]))
+            : SettingsSection(kind: .premiumCard(.init(
+                image: Image(systemName: "star.fill"),
+                title: "Go Premium",
+                subtitle: "Unlock all features",
+                buttonTitle: "Upgrade",
+                base: premiumPayload
+            )))
+
+        return [
+            premiumSection,
+
+            SettingsSection(title: "App", kind: .rows([
+                .row(.init(
+                    title: "Notifications",
+                    icon: .init(image: UIImage(systemName: "bell.fill"), color: .systemRed, inset: .init()),
+                    vc: NotificationsViewController.self
+                )),
+                .defaultRow(.appearance(theme: settings)),
+                .defaultRow(.tapticEngine(taptic: settings)),
+                .defaultRow(.language(email: "support@example.com"))
+            ])),
+
+            SettingsSection(title: "Feedback", kind: .rows([
+                .defaultRow(.shareApp(appID: "1234567890")),
+                .defaultRow(.rateApp(appID: "1234567890")),
+                .defaultRow(.contactDeveloper(email: "support@example.com")),
+                .defaultRow(.moreApps(developerID: "12345678")),
+                .defaultRow(.telegram(id: "your_channel")),
+                .defaultRow(.vkGroup(id: "123456789")),
+                .defaultRow(.redeemCode)
+            ])),
+
+            SettingsSection(
+                title: "More Apps",
+                kind: .ourApps(developerID: "12345678", limit: 6, excludeAppID: "1234567890")
+            ),
+
+            SettingsSection(kind: .rows([
+                .defaultRow(.about(
+                    userID: settings.userID,
+                    appID: "1234567890",
+                    privacyURL: URL(string: "https://example.com/privacy")!,
+                    termsURL: URL(string: "https://example.com/terms")!
+                ))
+            ]))
+        ]
+    }
+}
+
+extension SettingsConfiguration {
+    static func setup(delegate: SettingsControllerDelegate?) -> SettingsConfiguration {
+        .init(
+            title: SettingsControllerHelper.setupTitle(),
+            initialValues: SettingsControllerHelper.setupInitialValues(),
+            insets: SettingsControllerHelper.setupInsets(),
+            overlayAppID: SettingsControllerHelper.setupOverlayAppID(),
+            sections: SettingsControllerHelper.setupSections(),
+            delegate: delegate
+        )
+    }
+}
+```
+
+Then present settings from any view controller:
+
+```swift
+final class ViewController: UIViewController {
+    func openSettings() {
+        SettingsController.present(
+            configuration: .setup(delegate: self),
+            from: self
+        )
+    }
+}
+```
+
+## Delegate
+
+Use `SettingsControllerDelegate` to receive changes and provide dynamic data.
+
+```swift
+extension ViewController: SettingsControllerDelegate {
+    func settingsDidDismiss(_ initialValues: [AnyKeyPath: Any]?) {
+        // Called after the modal settings controller is dismissed.
+    }
+
+    func settingsDidUpdateTheme(_ theme: ThemeStorage) {
+        view.tintColor = theme.appColor
+
+        let style: UIUserInterfaceStyle
+        if theme.autoTheme {
+            style = .unspecified
+        } else {
+            style = theme.interfaceStyle == 1 ? .light : .dark
+        }
+
+        view.window?.overrideUserInterfaceStyle = style
+    }
+
+    func settingsDidUpdateTaptic(_ taptic: TapticStorage) {
+        // Persist or apply taptic settings in your app.
+    }
+
+    func settingsUserInfoRequested(_ request: (UserInfo) -> Void) {
+        request(UserInfo(name: "Vlad Likov", avatar: UIImage(named: "avatar")))
+    }
+
+    func settingsPremiumStatusRequested(_ request: (Bool) -> Void) {
+        request(false)
+    }
+}
+```
+
+## Theme and Taptic Storage
+
+The appearance and haptic screens mutate objects that conform to `ThemeStorage` and `TapticStorage`. A simple implementation can look like this:
+
+```swift
+import UIKit
+import SettingsController
+
+final class AppThemeStorage: ThemeStorage {
+    var appColorRawValue: String = AppColor.blue.rawValue
+    var autoTheme: Bool = true
+    var interfaceStyle: Int = 1 // 1 = light, 2 = dark
+
+    var appColor: UIColor {
+        get {
+            AppColor(rawValue: appColorRawValue)?.color ?? .systemBlue
+        }
+        set {
+            if let color = AppColor.allCases.first(where: { $0.color == newValue }) {
+                appColorRawValue = color.rawValue
+            }
+        }
+    }
+}
+
+final class AppTapticStorage: TapticStorage {
+    var tapticStyle: Int = 1 // 0 = light, 1 = medium, 2 = hard
+    var tapticEngine: Bool = true
+}
+```
+
+You can use the built-in `AppColor` values or provide your own color enum:
+
+```swift
+enum BrandColor: String, CaseIterable, AppColorType {
+    case blue
+    case mint
+
+    var title: String {
+        switch self {
+        case .blue: "Blue"
+        case .mint: "Mint"
+        }
+    }
+
+    var color: UIColor {
+        switch self {
+        case .blue: .systemBlue
+        case .mint: .systemMint
+        }
+    }
+
+    var iconName: String { rawValue }
+}
+```
+
+Then pass it to the appearance row:
+
+```swift
+.defaultRow(.appearance(theme: themeStorage, colors: BrandColor.allCases))
+```
+
+## Custom Rows
+
+Use `SettingsRow` when a built-in row does not cover your case.
+
+```swift
+let row = SettingsRow(
+    title: "Notifications",
+    detail: "Enabled",
+    icon: SettingsIcon(
+        image: UIImage(systemName: "bell.fill"),
+        color: .systemRed,
+        inset: Inset()
+    ),
+    vc: NotificationsViewController.self
+)
+
+let actionRow = SettingsRow(
+    title: "Clear Cache",
+    icon: SettingsIcon(image: UIImage(systemName: "trash.fill"), color: .systemGray),
+    action: { indexPath, tableView, controller in
+        tableView.deselectRow(at: indexPath, animated: true)
+        // Clear cache and show your own result UI.
+    }
 )
 ```
 
-2. Present controller
+Add them to a section:
 
 ```swift
-SettingsController.present(from: self, with: config)
+SettingsSection(title: "Advanced", kind: .rows([
+    .row(row),
+    .row(actionRow)
+]))
 ```
 
-✅ Can be presented modally or pushed into navigation stack.
+## Built-in Rows
 
-⸻
+`SettingsRowData.DefaultRow` includes:
 
-👤 Implement Delegate
+- `.user(_:_:_:)`
+- `.premium(_:)`
+- `.appearance(theme:colors:)`
+- `.tapticEngine(taptic:)`
+- `.language(email:)`
+- `.contactDeveloper(email:)`
+- `.shareApp(appID:)`
+- `.rateApp(appID:)`
+- `.moreApps(developerID:)`
+- `.telegram(id:)`
+- `.vkGroup(id:)`
+- `.redeemCode`
+- `.about(userID:appID:privacyURL:termsURL:)`
+
+## Premium Card
+
+Use `.premiumCard` when you want a larger call-to-action instead of a regular premium row.
 
 ```swift
-extension YourViewController: SettingsControllerDelegate {
-    func settingsUserInfoRequested() -> UserInfo? {
-        .init(name: "John Appleseed", avatar: UIImage(named: "avatar"))
-    }
+import SwiftUI
 
-    func settingsPremiumActionTriggered() {
-        // show your paywall
-    }
+let premium = PremiumPayload(
+    isPremium: false,
+    color: .systemYellow,
+    vc: PaywallViewController.self,
+    action: nil
+)
 
-    func settingsDidRequestDismiss() {
-        dismiss(animated: true)
-    }
-}
+let card = PremiumCardPayload(
+    image: Image(systemName: "star.fill"),
+    title: "Go Premium",
+    subtitle: "Unlock all features",
+    buttonTitle: "Upgrade",
+    base: premium
+)
+
+SettingsSection(kind: .premiumCard(card))
 ```
 
-More hooks available:
+## Presentation Options
+
+Present immediately:
+
 ```swift
-settingsAppColorDidChange(_:), settingsTapticStyleDidChange(_:), settingsIsPremiumRequested()
+SettingsController.present(configuration: configuration, from: self)
 ```
-⸻
 
-🌙 Appearance & Haptics
-
-You control app theme & haptics via two protocols:
+Or get a configured split presentation controller and present it yourself:
 
 ```swift
-protocol ThemeStorage {
-    var appColor: UIColor { get set }
-    var appColorIndex: Int { get set }
-    var autoTheme: Bool { get set }
-    var interfaceStyle: Int { get set }
-}
-
-protocol TapticStorage {
-    var tapticStyle: Int { get set }
-    var tapticEngine: Bool { get set }
-}
+let controller = SettingsController.getSplitPresentationSettingsController(configuration: configuration)
+present(controller, animated: true)
 ```
 
-Provide your own storage, e.g. backed by UserDefaults.
+You can also instantiate and push the controller in your own navigation flow:
 
-⸻
+```swift
+let controller = SettingsController(configuration: configuration)
+navigationController?.pushViewController(controller, animated: true)
+```
 
-📂 Structure
+## App Store and URL Notes
 
-SettingsController/
-├── Core/         // Configuration, models, storage protocols
-├── UI/           // Controllers, cells, reusable views
-├── Services/     // App Store, notifications
-├── Extensions/   // UIKit/Foundation helpers
-├── Resources/    // xcstrings, assets
+- `shareApp`, `rateApp`, `about`, `overlayAppID`, and `ourApps` expect App Store ids as strings.
+- `.ourApps(developerID:limit:excludeAppID:)` fetches apps from the App Store and hides the current app id.
+- `.telegram(id:)` expects the channel or username without `@`.
+- `.vkGroup(id:)` expects the numeric group id, without `club`.
+- If you want `tg://` and `vk://` deep links to open installed apps, add the URL schemes to `LSApplicationQueriesSchemes` in your app's `Info.plist`.
 
+```xml
+<key>LSApplicationQueriesSchemes</key>
+<array>
+    <string>tg</string>
+    <string>vk</string>
+</array>
+```
 
+## Project Structure
 
-⸻
+```text
+Sources/SettingsController
++-- Core
+|   +-- Configuration
+|   +-- Helpers
+|   +-- Models
+|   +-- Protocols
+|   +-- Services
++-- Resources
++-- UI
+    +-- Controllers
+    +-- Extensions
+    +-- Views
+```
 
-📄 License
+## Dependencies
 
-MIT © vladlikov
+The package currently uses:
 
-⸻
+- AlertKit
+- SafeSFSymbols
+- SwiftBoost
+- CheckUpdate
 
-🙌 Contribute / Feedback
+## License
 
-Feel free to open issues or submit pull requests.
-
----
+MIT.
