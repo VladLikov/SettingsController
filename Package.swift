@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
     name: "SettingsController",
     defaultLocalization: .init(rawValue: "en"),
-    platforms: [.iOS(.v14)],
+    platforms: [.iOS(.v15)],
     products: [
         .library(
             name: "SettingsController",
