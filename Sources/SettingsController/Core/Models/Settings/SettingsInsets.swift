@@ -8,8 +8,8 @@
 import Foundation
 
 public struct SettingsInsets {
-    let top: CGFloat?
-    let bottom: CGFloat?
+    public let top: CGFloat?
+    public let bottom: CGFloat?
     
     public init(top: CGFloat? = nil, bottom: CGFloat? = nil) {
         self.top = top

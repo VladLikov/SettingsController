@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol TapticStorage {
+public protocol TapticStorage: AnyObject {
     var tapticStyle: Int { get set }
     var tapticEngine: Bool { get set }
 }

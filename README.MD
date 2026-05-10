@@ -18,7 +18,7 @@ The package is built with Swift Package Manager and is intended to be configured
 
 ## Requirements
 
-- iOS 14.0+
+- iOS 15.0+
 - Swift 6.0+
 - UIKit
 - Swift Package Manager
@@ -60,12 +60,6 @@ struct SettingsControllerHelper {
         .init(top: 25)
     }
 
-    static func setupInitialValues() -> [AnyKeyPath: Any] {
-        [
-            \AppSettings.appColor: settings.appColor
-        ]
-    }
-
     static func setupOverlayAppID() -> String? {
         "1234567890"
     }
@@ -76,7 +70,7 @@ struct SettingsControllerHelper {
         let premiumPayload = PremiumPayload(
             isPremium: isPremium,
             color: settings.appColor,
-            vc: nil
+            destinationControllerType: nil
         ) { fromVC in
             let paywall = PaywallViewController()
             fromVC.present(paywall, animated: true)
@@ -89,7 +83,7 @@ struct SettingsControllerHelper {
                 title: "Go Premium",
                 subtitle: "Unlock all features",
                 buttonTitle: "Upgrade",
-                base: premiumPayload
+                premium: premiumPayload
             )))
 
         return [
@@ -99,7 +93,7 @@ struct SettingsControllerHelper {
                 .row(.init(
                     title: "Notifications",
                     icon: .init(image: UIImage(systemName: "bell.fill"), color: .systemRed, inset: .init()),
-                    vc: NotificationsViewController.self
+                    destinationControllerType: NotificationsViewController.self
                 )),
                 .defaultRow(.appearance(theme: settings)),
                 .defaultRow(.tapticEngine(taptic: settings)),
@@ -134,14 +128,13 @@ struct SettingsControllerHelper {
 }
 
 extension SettingsConfiguration {
-    static func setup(delegate: SettingsControllerDelegate?) -> SettingsConfiguration {
+    static func setup(owner: SettingsControllerDelegate?) -> SettingsConfiguration {
         .init(
             title: SettingsControllerHelper.setupTitle(),
-            initialValues: SettingsControllerHelper.setupInitialValues(),
             insets: SettingsControllerHelper.setupInsets(),
             overlayAppID: SettingsControllerHelper.setupOverlayAppID(),
             sections: SettingsControllerHelper.setupSections(),
-            delegate: delegate
+            delegate: owner
         )
     }
 }
@@ -153,20 +146,20 @@ Then present settings from any view controller:
 final class ViewController: UIViewController {
     func openSettings() {
         SettingsController.present(
-            configuration: .setup(delegate: self),
+            configuration: .setup(owner: self),
             from: self
         )
     }
 }
 ```
 
-## Delegate
+## Events and Dynamic Data
 
-Use `SettingsControllerDelegate` to receive changes and provide dynamic data.
+Use `SettingsControllerDelegate` when the same object both receives settings events and provides dynamic data. For larger apps, pass separate `eventHandler` and `dataProvider` objects to `SettingsConfiguration`; those separate objects are retained by the configuration, while `delegate` is weak for the common `delegate: self` case.
 
 ```swift
 extension ViewController: SettingsControllerDelegate {
-    func settingsDidDismiss(_ initialValues: [AnyKeyPath: Any]?) {
+    func settingsDidDismiss() {
         // Called after the modal settings controller is dismissed.
     }
 
@@ -187,12 +180,12 @@ extension ViewController: SettingsControllerDelegate {
         // Persist or apply taptic settings in your app.
     }
 
-    func settingsUserInfoRequested(_ request: (UserInfo) -> Void) {
-        request(UserInfo(name: "Vlad Likov", avatar: UIImage(named: "avatar")))
+    func settingsCurrentUserInfo() async -> UserInfo? {
+        UserInfo(name: "Vlad Likov", avatar: UIImage(named: "avatar"))
     }
 
-    func settingsPremiumStatusRequested(_ request: (Bool) -> Void) {
-        request(false)
+    func settingsIsPremiumActive() async -> Bool {
+        false
     }
 }
 ```
@@ -248,8 +241,6 @@ enum BrandColor: String, CaseIterable, AppColorType {
         case .mint: .systemMint
         }
     }
-
-    var iconName: String { rawValue }
 }
 ```
 
@@ -272,7 +263,7 @@ let row = SettingsRow(
         color: .systemRed,
         inset: Inset()
     ),
-    vc: NotificationsViewController.self
+    destinationControllerType: NotificationsViewController.self
 )
 
 let actionRow = SettingsRow(
@@ -294,9 +285,45 @@ SettingsSection(title: "Advanced", kind: .rows([
 ]))
 ```
 
+## Settings Icon Generator
+
+You can also use the same cached icon renderer outside `SettingsController`.
+Rendering is handled inside `SettingsController` and includes caching, trait-aware color keys, optional insets, and `SettingsIcon` integration.
+
+```swift
+let image = SettingsIconGenerator.generate(
+    systemName: "bell.fill",
+    backgroundColor: .systemBlue
+)
+
+let safeSymbolImage = SettingsIconGenerator.generate(
+    symbol: .star.fill,
+    backgroundColor: .systemOrange
+)
+
+let customImage = SettingsIconGenerator.generate(
+    image: UIImage(named: "BrandGlyph"),
+    backgroundColor: .systemPurple,
+    cacheIdentifier: "brand-glyph"
+)
+```
+
+For an existing `SettingsIcon`:
+
+```swift
+let settingsIcon = SettingsIcon(symbol: .heart.fill, color: .systemRed)
+let image = settingsIcon.generateSettingsImage()
+```
+
+Generated images are cached by glyph, color, inset, size, corner radius, scale, and interface style. If needed, clear the cache:
+
+```swift
+SettingsIconGenerator.removeAllCachedImages()
+```
+
 ## Built-in Rows
 
-`SettingsRowData.DefaultRow` includes:
+`SettingsRowItem.DefaultRow` includes:
 
 - `.user(_:_:_:)`
 - `.premium(_:)`
@@ -322,7 +349,7 @@ import SwiftUI
 let premium = PremiumPayload(
     isPremium: false,
     color: .systemYellow,
-    vc: PaywallViewController.self,
+    destinationControllerType: PaywallViewController.self,
     action: nil
 )
 
@@ -331,13 +358,15 @@ let card = PremiumCardPayload(
     title: "Go Premium",
     subtitle: "Unlock all features",
     buttonTitle: "Upgrade",
-    base: premium
+    premium: premium
 )
 
 SettingsSection(kind: .premiumCard(card))
 ```
 
 ## Presentation Options
+
+Presentation helpers are `@MainActor`, because UIKit presentation must happen on the main actor.
 
 Present immediately:
 
@@ -381,15 +410,35 @@ navigationController?.pushViewController(controller, animated: true)
 Sources/SettingsController
 +-- Core
 |   +-- Configuration
-|   +-- Helpers
+|   +-- Mail
 |   +-- Models
+|   |   +-- AppStore
+|   |   +-- Common
+|   |   +-- Premium
+|   |   +-- Settings
 |   +-- Protocols
 |   +-- Services
+|       +-- AppReview
+|       +-- AppStore
+|       +-- Image
 +-- Resources
 +-- UI
     +-- Controllers
+    |   +-- About
+    |   +-- Mail
+    |   +-- Preferences
+    |   +-- Presentation
+    |   +-- Settings
     +-- Extensions
     +-- Views
+        +-- Cells
+        |   +-- AppStore
+        |   +-- Mail
+        |   +-- Premium
+        |   +-- Settings
+        +-- Components
+            +-- EmptyState
+            +-- Premium
 ```
 
 ## Dependencies
@@ -398,7 +447,6 @@ The package currently uses:
 
 - AlertKit
 - SafeSFSymbols
-- SwiftBoost
 - CheckUpdate
 
 ## License

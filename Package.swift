@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.3
 
 import PackageDescription
 
@@ -27,5 +27,6 @@ let package = Package(
                 "CheckUpdate"
             ],
             resources: [.process("Resources")]),
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

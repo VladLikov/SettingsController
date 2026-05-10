@@ -9,7 +9,7 @@ import Foundation
 
 public enum SettingsSectionKind {
     /// Статический набор строк (старое поведение)
-    case rows([SettingsRowData])
+    case rows([SettingsRowItem])
 
     /// Автоматическая витрина App Store-приложений вашего dev-аккаунта
     /// - Parameters:
@@ -22,8 +22,8 @@ public enum SettingsSectionKind {
 
 public struct SettingsSection {
       
-    var title: String? = nil
-    var kind: SettingsSectionKind
+    public let title: String?
+    public internal(set) var kind: SettingsSectionKind
     
     public init(title: String? = nil, kind: SettingsSectionKind) {
         self.title = title

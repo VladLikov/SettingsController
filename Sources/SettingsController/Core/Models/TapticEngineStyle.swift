@@ -1,6 +1,6 @@
 //
 //  TapticEngineStyle.swift
-//  Speech To Text
+//  SettingsController
 //
 //  Created by Влад Лыков on 06.10.2024.
 //

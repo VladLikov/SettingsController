@@ -7,43 +7,59 @@
 
 import UIKit
 
-// MARK: - SettingsControllerDelegate
+// MARK: - SettingsControllerEventHandler
 
-public protocol SettingsControllerDelegate: AnyObject {
-    func settingsDidDismiss(_ initialValues: [AnyKeyPath: Any]?)
-    
+@MainActor
+public protocol SettingsControllerEventHandler: AnyObject {
+    func settingsDidDismiss()
+
     func settingsDidUpdateTheme(_ theme: ThemeStorage)
     func settingsDidUpdateTaptic(_ taptic: TapticStorage)
-
-    func settingsUserInfoRequested(_ request: (UserInfo) -> Void)
-    func settingsPremiumStatusRequested(_ request: (Bool) -> Void)
 }
+
+// MARK: - SettingsControllerDataProvider
+
+@MainActor
+public protocol SettingsControllerDataProvider: AnyObject {
+    func settingsCurrentUserInfo() async -> UserInfo?
+    func settingsIsPremiumActive() async -> Bool
+}
+
+// MARK: - SettingsControllerDelegate
+
+@MainActor
+public protocol SettingsControllerDelegate: SettingsControllerEventHandler, SettingsControllerDataProvider {}
 
 // MARK: - SettingsConfiguration
 
 public final class SettingsConfiguration {
-    
-    public var title: String?
-    public var insets: SettingsInsets?
-    public var sections: [SettingsSection]
-    public var overlayAppID: String?
-        
-    public var initialValues: [AnyKeyPath: Any]?
-    
-    public weak var delegate: SettingsControllerDelegate?
-    
+
+    public let title: String?
+    public let insets: SettingsInsets?
+    public let sections: [SettingsSection]
+    public let overlayAppID: String?
+
+    public private(set) weak var eventHandler: (any SettingsControllerEventHandler)?
+    public private(set) weak var dataProvider: (any SettingsControllerDataProvider)?
+
+    private let retainedEventHandler: (any SettingsControllerEventHandler)?
+    private let retainedDataProvider: (any SettingsControllerDataProvider)?
+
     public init(title: String? = nil,
-                initialValues: [AnyKeyPath: Any]? = nil,
                 insets: SettingsInsets? = nil,
                 overlayAppID: String? = nil,
                 sections: [SettingsSection],
-                delegate: SettingsControllerDelegate? = nil) {
-        
+                eventHandler: (any SettingsControllerEventHandler)? = nil,
+                dataProvider: (any SettingsControllerDataProvider)? = nil,
+                delegate: (any SettingsControllerDelegate)? = nil) {
+
         self.title = title
-        self.initialValues = initialValues
         self.sections = sections
         self.insets = insets
         self.overlayAppID = overlayAppID
-        self.delegate = delegate
+        self.retainedEventHandler = eventHandler
+        self.retainedDataProvider = dataProvider
+        self.eventHandler = eventHandler ?? delegate
+        self.dataProvider = dataProvider ?? delegate
     }
 }

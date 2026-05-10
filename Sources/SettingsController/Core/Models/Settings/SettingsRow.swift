@@ -1,5 +1,5 @@
 //
-//  Row.swift
+//  SettingsRow.swift
 //  SettingsController
 //
 //  Created by Влад Лыков on 12.09.2024.
@@ -12,24 +12,24 @@ public struct SettingsRow {
     
     public typealias SettingsAction = ((_ indexPath: IndexPath,
                                         _ tableView: UITableView,
-                                        _ vc: UIViewController) -> Void)
-    
-    var title: String
-    var detail: String?
-    var icon: SettingsIcon
-    var vc: UIViewController.Type?
-    var action: SettingsAction?
-    
+                                        _ viewController: UIViewController) -> Void)
+
+    public let title: String
+    public let detail: String?
+    public let icon: SettingsIcon
+    public let destinationControllerType: UIViewController.Type?
+    public let action: SettingsAction?
+
     public init(title: String,
                 detail: String? = nil,
                 icon: SettingsIcon,
-                vc: UIViewController.Type? = nil,
+                destinationControllerType: UIViewController.Type? = nil,
                 action: SettingsAction? = nil) {
-        
+
         self.title = title
         self.detail = detail
         self.icon = icon
-        self.vc = vc
+        self.destinationControllerType = destinationControllerType
         self.action = action
     }
 }
