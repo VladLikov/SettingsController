@@ -76,7 +76,7 @@ public enum SettingsRowItem {
                              inset: .init())
 
             case .tapticEngine:
-                SettingsIcon(symbol: .sun.minFill,
+                SettingsIcon(symbol: .hand.tapFill,
                              color: .systemOrange,
                              inset: .init())
 
