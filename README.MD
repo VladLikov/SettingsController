@@ -475,7 +475,7 @@ The package currently uses:
 
 - AlertKit
 - SafeSFSymbols
-- CheckUpdate (currently tracks `main`)
+- CheckUpdate (1.0.0+)
 - SwiftBoost
 
 ## Localization

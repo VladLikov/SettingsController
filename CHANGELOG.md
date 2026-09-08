@@ -23,4 +23,6 @@ See [MIGRATION.md](MIGRATION.md) before upgrading from 2.8.8.
 
 ### Changed
 
+- Use a versioned CheckUpdate dependency so release-based SPM installation resolves.
+
 - Clarify Swift 6.3 requirements, dependencies, localization, and minimal setup.
