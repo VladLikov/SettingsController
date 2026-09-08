@@ -2,6 +2,8 @@
 
 SettingsController is a modular UIKit settings screen for iOS apps. It gives you a ready-to-present `UITableViewController` with common settings flows: appearance, haptics, language, premium, support, App Store actions, social links, app metadata, and an App Store "more apps" section.
 
+SettingsController is used across a portfolio of production iOS apps and is available to other developers through Swift Package Manager.
+
 The package is built with Swift Package Manager and is intended to be configured from your app code without subclassing the settings controller.
 
 ## Features
@@ -19,7 +21,7 @@ The package is built with Swift Package Manager and is intended to be configured
 ## Requirements
 
 - iOS 15.0+
-- Swift 6.0+
+- Swift 6.3+
 - UIKit
 - Swift Package Manager
 
@@ -35,12 +37,38 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "2.8.8")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.0.0")
 ```
 
 Then add `SettingsController` to your target dependencies.
 
+**Upgrading from 2.8.8:** version 3.0.0 contains breaking API changes.
+Read [MIGRATION.md](MIGRATION.md) before updating. For the old release, see the
+[README at 2.8.8](https://github.com/VladLikov/SettingsController/blob/2.8.8/README.MD).
+
 ## Quick Start
+
+A minimal settings screen needs only a configuration and a presenting controller:
+
+```swift
+import UIKit
+import SettingsController
+
+@MainActor
+func showSettings(from controller: UIViewController) {
+    let configuration = SettingsConfiguration(sections: [
+        SettingsSection(kind: .rows([
+            .defaultRow(.shareApp(appID: "1234567890")),
+            .defaultRow(.rateApp(appID: "1234567890"))
+        ]))
+    ])
+    SettingsController.present(configuration: configuration, from: controller)
+}
+```
+
+Replace the example App Store ID with your app's ID.
+
+### Full configuration example
 
 Create a small helper in your app and keep the settings composition in one place. In this example, `AppSettings.shared` is your app storage object that conforms to `ThemeStorage` and `TapticStorage`.
 
@@ -447,8 +475,31 @@ The package currently uses:
 
 - AlertKit
 - SafeSFSymbols
-- CheckUpdate
+- CheckUpdate (currently tracks `main`)
+- SwiftBoost
+
+## Localization
+
+Built-in strings and images are loaded from the Swift Package resource bundle.
+The string catalog is `Sources/SettingsController/Resources/Localizable.xcstrings`.
+Localize custom row titles in the consuming app. Language availability follows
+that app's supported localizations; the language row opens system app settings.
+
+## Testing and Contributing
+
+Use Xcode 26.6 with its iOS Simulator runtime for the CI configuration:
+
+```bash
+bash scripts/test-ios.sh
+```
+
+The script resolves dependencies and builds and tests the package on an available
+iPhone simulator. Override `SIMULATOR_ID` to choose a specific device.
+Tests run without App Store access or credentials. UIKit requires an iOS
+Simulator; plain macOS `swift test` is not supported.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
+[CHANGELOG.md](CHANGELOG.md) for unreleased changes.
 
 ## License
 
-MIT.
+[MIT](LICENSE). Dependencies retain their own licenses.

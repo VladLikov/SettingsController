@@ -6,3 +6,6 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
 .DS_Store
+
+# Local application preparation (not part of the public package)
+.local-oss/

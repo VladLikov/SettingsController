@@ -27,6 +27,7 @@ let package = Package(
                 "CheckUpdate"
             ],
             resources: [.process("Resources")]),
+        .testTarget(name: "SettingsControllerTests", dependencies: ["SettingsController"]),
     ],
     swiftLanguageModes: [.v6]
 )
