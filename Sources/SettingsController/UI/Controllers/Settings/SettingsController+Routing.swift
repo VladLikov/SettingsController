@@ -79,7 +79,8 @@ extension SettingsController {
                 type: .supportRequest,
                 email: email,
                 userID: mailUserID,
-                isPremium: isPremium
+                isPremium: isPremium,
+                subscriptionID: configuration.subscriptionID
             )
             present(UINavigationController(rootViewController: mailController), animated: true)
         }

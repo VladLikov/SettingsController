@@ -124,7 +124,12 @@ extension SettingsController {
 
         case .language(let email):
             pushViewController(
-                LanguageController(email: email, userID: mailUserID, isPremium: isPremium),
+                LanguageController(
+                    email: email,
+                    userID: mailUserID,
+                    isPremium: isPremium,
+                    subscriptionID: configuration.subscriptionID
+                ),
                 navigationTitle: row.title
             )
 

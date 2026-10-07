@@ -38,6 +38,8 @@ public final class SettingsConfiguration {
     public let insets: SettingsInsets?
     public let sections: [SettingsSection]
     public let overlayAppID: String?
+    /// Subscription identifier supplied by the app for support and language-request emails.
+    public let subscriptionID: String?
 
     public private(set) weak var eventHandler: (any SettingsControllerEventHandler)?
     public private(set) weak var dataProvider: (any SettingsControllerDataProvider)?
@@ -51,12 +53,14 @@ public final class SettingsConfiguration {
                 sections: [SettingsSection],
                 eventHandler: (any SettingsControllerEventHandler)? = nil,
                 dataProvider: (any SettingsControllerDataProvider)? = nil,
-                delegate: (any SettingsControllerDelegate)? = nil) {
+                delegate: (any SettingsControllerDelegate)? = nil,
+                subscriptionID: String? = nil) {
 
         self.title = title
         self.sections = sections
         self.insets = insets
         self.overlayAppID = overlayAppID
+        self.subscriptionID = subscriptionID
         self.retainedEventHandler = eventHandler
         self.retainedDataProvider = dataProvider
         self.eventHandler = eventHandler ?? delegate

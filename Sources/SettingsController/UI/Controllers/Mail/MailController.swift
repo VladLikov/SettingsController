@@ -76,6 +76,7 @@ public class MailController: UITableViewController {
     private let email: String
     private let userID: String?
     private let isPremium: Bool?
+    private let subscriptionID: String?
 
     private var currentText: String = ""
         
@@ -96,7 +97,8 @@ public class MailController: UITableViewController {
                 recipient: email,
                 type: type,
                 userID: userID,
-                isPremium: isPremium
+                isPremium: isPremium,
+                subscriptionID: subscriptionID
             )
             
             if let url = URL(string: urlString) {
@@ -115,11 +117,12 @@ public class MailController: UITableViewController {
     
     // MARK: Life Cycle
 
-    public init(type: MailType, email: String, userID: String? = nil, isPremium: Bool? = nil) {
+    public init(type: MailType, email: String, userID: String? = nil, isPremium: Bool? = nil, subscriptionID: String? = nil) {
         self.type = type
         self.email = email
         self.userID = userID
         self.isPremium = isPremium
+        self.subscriptionID = subscriptionID
         
         super.init(style: .insetGrouped)
     }
