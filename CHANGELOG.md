@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.0.2 — 2026-10-08
+
+### Changed
+
+- Replace `subscriptionID` with optional `productID` in settings, direct support forms, and language requests.
+- Email diagnostics now display `Product ID`, with `-` when the app supplies no product identifier.
+- Callers using the 3.1.0 `subscriptionID` argument must rename it to `productID` and pass their store product identifier.
+- Pin version 3.0.2 exactly; the previously published 3.1.0 tag keeps its original API.
+
 ## 3.1.0 — 2026-10-08
 
 ### Added

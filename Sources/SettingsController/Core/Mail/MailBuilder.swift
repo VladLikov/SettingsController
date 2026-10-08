@@ -17,7 +17,7 @@ enum MailBuilder {
         type: MailType,
         userID: String?,
         isPremium: Bool?,
-        subscriptionID: String? = nil
+        productID: String? = nil
     ) -> String {
         
         // MARK: Device
@@ -77,7 +77,7 @@ enum MailBuilder {
         ===== USER INFO =====
 
         User ID: \(userID ?? "-")
-        Subscription ID: \(subscriptionID ?? "-")
+        Product ID: \(productID ?? "-")
         Pro Status: \(proStatus)
         
         ===== ENVIRONMENT =====

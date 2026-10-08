@@ -3,8 +3,8 @@ import XCTest
 
 @MainActor
 final class MailBuilderTests: XCTestCase {
-    func testSubscriptionIDIsIncludedForEveryMailType() throws {
-        let configuration = SettingsConfiguration(sections: [], subscriptionID: "subscription-123")
+    func testProductIDIsIncludedForEveryMailType() throws {
+        let configuration = SettingsConfiguration(sections: [], productID: "com.example.premium.monthly")
         let types: [MailType] = [
             .supportRequest,
             .languageRequest,
@@ -18,16 +18,17 @@ final class MailBuilderTests: XCTestCase {
                 type: type,
                 userID: "user-456",
                 isPremium: true,
-                subscriptionID: configuration.subscriptionID
+                productID: configuration.productID
             )
             let body = try mailBody(from: url)
-            XCTAssertTrue(body.contains("User ID: user-456\nSubscription ID: subscription-123\nPro Status: true"))
+            XCTAssertTrue(body.contains("User ID: user-456\nProduct ID: com.example.premium.monthly\nPro Status: true"))
             XCTAssertTrue(body.contains("Please help"))
+            XCTAssertFalse(body.contains("Subscription ID:"))
         }
     }
 
-    func testMissingSubscriptionIDUsesPlaceholderWithExistingArguments() throws {
-        XCTAssertNil(SettingsConfiguration(sections: []).subscriptionID)
+    func testMissingProductIDUsesPlaceholderWithExistingArguments() throws {
+        XCTAssertNil(SettingsConfiguration(sections: []).productID)
         let url = MailBuilder.buildMail(
             with: "Please help",
             recipient: "support@example.com",
@@ -36,7 +37,7 @@ final class MailBuilderTests: XCTestCase {
             isPremium: false
         )
         let body = try mailBody(from: url)
-        XCTAssertTrue(body.contains("Subscription ID: -"))
+        XCTAssertTrue(body.contains("Product ID: -"))
         XCTAssertTrue(body.contains("Pro Status: false"))
     }
 

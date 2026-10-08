@@ -17,15 +17,15 @@ class LanguageController: UITableViewController {
     private let email: String
     private let userID: String?
     private let isPremium: Bool?
-    private let subscriptionID: String?
+    private let productID: String?
     
     // MARK: Life Cycle
     
-    init(email: String, userID: String? = nil, isPremium: Bool? = nil, subscriptionID: String? = nil) {
+    init(email: String, userID: String? = nil, isPremium: Bool? = nil, productID: String? = nil) {
         self.email = email
         self.userID = userID
         self.isPremium = isPremium
-        self.subscriptionID = subscriptionID
+        self.productID = productID
         super.init(style: .insetGrouped)
     }
     
@@ -142,7 +142,7 @@ extension LanguageController {
             email: email,
             userID: userID,
             isPremium: isPremium,
-            subscriptionID: subscriptionID
+            productID: productID
         )
         
         present(UINavigationController(rootViewController: mailVC), animated: true)

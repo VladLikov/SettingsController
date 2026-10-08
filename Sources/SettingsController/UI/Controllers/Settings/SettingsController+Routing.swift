@@ -80,7 +80,7 @@ extension SettingsController {
                 email: email,
                 userID: mailUserID,
                 isPremium: isPremium,
-                subscriptionID: configuration.subscriptionID
+                productID: configuration.productID
             )
             present(UINavigationController(rootViewController: mailController), animated: true)
         }
