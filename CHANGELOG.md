@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.1.1 — 2026-10-08
+
+### Changed
+
+- Replace `subscriptionID` with optional `productID` in settings, direct support forms, and language requests.
+- Email diagnostics display the store product identifier as `Product ID`, with `-` when absent.
+- When upgrading from 3.1.0, rename the `subscriptionID` argument to `productID` and supply the store product identifier.
+- Initializer calls that omit product metadata remain source-compatible.
+
 ## 3.0.2 — 2026-10-08
 
 ### Changed
