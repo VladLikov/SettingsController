@@ -37,7 +37,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.0.0")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.0")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -183,7 +183,7 @@ final class ViewController: UIViewController {
 
 ## Events and Dynamic Data
 
-Pass `subscriptionID` to `SettingsConfiguration(sections: sections, subscriptionID: subscriptionID)` to include the app's subscription identifier in support and language-request emails. When presenting `MailController` directly, pass its optional `subscriptionID` argument. The email's user information shows `Subscription ID: -` when no identifier is supplied. Existing initializer calls remain valid.
+Available from **3.1.0**. Pass `subscriptionID` to `SettingsConfiguration(sections: sections, subscriptionID: subscriptionID)` to include the app's subscription identifier in support and language-request emails. When presenting `MailController` directly, pass its optional `subscriptionID` argument. The email's user information shows `Subscription ID: -` when no identifier is supplied. Existing initializer calls remain valid.
 
 Use `SettingsControllerDelegate` when the same object both receives settings events and provides dynamic data. For larger apps, pass separate `eventHandler` and `dataProvider` objects to `SettingsConfiguration`; those separate objects are retained by the configuration, while `delegate` is weak for the common `delegate: self` case.
 

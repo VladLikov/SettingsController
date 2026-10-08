@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.1.0 — 2026-10-08
+
+### Added
+
+- Optional `subscriptionID` in `SettingsConfiguration` and `MailController`.
+- Subscription ID in support and language-request emails, with `-` when absent.
+- Regression coverage for all mail types and existing initializer arguments.
+
+### Compatibility
+
+- Existing 3.0.0 initializer calls remain source-compatible.
+- Install from version 3.1.0 to use subscription ID metadata.
+
 ## 3.0.0 — 2026-09-08
 
 ### Breaking changes
