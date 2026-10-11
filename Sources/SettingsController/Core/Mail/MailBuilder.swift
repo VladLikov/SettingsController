@@ -49,7 +49,29 @@ enum MailBuilder {
         let systemVersion = device.systemVersion
         let systemName = device.systemName
         
-        let locale = Locale.current.identifier
+        let currentLocale = Locale.current
+        let locale = currentLocale.identifier
+
+        // Read the system language without the per-app language override.
+        let globalPreferredLanguages = UserDefaults.standard
+            .persistentDomain(forName: UserDefaults.globalDomain)?["AppleLanguages"] as? [String]
+        let systemLanguageIdentifier = globalPreferredLanguages?.first
+            ?? Locale.preferredLanguages.first
+            ?? "Unknown"
+        let systemLanguage = Locale(identifier: systemLanguageIdentifier).languageCode
+            ?? systemLanguageIdentifier
+
+        let appLanguage = bundle.preferredLocalizations.first
+            ?? bundle.developmentLocalization
+            ?? "Unknown"
+
+        let appRegion: String
+        if #available(iOS 16.0, *) {
+            appRegion = currentLocale.region?.identifier.lowercased() ?? "Unknown"
+        } else {
+            appRegion = currentLocale.regionCode?.lowercased() ?? "Unknown"
+        }
+
         let timeZone = TimeZone.current.identifier
         
         
@@ -83,6 +105,9 @@ enum MailBuilder {
         ===== ENVIRONMENT =====
         
         Locale: \(locale)
+        System Language: \(systemLanguage)
+        App Language: \(appLanguage)
+        App Region: \(appRegion)
         Time Zone: \(timeZone)
         
         Timestamp: \(Date())
