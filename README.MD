@@ -37,7 +37,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.1")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.2")
 ```
 
 Then add `SettingsController` to your target dependencies.
