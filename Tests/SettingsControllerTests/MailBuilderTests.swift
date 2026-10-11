@@ -23,6 +23,9 @@ final class MailBuilderTests: XCTestCase {
             let body = try mailBody(from: url)
             XCTAssertTrue(body.contains("User ID: user-456\nProduct ID: com.example.premium.monthly\nPro Status: true"))
             XCTAssertTrue(body.contains("Please help"))
+            XCTAssertTrue(body.contains("\nSystem Language: "))
+            XCTAssertTrue(body.contains("\nApp Language: "))
+            XCTAssertTrue(body.contains("\nApp Region: "))
             XCTAssertFalse(body.contains("Subscription ID:"))
         }
     }
