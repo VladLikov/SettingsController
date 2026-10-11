@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.1.2 — 2026-10-11
+
+### Added
+
+- Include `System Language`, `App Language`, and `App Region` in support, language-request, and custom email diagnostics.
+- Keep the existing `Locale` and `Time Zone` fields for backward-compatible support information.
+- Add regression assertions for the new email diagnostics across all mail types.
+
+### Compatibility
+
+- No public API changes; existing integration with version 3.1.1 remains source-compatible.
+
 ## 3.1.1 — 2026-10-08
 
 ### Changed
