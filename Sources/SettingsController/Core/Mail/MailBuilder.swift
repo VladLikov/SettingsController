@@ -17,7 +17,8 @@ enum MailBuilder {
         type: MailType,
         userID: String?,
         isPremium: Bool?,
-        productID: String? = nil
+        productID: String? = nil,
+        mailInfo: SettingsMailInfo? = nil
     ) -> String {
         
         // MARK: Device
@@ -42,7 +43,8 @@ enum MailBuilder {
         let version = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
         let build = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
         let appName = bundle.infoDictionary?["CFBundleDisplayName"] as? String ?? "App"
-        let proStatus = isPremium.map { $0 ? "true" : "false" } ?? "-"
+        let proStatus = (mailInfo?.isPremium ?? isPremium).map { $0 ? "true" : "false" } ?? "-"
+        let effectiveProductID = mailInfo?.productID ?? productID
         
         // MARK: System
         
@@ -99,7 +101,8 @@ enum MailBuilder {
         ===== USER INFO =====
 
         User ID: \(userID ?? "-")
-        Product ID: \(productID ?? "-")
+        Adapty Profile ID: \(mailInfo?.adaptyProfileID ?? "-")
+        Product ID: \(effectiveProductID ?? "-")
         Pro Status: \(proStatus)
         
         ===== ENVIRONMENT =====
