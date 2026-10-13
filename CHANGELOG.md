@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.1.3 — 2026-10-13
+
+### Added
+- `SettingsMailInfo` with only `adaptyProfileID`, `productID`, and `isPremium`.
+- Async `settingsMailInfo()` provider invoked when preparing support/language/custom emails.
+- On-demand typed diagnostics take priority over legacy fields, with compatibility fallbacks.
+- Regression tests for typed diagnostics and old provider behavior.
+
+### Compatibility
+- No Adapty dependency and no breaking changes to existing callers.
+
 ## 3.1.2 — 2026-10-11
 
 ### Added
