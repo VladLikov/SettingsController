@@ -18,14 +18,16 @@ class LanguageController: UITableViewController {
     private let userID: String?
     private let isPremium: Bool?
     private let productID: String?
+    private weak var dataProvider: (any SettingsControllerDataProvider)?
     
     // MARK: Life Cycle
     
-    init(email: String, userID: String? = nil, isPremium: Bool? = nil, productID: String? = nil) {
+    init(email: String, userID: String? = nil, isPremium: Bool? = nil, productID: String? = nil, dataProvider: (any SettingsControllerDataProvider)? = nil) {
         self.email = email
         self.userID = userID
         self.isPremium = isPremium
         self.productID = productID
+        self.dataProvider = dataProvider
         super.init(style: .insetGrouped)
     }
     
@@ -142,7 +144,8 @@ extension LanguageController {
             email: email,
             userID: userID,
             isPremium: isPremium,
-            productID: productID
+            productID: productID,
+            dataProvider: dataProvider
         )
         
         present(UINavigationController(rootViewController: mailVC), animated: true)
