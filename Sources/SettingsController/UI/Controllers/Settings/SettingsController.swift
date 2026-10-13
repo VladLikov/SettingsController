@@ -64,7 +64,6 @@ public final class SettingsController: UITableViewController {
     var storeProductTask: Task<Void, Never>?
     var pendingRefreshTask: Task<Void, Never>?
     var aboutStatusTask: Task<Void, Never>?
-    var mailPresentationTask: Task<Void, Never>?
     
     // MARK: Life Cycle
     
@@ -83,7 +82,6 @@ public final class SettingsController: UITableViewController {
         storeProductTask?.cancel()
         pendingRefreshTask?.cancel()
         aboutStatusTask?.cancel()
-        mailPresentationTask?.cancel()
     }
     
     public override func viewDidLoad() {
