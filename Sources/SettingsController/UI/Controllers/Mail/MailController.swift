@@ -77,6 +77,9 @@ public class MailController: UITableViewController {
     private let userID: String?
     private let isPremium: Bool?
     private let productID: String?
+    private weak var dataProvider: (any SettingsControllerDataProvider)?
+    private var mailTask: Task<Void, Never>?
+    private var isPreparingMail = false
 
     private var currentText: String = ""
         
@@ -87,23 +90,7 @@ public class MailController: UITableViewController {
         let button = UIBarButtonItem(image: UIImage(.arrow.up),
                                          primaryAction: .init { [weak self] _ in
             
-            guard let self else { return }
-            guard MailAvailability.canSendEmail() else { return }
-            
-            let text = currentText
-        
-            let urlString = MailBuilder.buildMail(
-                with: text,
-                recipient: email,
-                type: type,
-                userID: userID,
-                isPremium: isPremium,
-                productID: productID
-            )
-            
-            if let url = URL(string: urlString) {
-                UIApplication.shared.open(url)
-            }
+            self?.prepareMail()
         })
         
         if #available(iOS 26.0, *) {
@@ -117,12 +104,13 @@ public class MailController: UITableViewController {
     
     // MARK: Life Cycle
 
-    public init(type: MailType, email: String, userID: String? = nil, isPremium: Bool? = nil, productID: String? = nil) {
+    public init(type: MailType, email: String, userID: String? = nil, isPremium: Bool? = nil, productID: String? = nil, dataProvider: (any SettingsControllerDataProvider)? = nil) {
         self.type = type
         self.email = email
         self.userID = userID
         self.isPremium = isPremium
         self.productID = productID
+        self.dataProvider = dataProvider
         
         super.init(style: .insetGrouped)
     }
@@ -132,6 +120,8 @@ public class MailController: UITableViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit { mailTask?.cancel() }
+
     public override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -170,6 +160,7 @@ extension MailController {
         
         let closeButton = UIBarButtonItem(systemItem: .close,
                                           primaryAction: .init { [weak self] _ in
+            self?.mailTask?.cancel()
             self?.dismiss(animated: true)
         })
         
@@ -213,12 +204,46 @@ extension MailController: MailCellDelegate {
 
         currentText = text
 
-        sendButton.isEnabled = text.count >= type.minCharactersCount
+        sendButton.isEnabled = !isPreparingMail && text.count >= type.minCharactersCount
 
         if needsHeightUpdate {
             UIView.performWithoutAnimation {
                 tableView.beginUpdates()
                 tableView.endUpdates()
+            }
+        }
+    }
+}
+
+extension MailController {
+    private func prepareMail() {
+        guard !isPreparingMail, currentText.count >= type.minCharactersCount,
+              MailAvailability.canSendEmail() else { return }
+        isPreparingMail = true
+        sendButton.isEnabled = false
+        let text = currentText
+
+        mailTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer {
+                isPreparingMail = false
+                sendButton.isEnabled = currentText.count >= type.minCharactersCount
+                mailTask = nil
+            }
+
+            let diagnostics = await MailInfoResolver.resolve(
+                provider: dataProvider,
+                fallbackPremium: isPremium
+            )
+            guard !Task.isCancelled else { return }
+
+            let urlString = MailBuilder.buildMail(
+                with: text, recipient: email, type: type,
+                userID: userID, isPremium: diagnostics.isPremium,
+                productID: productID, mailInfo: diagnostics.info
+            )
+            if let url = URL(string: urlString) {
+                UIApplication.shared.open(url)
             }
         }
     }
