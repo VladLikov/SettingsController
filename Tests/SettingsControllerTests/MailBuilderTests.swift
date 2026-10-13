@@ -21,7 +21,7 @@ final class MailBuilderTests: XCTestCase {
                 productID: configuration.productID
             )
             let body = try mailBody(from: url)
-            XCTAssertTrue(body.contains("User ID: user-456\nProduct ID: com.example.premium.monthly\nPro Status: true"))
+            XCTAssertTrue(body.contains("User ID: user-456\nAdapty Profile ID: -\nProduct ID: com.example.premium.monthly\nPro Status: true"))
             XCTAssertTrue(body.contains("Please help"))
             XCTAssertTrue(body.contains("\nSystem Language: "))
             XCTAssertTrue(body.contains("\nApp Language: "))
@@ -42,6 +42,42 @@ final class MailBuilderTests: XCTestCase {
         let body = try mailBody(from: url)
         XCTAssertTrue(body.contains("Product ID: -"))
         XCTAssertTrue(body.contains("Pro Status: false"))
+    }
+
+    func testTypedMailInfoOverridesOldValuesForEveryMailType() throws {
+        let types: [MailType] = [
+            .supportRequest,
+            .languageRequest,
+            .custom(placeholder: "Custom", minCharactersCount: 1, navigationTitle: "Contact", subject: "Question")
+        ]
+        for type in types {
+            let url = MailBuilder.buildMail(
+                with: "Help",
+                recipient: "support@example.com",
+                type: type,
+                userID: "user-1",
+                isPremium: true,
+                productID: "old",
+                mailInfo: SettingsMailInfo(adaptyProfileID: "profile-1", productID: "new", isPremium: false)
+            )
+            let body = try mailBody(from: url)
+            XCTAssertTrue(body.contains("Adapty Profile ID: profile-1"))
+            XCTAssertTrue(body.contains("Product ID: new"))
+            XCTAssertTrue(body.contains("Pro Status: false"))
+            XCTAssertFalse(body.contains("Product ID: old"))
+        }
+    }
+
+    func testPartialInfoUsesLegacyProductAndPremium() throws {
+        let url = MailBuilder.buildMail(
+            with: "Help", recipient: "support@example.com",
+            type: .supportRequest, userID: nil, isPremium: true,
+            productID: "legacy-product",
+            mailInfo: SettingsMailInfo(adaptyProfileID: "profile")
+        )
+        let body = try mailBody(from: url)
+        XCTAssertTrue(body.contains("Product ID: legacy-product"))
+        XCTAssertTrue(body.contains("Pro Status: true"))
     }
 
     private func mailBody(from url: String) throws -> String {
