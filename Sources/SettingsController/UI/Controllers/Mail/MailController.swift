@@ -243,7 +243,7 @@ extension MailController {
                 productID: productID, mailInfo: diagnostics.info
             )
             if let url = URL(string: urlString) {
-                UIApplication.shared.open(url)
+                await UIApplication.shared.open(url)
             }
         }
     }
