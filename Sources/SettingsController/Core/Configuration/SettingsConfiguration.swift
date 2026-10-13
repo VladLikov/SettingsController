@@ -23,6 +23,11 @@ public protocol SettingsControllerEventHandler: AnyObject {
 public protocol SettingsControllerDataProvider: AnyObject {
     func settingsCurrentUserInfo() async -> UserInfo?
     func settingsIsPremiumActive() async -> Bool
+    func settingsMailInfo() async -> SettingsMailInfo?
+}
+
+public extension SettingsControllerDataProvider {
+    func settingsMailInfo() async -> SettingsMailInfo? { nil }
 }
 
 // MARK: - SettingsControllerDelegate
