@@ -65,25 +65,15 @@ extension SettingsController {
     func sendMail(_ email: String) {
         guard MailAvailability.canSendEmail() else { return }
 
-        mailPresentationTask?.cancel()
-        mailPresentationTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            defer { mailPresentationTask = nil }
-
-            let isPremium = await resolvePremiumStatus()
-            guard !Task.isCancelled else { return }
-
-            self.isPremium = isPremium
-
-            let mailController = MailController(
-                type: .supportRequest,
-                email: email,
-                userID: mailUserID,
-                isPremium: isPremium,
-                productID: configuration.productID
-            )
-            present(UINavigationController(rootViewController: mailController), animated: true)
-        }
+        let mailController = MailController(
+            type: .supportRequest,
+            email: email,
+            userID: mailUserID,
+            isPremium: cachedPremiumStatus,
+            productID: configuration.productID,
+            dataProvider: configuration.dataProvider
+        )
+        present(UINavigationController(rootViewController: mailController), animated: true)
     }
 
     func shareApp(_ appID: String, at indexPath: IndexPath) {
