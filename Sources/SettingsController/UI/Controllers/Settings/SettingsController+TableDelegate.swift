@@ -128,7 +128,8 @@ extension SettingsController {
                     email: email,
                     userID: mailUserID,
                     isPremium: isPremium,
-                    productID: configuration.productID
+                    productID: configuration.productID,
+                    dataProvider: configuration.dataProvider
                 ),
                 navigationTitle: row.title
             )
