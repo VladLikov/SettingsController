@@ -37,7 +37,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.2")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.3")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -180,6 +180,24 @@ final class ViewController: UIViewController {
     }
 }
 ```
+
+## Typed email diagnostics (3.1.3)
+
+Implement `settingsMailInfo()` on your existing `SettingsControllerDataProvider` (or `SettingsControllerDelegate`) to supply precisely three values for support and language-request emails:
+
+```swift
+func settingsMailInfo() async -> SettingsMailInfo? {
+    guard let profile = try? await Adapty.getProfile() else { return nil }
+    let premium = profile.accessLevels["premium"] // Replace with your access level ID.
+    return SettingsMailInfo(
+        adaptyProfileID: profile.profileId,
+        productID: premium?.vendorProductId,
+        isPremium: premium?.isActive ?? false
+    )
+}
+```
+
+The SDK itself has **no Adapty dependency**. The callback is invoked once when the user taps Send in the email form. This also works with a custom `MailController` when you pass its optional `dataProvider:` parameter. A default implementation returns `nil`, so old data providers remain compatible. Existing `productID` and `isPremium` initializer parameters remain fallbacks, but a provided typed value wins. Existing User ID and device/app/environment details are retained.
 
 ## Events and Dynamic Data
 
