@@ -85,7 +85,6 @@ enum MailBuilder {
         ===== DEVICE INFO =====
         
         Device Model: \(modelIdentifier)
-        Device Name: \(device.name)
         Device Type: \(device.model)
         
         OS: \(systemName) \(systemVersion)

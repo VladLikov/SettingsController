@@ -1,0 +1,36 @@
+name: Publish SettingsController 3.1.4
+
+on:
+  workflow_run:
+    workflows: ["iOS package"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish tested main commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERIFIED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          HEAD_SHA="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          if [ "$HEAD_SHA" != "$VERIFIED_SHA" ]; then
+            echo "Skipping stale CI commit $VERIFIED_SHA"
+            exit 0
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/3.1.4" >/dev/null 2>&1; then
+            echo "Tag already exists"
+            exit 0
+          fi
+          gh release create 3.1.4 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$VERIFIED_SHA" \
+            --title "3.1.4 — Remove device name from support emails" \
+            --notes "Remove Device Name from every support email type. Keep Device Model and Device Type. No public API changes."

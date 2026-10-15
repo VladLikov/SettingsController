@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.1.4 — 2026-10-15
+
+### Changed
+
+- Remove user-assigned device name from support, language-request, and custom mail diagnostics.
+- Retain Device Model and Device Type fields, with regression tests for all mail types.
+
+### Compatibility
+
+- No public API changes.
+
 ## 3.1.3 — 2026-10-13
 
 ### Added
