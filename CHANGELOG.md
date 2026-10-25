@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.5 — 2026-10-25
+
+### Changed
+
+- Display only `User ID`, `Product ID`, and `Pro Status` in the email's user-info section. Never display or substitute Adapty Profile ID, even when User ID is unavailable.
+- Offer a two-field `SettingsMailInfo(productID:isPremium:)` initializer. Keep the old profile-ID initializer deprecated but source-compatible; its profile-ID argument has no effect on emails.
+- Correct the Russian support form title, remove an unsupported lifetime Premium promise from translation-help text, and polish five additional Russian UI strings.
+
+### Testing
+
+- Verify user-ID precedence and absence of Adapty Profile ID in support, language-request, and custom emails.
+
+### Compatibility
+
+- Existing callers continue to compile. No Adapty SDK dependency.
+
 ## 3.1.4 — 2026-10-15
 
 ### Changed

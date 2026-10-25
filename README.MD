@@ -37,7 +37,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.4")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.5")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -181,21 +181,22 @@ final class ViewController: UIViewController {
 }
 ```
 
-## Typed email diagnostics (3.1.3)
+## Typed email diagnostics (3.1.5)
 
-Implement `settingsMailInfo()` on your existing `SettingsControllerDataProvider` (or `SettingsControllerDelegate`) to supply precisely three values for support and language-request emails:
+Implement `settingsMailInfo()` on your existing `SettingsControllerDataProvider` (or `SettingsControllerDelegate`) to supply the product ID and premium status for support and language-request emails:
 
 ```swift
 func settingsMailInfo() async -> SettingsMailInfo? {
     guard let profile = try? await Adapty.getProfile() else { return nil }
     let premium = profile.accessLevels["premium"] // Replace with your access level ID.
     return SettingsMailInfo(
-        adaptyProfileID: profile.profileId,
         productID: premium?.vendorProductId,
         isPremium: premium?.isActive ?? false
     )
 }
 ```
+
+`User ID` comes only from the existing `userID` parameter (the `.about` row for built-in support). It is **never** inferred from Adapty Profile ID. For source compatibility, the deprecated `adaptyProfileID` initializer argument remains accepted but is never shown or used as a fallback.
 
 The SDK itself has **no Adapty dependency**. The callback is invoked once when the user taps Send in the email form. This also works with a custom `MailController` when you pass its optional `dataProvider:` parameter. A default implementation returns `nil`, so old data providers remain compatible. Existing `productID` and `isPremium` initializer parameters remain fallbacks, but a provided typed value wins. Existing User ID and device/app/environment details are retained.
 

@@ -100,7 +100,6 @@ enum MailBuilder {
         ===== USER INFO =====
 
         User ID: \(userID ?? "-")
-        Adapty Profile ID: \(mailInfo?.adaptyProfileID ?? "-")
         Product ID: \(effectiveProductID ?? "-")
         Pro Status: \(proStatus)
         
