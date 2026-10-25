@@ -104,7 +104,7 @@ final class MailBuilderTests: XCTestCase {
                 mailInfo: info
             )
             let body = try mailBody(from: url)
-            XCTAssertTrue(body.contains("User ID: \\(userID ?? "-")"))
+            XCTAssertTrue(body.contains("User ID: " + (userID ?? "-")))
             XCTAssertFalse(body.contains("adapty-legacy"))
             XCTAssertFalse(body.contains("Adapty Profile ID:"))
             XCTAssertTrue(body.contains("Product ID: premium.annual"))
