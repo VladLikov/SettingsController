@@ -75,8 +75,9 @@ public final class SettingsCell: UITableViewCell {
 extension SettingsCell {
 
     public func configure(title: String?, icon: SettingsIcon?, detail: String? = nil) {
-        resetContent()
-
+        accessoryType = .disclosureIndicator
+        accessoryView = nil
+        selectionStyle = .default
         currentTitle = title
         currentDetail = detail
         iconDescription = icon
@@ -119,8 +120,5 @@ extension SettingsCell {
         backgroundConfiguration = nil
         contentConfiguration = nil
 
-        imageView?.image = nil
-        textLabel?.text = nil
-        detailTextLabel?.text = nil
     }
 }

@@ -161,7 +161,13 @@ final class AboutAppController: UITableViewController {
         let changed = userID != info?.userID || isPremium != premium
         userID = info?.userID
         isPremium = premium
-        if changed, isViewLoaded { setupData(); tableView.reloadData() }
+        if changed, isViewLoaded, let section = data.firstIndex(where: { $0.section == .account }) {
+            data[section].items = accountItems()
+            guard tableView.window != nil else { tableView.reloadData(); return }
+            UIView.performWithoutAnimation {
+                tableView.reconfigureRows(at: data[section].items.indices.map { IndexPath(row: $0, section: section) })
+            }
+        }
     }
 
     func loadAccountInfo() {
@@ -183,7 +189,7 @@ final class AboutAppController: UITableViewController {
     private func observeAppearance() {
         if #available(iOS 17, *) {
             registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (controller: AboutAppController, _: UITraitCollection) in
-                controller.tableView.reloadData()
+                controller.refreshVisibleRows()
             }
         }
     }
@@ -191,7 +197,10 @@ final class AboutAppController: UITableViewController {
     @available(iOS, introduced: 8, deprecated: 17)
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
-        if #unavailable(iOS 17), isViewLoaded { tableView.reloadData() }
+        if #unavailable(iOS 17), isViewLoaded,
+           previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle ||
+           previousTraitCollection?.accessibilityContrast != traitCollection.accessibilityContrast ||
+           previousTraitCollection?.displayScale != traitCollection.displayScale { refreshVisibleRows() }
     }
 }
 
@@ -208,6 +217,43 @@ private extension AboutAppController {
         )
     }
     
+    func refreshVisibleRows() {
+        guard isViewLoaded else { return }
+        guard tableView.window != nil else { tableView.reloadData(); return }
+        guard let paths = tableView.indexPathsForVisibleRows, !paths.isEmpty else { return }
+        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
+    }
+
+    func refreshUpdateRow() {
+        guard isViewLoaded else { return }
+        guard tableView.window != nil else { tableView.reloadData(); return }
+        let paths = data.enumerated().flatMap { section, group in
+            group.items.enumerated().compactMap { row, item in
+                item.action == .checkForUpdate ? IndexPath(row: row, section: section) : nil
+            }
+        }
+        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
+    }
+
+    private func accountItems() -> [AboutItem] {
+        [
+            .init(
+                title: NSLocalizedString("User ID", bundle: .module, comment: "Diagnostic label for the current account identifier supplied by the host app."),
+                subtitle: userID ?? "-",
+                value: nil,
+                icon: Self.icon("person.fill"),
+                action: userID == nil ? .none : .copyUserID
+            ),
+            .init(
+                title: NSLocalizedString("Premium", bundle: .module, comment: "Title of the premium settings row."),
+                subtitle: nil,
+                value: isPremium ? "true" : "false",
+                icon: Self.icon("star.fill"),
+                action: .none
+            )
+        ]
+    }
+
     func setupData() {
         
         let bundle = Bundle.main
@@ -289,25 +335,7 @@ private extension AboutAppController {
                     )
                 ]
             ),
-            (
-                .account,
-                [
-                    .init(
-                        title: NSLocalizedString("User ID", bundle: .module, comment: "Diagnostic label for the current account identifier supplied by the host app."),
-                        subtitle: userID ?? "-",
-                        value: nil,
-                        icon: Self.icon("person.fill"),
-                        action: userID == nil ? .none : .copyUserID
-                    ),
-                    .init(
-                        title: NSLocalizedString("Premium", bundle: .module, comment: "Title of the premium settings row."),
-                        subtitle: nil,
-                        value: isPremium ? "true" : "false",
-                        icon: Self.icon("star.fill"),
-                        action: .none
-                    )
-                ]
-            ),
+            (.account, accountItems()),
             (
                 .locale,
                 [
@@ -480,7 +508,7 @@ extension AboutAppController {
             defer {
                 if lifetime.finish(request) {
                     self?.checkUpdateTask = nil
-                    self?.tableView.reloadData()
+                    self?.refreshUpdateRow()
                 }
             }
             do {
@@ -499,7 +527,7 @@ extension AboutAppController {
                 self?.showUpdateMessage(NSLocalizedString("Unable to check for updates", bundle: .module, comment: "About alert title when retrieving App Store update information fails."))
             }
         }
-        tableView.reloadData()
+        refreshUpdateRow()
     }
 
     private func showUpdateMessage(_ title: String) {

@@ -44,8 +44,8 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
     override func updateViewConstraints() {
 #if compiler(>=6.4)
         if #available(iOS 27.1, *) {
-            // UIKit tracks reserved-region reads during constraint updates. An active
-            // division, rather than a model name or hinge angle, defines this layout.
+            // An active division, rather than a model name or hinge angle, defines
+            // this layout. Widths change only when the division state changes.
             applyDivisionLayout(hasActiveDivision: view.reservedRegions(kind: .division).contains { $0.isActive })
         }
 #endif

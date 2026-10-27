@@ -101,6 +101,31 @@ final class CatalogRegressionTests: XCTestCase {
         XCTAssertEqual(request?.cachePolicy, .useProtocolCachePolicy)
     }
 
+    func testConcurrentCatalogsShareRequestButKeepDifferentProjectionAndCancellation() async throws {
+        let developer = UUID().uuidString, url = lookupURL(developer)
+        let json = #"{"results":[{"kind":"software","trackId":1,"trackName":"One","artworkUrl100":"https://example.com/1","trackViewUrl":"https://apps.apple.com/app/id1"},{"kind":"software","trackId":2,"trackName":"Two","artworkUrl100":"https://example.com/2","trackViewUrl":"https://apps.apple.com/app/id2"}]}"#
+        await FixtureServer.shared.register(url, data: Data(json.utf8), hold: true)
+        let session = fixtureSession()
+        defer { session.invalidateAndCancel() }
+        let first = Task { try await AppStoreAppsLoader.fetch(developerId: developer, limit: 1, session: session) }
+        await FixtureServer.shared.waitForRequest(url)
+        let second = Task { try await AppStoreAppsLoader.fetch(developerId: developer, limit: 2, excludeAppID: "1", session: session) }
+        for _ in 0..<1000 {
+            if await CatalogRequestLoader.shared.activeConsumerCount == 2 { break }
+            await Task.yield()
+        }
+        let consumers = await CatalogRequestLoader.shared.activeConsumerCount
+        XCTAssertEqual(consumers, 2)
+        first.cancel()
+        await FixtureServer.shared.release(url)
+        do { _ = try await first.value; XCTFail("Cancelled catalog returned") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        let result = try await second.value
+        XCTAssertEqual(result.map(\.id), [2])
+        let count = await FixtureServer.shared.requestCount(url)
+        XCTAssertEqual(count, 1)
+    }
+
     func testLoaderHTTPAndDecodingFailures() async {
         let session = fixtureSession()
         defer { session.invalidateAndCancel() }

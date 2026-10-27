@@ -112,6 +112,13 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         let first = Task { try await loader.image(from: url, maxPixelSize: 40, scale: 2) }
         await FixtureServer.shared.waitForRequest(url)
         let second = Task { try await loader.image(from: url, maxPixelSize: 40, scale: 2) }
+        // Wait for both consumers to acquire the shared request before cancelling one.
+        for _ in 0..<1000 {
+            if await loader.activeConsumerCount == 2 { break }
+            await Task.yield()
+        }
+        let consumers = await loader.activeConsumerCount
+        XCTAssertEqual(consumers, 2)
         first.cancel()
         await FixtureServer.shared.release(url)
         do { _ = try await first.value; XCTFail("Cancelled waiter must not receive an image") }
@@ -120,6 +127,30 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertNotNil(image.cgImage)
         let requests = await FixtureServer.shared.requestCount(url)
         XCTAssertEqual(requests, 1)
+    }
+
+    func testLastCancelledImageConsumerReleasesFlightAndCanRetry() async throws {
+        let url = URL(string: "https://fixture.example/\(UUID().uuidString).png")!
+        await FixtureServer.shared.register(url, data: try pngData(), hold: true)
+        let session = fixtureSession()
+        defer { session.invalidateAndCancel() }
+        let loader = RemoteImageLoader(session: session)
+        let first = Task { try await loader.image(from: url, maxPixelSize: 30, scale: 2) }
+        await FixtureServer.shared.waitForRequest(url)
+        first.cancel()
+        for _ in 0..<1000 {
+            if await loader.activeRequestCount == 0 { break }
+            await Task.yield()
+        }
+        let active = await loader.activeRequestCount
+        XCTAssertEqual(active, 0)
+        await FixtureServer.shared.release(url)
+        do { _ = try await first.value; XCTFail("Cancelled consumer received image") }
+        catch { XCTAssertTrue(error is CancellationError) }
+        let image = try await loader.image(from: url, maxPixelSize: 30, scale: 2)
+        XCTAssertNotNil(image.cgImage)
+        let requests = await FixtureServer.shared.requestCount(url)
+        XCTAssertEqual(requests, 2)
     }
 
     func testImageScaleIsPartOfCacheKeyAndFailuresCanRetry() async throws {

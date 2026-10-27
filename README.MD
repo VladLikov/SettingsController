@@ -602,3 +602,23 @@ When the division becomes inactive, the original column sizing is restored.
 The selected destination remains the same controller across these changes.
 Earlier OS versions and the existing Swift 6.3 compiler path retain the classic
 split presentation. The package minimum deployment target remains iOS 15.
+
+
+### Incremental updates and avatar snapshots
+
+Visible settings update the affected rows or catalog sections. A premium card changing
+into an Active row replaces its section because its cell type changes. Offscreen tables
+may still use `reloadData()` to synchronize before their next display; there is no reload
+from the root layout callback.
+
+If your provider recreates the same avatar UIImage on every refresh, pass an optional
+`UserInfo(name:avatar:avatarRevision:)` key. Include account identity and content revision
+(for example, `"account-42:avatar-3"`) and change it whenever the avatar pixels change.
+Without the key, the existing UIImage reference comparison remains in effect. Never
+reuse a revision for different image content. A nil avatar still explicitly removes it.
+
+Icon requests share work while consumers remain. Cancelling the last consumer cancels
+the request; cancelling one consumer leaves other consumers running. Catalog requests
+share only concurrent work for the same URL and URLSession; limit and exclusion are
+applied independently. No new persistent/TTL cache or stale-data fallback is introduced.
+Bitmap caches use both count and byte-cost budgets; NSCache budgets are advisory.

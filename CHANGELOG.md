@@ -3,6 +3,7 @@
 ## 4.0.0 — Unreleased
 
 ### Added
+- Optional avatar content revisions to avoid false profile changes when hosts recreate UIImage snapshots. Existing initializers and reference comparison remain supported.
 - Synchronized source folders in the generated example and stable Mail action identifiers across horizontal and vertical native toolbars.
 - Native iPhone Duo split presentation: equal sidebar/detail columns for an active division, selected detail retention across fold transitions, and the existing empty state when nothing is selected. Tabletop keeps left/right columns. This path requires Xcode 27.1 / Swift 6.4 and iOS 27.1; earlier compilers and runtimes keep classic presentation.
 - A visible, localized preparation status in the mail form while diagnostics load; Send remains a standard disabled navigation action during preparation.
@@ -11,6 +12,9 @@
 - Retriable catalog state and recoverable external-mail opening failures.
 
 ### Fixed
+- Incremental visible-table updates for account/premium/catalog changes, without rebuilding unrelated cells; safe offscreen synchronization is retained.
+- Reused app placeholders, stable icon tasks, reduced cell configuration work, cached Mail status sizing and bounded Send-length checks.
+- Shared catalog requests and consumer-aware image cancellation; bitmap caches now account for byte cost as well as object count.
 - Percent encoding in mail drafts, cancelled/obsolete StoreKit fallbacks, late account/update results and task-handle races.
 - Premium card restoration, profile updates behind sheets/on iPad, and missing typed User ID clearing.
 - Removed-color selection, nil/zero inset cache collision, dynamic trait refresh, overlay inset restoration and bounded tile rendering.

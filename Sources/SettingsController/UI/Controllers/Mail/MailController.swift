@@ -144,6 +144,8 @@ public class MailController: UITableViewController {
         cell.textViewBecomeFirstResponder()
     } 
 
+    private var preparationMeasurement: (width: CGFloat, category: UIContentSizeCategory, safeArea: UIEdgeInsets, direction: UIUserInterfaceLayoutDirection, height: CGFloat)?
+
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         if isPreparingMail { sizePreparationView() }
@@ -217,7 +219,7 @@ extension MailController: MailCellDelegate {
 
         currentText = text
 
-        sendButton.isEnabled = !isPreparingMail && text.count >= type.minCharactersCount
+        sendButton.isEnabled = !isPreparingMail && text.prefix(type.minCharactersCount).count >= type.minCharactersCount
 
         if needsHeightUpdate {
             UIView.performWithoutAnimation {
@@ -238,7 +240,7 @@ extension MailController {
 
     private func setPreparingMail(_ preparing: Bool) {
         isPreparingMail = preparing
-        sendButton.isEnabled = !preparing && currentText.count >= type.minCharactersCount
+        sendButton.isEnabled = !preparing && currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount
         navigationItem.rightBarButtonItem = sendButton
         guard isViewLoaded else { return }
         if preparing {
@@ -253,11 +255,16 @@ extension MailController {
     private func sizePreparationView() {
         let width = tableView.bounds.width
         guard width > 0 else { return }
+        let category = traitCollection.preferredContentSizeCategory
+        if let measured = preparationMeasurement, measured.width == width, measured.category == category,
+           measured.safeArea == preparationView.safeAreaInsets, measured.direction == preparationView.effectiveUserInterfaceLayoutDirection,
+           tableView.tableHeaderView === preparationView, preparationView.frame.height == measured.height { return }
         let size = preparationView.systemLayoutSizeFitting(
             CGSize(width: width, height: 0),
             withHorizontalFittingPriority: .required,
             verticalFittingPriority: .fittingSizeLevel
         )
+        preparationMeasurement = (width, category, preparationView.safeAreaInsets, preparationView.effectiveUserInterfaceLayoutDirection, ceil(size.height))
         let frame = CGRect(x: 0, y: 0, width: width, height: ceil(size.height))
         if tableView.tableHeaderView !== preparationView || preparationView.frame != frame {
             preparationView.frame = frame
@@ -266,7 +273,7 @@ extension MailController {
     }
 
     func prepareMail() {
-        guard !isPreparingMail, currentText.count >= type.minCharactersCount else { return }
+        guard !isPreparingMail, currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount else { return }
         setPreparingMail(true)
         let request = mailLifetime.begin()
         let lifetime = mailLifetime

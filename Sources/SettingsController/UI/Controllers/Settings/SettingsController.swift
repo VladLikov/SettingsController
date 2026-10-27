@@ -164,7 +164,8 @@ public final class SettingsController: UITableViewController {
         configuration.eventHandler?.settingsDidDismiss()
     }
 
-    func rebuildSections(reload: Bool = true) {
+    func rebuildSections(reload: Bool = true, changedSectionIDs: Set<Int>? = nil, reconfiguredRows: [IndexPath] = []) {
+        let oldIDs = visibleSectionIDs
         var result: [SettingsSection] = []
         var ids: [Int] = []
         for (id, definition) in configuration.sections.enumerated() {
@@ -203,9 +204,32 @@ public final class SettingsController: UITableViewController {
             result.append(section)
             ids.append(id)
         }
-        sections = result
-        visibleSectionIDs = ids
-        if reload, isViewLoaded { tableView.reloadData() }
+        guard reload, isViewLoaded, tableView.window != nil, let changedSectionIDs else {
+            sections = result
+            visibleSectionIDs = ids
+            // An offscreen table may not have acquired its initial row counts yet.
+            // Synchronize it without issuing batch operations against unknown counts.
+            if reload, isViewLoaded { tableView.reloadData() }
+            return
+        }
+        let deleted = IndexSet(oldIDs.indices.filter { !ids.contains(oldIDs[$0]) })
+        let inserted = IndexSet(ids.indices.filter { !oldIDs.contains(ids[$0]) })
+        let replaced = IndexSet(oldIDs.indices.filter { ids.contains(oldIDs[$0]) && changedSectionIDs.contains(oldIDs[$0]) })
+        UIView.performWithoutAnimation {
+            if !deleted.isEmpty || !inserted.isEmpty || !replaced.isEmpty {
+                tableView.performBatchUpdates {
+                    sections = result
+                    visibleSectionIDs = ids
+                    tableView.deleteSections(deleted, with: .none)
+                    tableView.insertSections(inserted, with: .none)
+                    tableView.reloadSections(replaced, with: .none)
+                }
+            } else {
+                sections = result
+                visibleSectionIDs = ids
+            }
+            if !reconfiguredRows.isEmpty { tableView.reconfigureRows(at: reconfiguredRows) }
+        }
     }
 
     private func resumeCatalogLoads() {
@@ -222,8 +246,9 @@ public final class SettingsController: UITableViewController {
         catalogLifetimes[id] = lifetime
         let request = lifetime.begin()
         appLoadTasks[id]?.cancel()
+        let wasLoading = catalogStates[id] == .loading
         catalogStates[id] = .loading
-        rebuildSections()
+        if !wasLoading { rebuildSections(changedSectionIDs: [id]) }
         let fetch = fetchApps
         appLoadTasks[id] = Task { @MainActor [weak self] in
             defer { if lifetime.finish(request) { self?.appLoadTasks[id] = nil } }
@@ -243,7 +268,7 @@ public final class SettingsController: UITableViewController {
         guard catalogLifetimes[id]?.finish(request) == true else { return }
         appLoadTasks[id] = nil
         catalogStates[id] = state
-        rebuildSections()
+        rebuildSections(changedSectionIDs: [id])
     }
 
     private static func initialPremium(in sections: [SettingsSection]) -> Bool {

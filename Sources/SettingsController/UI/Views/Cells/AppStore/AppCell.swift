@@ -22,13 +22,21 @@ final class AppCell: UITableViewCell {
     private var currentIcon: UIImage?
 
     private var isShowingPlaceholder = true
+    private var representedScale: CGFloat?
+    private var iconRequest = UUID()
+    private static let placeholders = NSCache<NSString, UIImage>()
     private func makePlaceholder() -> UIImage {
+        let key = "\(traitCollection.userInterfaceStyle.rawValue):\(traitCollection.accessibilityContrast.rawValue):\(traitCollection.displayScale)" as NSString
+        if let image = Self.placeholders.object(forKey: key) { return image }
+        Self.placeholders.countLimit = 12
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = max(traitCollection.displayScale, 1)
-        return UIGraphicsImageRenderer(size: Metrics.iconSize, format: format).image { _ in
+        let image = UIGraphicsImageRenderer(size: Metrics.iconSize, format: format).image { _ in
             UIColor.secondarySystemBackground.resolvedColor(with: traitCollection).setFill()
             UIBezierPath(roundedRect: CGRect(origin: .zero, size: Metrics.iconSize), cornerRadius: Metrics.iconCornerRadius).fill()
         }
+        Self.placeholders.setObject(image, forKey: key)
+        return image
     }
 
     // MARK: Life Cycle
@@ -68,6 +76,7 @@ final class AppCell: UITableViewCell {
         iconTask?.cancel()
         iconTask = nil
         representedIconURL = nil
+        iconRequest = UUID()
         currentTitle = nil
         currentIcon = nil
         accessoryType = .disclosureIndicator
@@ -85,9 +94,17 @@ extension AppCell {
     
     public func configure(with row: AppStoreAppRowState) {
 
+        if case .loaded(let item) = row, representedIconURL == item.iconURL,
+           representedScale == max(traitCollection.displayScale, 1), !isShowingPlaceholder || iconTask != nil {
+            currentTitle = item.name
+            accessoryType = .disclosureIndicator
+            updateContentConfiguration()
+            return
+        }
         iconTask?.cancel()
         iconTask = nil
         representedIconURL = nil
+        iconRequest = UUID()
         isShowingPlaceholder = true
         currentIcon = makePlaceholder()
 
@@ -112,7 +129,10 @@ extension AppCell {
     private func load(icon url: URL) {
 
         representedIconURL = url
+        let request = UUID()
+        iconRequest = request
         let scale = max(traitCollection.displayScale, 1)
+        representedScale = scale
 
         iconTask = Task { [weak self] in
             do {
@@ -125,7 +145,8 @@ extension AppCell {
                 guard !Task.isCancelled else { return }
 
                 await MainActor.run { [weak self] in
-                    guard let self, representedIconURL == url else { return }
+                    guard let self, iconRequest == request, representedIconURL == url else { return }
+                    iconTask = nil
                     isShowingPlaceholder = false
                     currentIcon = image
                     updateContentConfiguration()
@@ -134,7 +155,8 @@ extension AppCell {
                 return
             } catch {
                 await MainActor.run { [weak self] in
-                    guard !Task.isCancelled, let self, representedIconURL == url else { return }
+                    guard !Task.isCancelled, let self, iconRequest == request, representedIconURL == url else { return }
+                    iconTask = nil
                     isShowingPlaceholder = true
                     currentIcon = makePlaceholder()
                     updateContentConfiguration()

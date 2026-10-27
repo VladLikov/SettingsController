@@ -18,6 +18,7 @@ public struct SettingsIcon {
     fileprivate static let tileCache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
         cache.countLimit = 200
+        cache.totalCostLimit = 8 * 1024 * 1024
         return cache
     }()
 
@@ -62,7 +63,7 @@ public struct SettingsIcon {
             return nil
         }
 
-        Self.tileCache.setObject(rendered, forKey: cacheKey)
+        Self.tileCache.setObject(rendered, forKey: cacheKey, cost: (rendered.cgImage?.bytesPerRow ?? 0) * (rendered.cgImage?.height ?? 0))
         return rendered
     }
 

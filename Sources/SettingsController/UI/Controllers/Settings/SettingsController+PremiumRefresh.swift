@@ -58,18 +58,38 @@ extension SettingsController {
     }
 
     func applyResolvedState(info: SettingsMailInfo?, premium: Bool?, user: UserInfo?, includesAccount: Bool) {
-        var changed = false
+        var premiumChanged = false
+        var userChanged = false
         if includesAccount {
             currentMailInfo = info // nil must clear a previous account ID.
-            if let premium, premium != isPremium { isPremium = premium; changed = true }
+            if let premium, premium != isPremium { isPremium = premium; premiumChanged = true }
             activeAboutController?.acceptAccountInfo(info, premium: isPremium)
         }
         // nil means "no new snapshot". A guest UserInfo explicitly represents logout.
-        if let user, currentUser?.name != user.name || currentUser?.avatar !== user.avatar {
+        if let user, currentUser?.name != user.name || !user.hasSameAvatar(as: currentUser) {
             currentUser = user
-            changed = true
+            userChanged = true
         }
-        if changed { rebuildSections() }
+        guard premiumChanged || userChanged else { return }
+        var replacements = Set<Int>()
+        var rows: [IndexPath] = []
+        for (visible, id) in visibleSectionIDs.enumerated() {
+            switch configuration.sections[id].kind {
+            case .premiumCard where premiumChanged: replacements.insert(id)
+            case .rows(let definitions):
+                for (index, row) in definitions.enumerated() {
+                    switch row {
+                    case .defaultRow(.premium) where premiumChanged,
+                         .defaultRow(.user) where userChanged,
+                         .defaultRow(.userFactory) where userChanged:
+                        rows.append(IndexPath(row: index, section: visible))
+                    default: break
+                    }
+                }
+            default: break
+            }
+        }
+        rebuildSections(changedSectionIDs: replacements, reconfiguredRows: rows)
     }
 
     func pushAboutController(appID: String, privacyURL: URL, termsURL: URL, navigationTitle: String?) {

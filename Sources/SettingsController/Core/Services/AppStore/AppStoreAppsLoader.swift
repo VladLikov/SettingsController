@@ -32,35 +32,26 @@ public enum AppStoreAppsLoader {
         request.cachePolicy = .useProtocolCachePolicy
         request.timeoutInterval = 15
 
-        let (data, response) = try await session.data(for: request)
+        let data = try await CatalogRequestLoader.shared.data(for: request, session: session)
         try Task.checkCancellation()
-
-        if let httpResponse = response as? HTTPURLResponse,
-           !(200...299).contains(httpResponse.statusCode) {
-            throw URLError(.badServerResponse)
-        }
 
         let raw = try JSONDecoder().decode(LookupResponse.self, from: data)
 
-        return raw.results
-            .filter { $0.kind == "software" }
-            .compactMap {
-                guard let id = $0.trackId,
-                      let name = $0.trackName,
-                      let icon = $0.artworkUrl100,
-                      let link = $0.trackViewUrl,
-                      let iconURL = URL(string: icon),
-                      let storeURL = URL(string: link),
-                      id > 0, !name.isEmpty,
-                      ["https", "http"].contains(iconURL.scheme?.lowercased() ?? ""),
-                      ["https", "http"].contains(storeURL.scheme?.lowercased() ?? ""),
-                      iconURL.host != nil, storeURL.host != nil
-                else { return nil }
-                return AppItem(id: id, name: name, iconURL: iconURL, storeURL: storeURL)
-            }
-            .filter { excludeAppID == nil || String($0.id) != excludeAppID }
-            .prefix(limit)
-            .map { $0 }
+        var apps: [AppItem] = []
+        apps.reserveCapacity(min(limit, raw.results.count))
+        for row in raw.results {
+            guard row.kind == "software", let id = row.trackId, id > 0,
+                  excludeAppID == nil || String(id) != excludeAppID,
+                  let name = row.trackName, !name.isEmpty,
+                  let icon = row.artworkUrl100, let link = row.trackViewUrl,
+                  let iconURL = URL(string: icon), let storeURL = URL(string: link),
+                  ["https", "http"].contains(iconURL.scheme?.lowercased() ?? ""),
+                  ["https", "http"].contains(storeURL.scheme?.lowercased() ?? ""),
+                  iconURL.host != nil, storeURL.host != nil else { continue }
+            apps.append(AppItem(id: id, name: name, iconURL: iconURL, storeURL: storeURL))
+            if apps.count == limit { break }
+        }
+        return apps
     }
 }
 
@@ -72,5 +63,65 @@ private struct LookupResponse: Decodable {
         let trackName: String?
         let artworkUrl100: String?
         let trackViewUrl: String?
+    }
+}
+
+// Shares only requests currently in flight. No TTL or stale response cache is added.
+actor CatalogRequestLoader {
+    static let shared = CatalogRequestLoader()
+    private struct Key: Hashable { let session: ObjectIdentifier; let url: URL }
+    private struct Flight {
+        let id: UUID
+        let task: Task<Data, Error>
+        var consumers: Set<UUID>
+    }
+    private var flights: [Key: Flight] = [:]
+    var activeConsumerCount: Int { flights.values.reduce(0) { $0 + $1.consumers.count } }
+
+    func data(for request: URLRequest, session: URLSession) async throws -> Data {
+        try Task.checkCancellation()
+        guard let url = request.url else { throw URLError(.badURL) }
+        let key = Key(session: ObjectIdentifier(session), url: url)
+        let consumer = UUID()
+        let flight: Flight
+        if var existing = flights[key] {
+            existing.consumers.insert(consumer)
+            flights[key] = existing
+            flight = existing
+        } else {
+            let task = Task {
+                let (data, response) = try await session.data(for: request)
+                try Task.checkCancellation()
+                if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
+                    throw URLError(.badServerResponse)
+                }
+                return data
+            }
+            flight = Flight(id: UUID(), task: task, consumers: [consumer])
+            flights[key] = flight
+        }
+        return try await withTaskCancellationHandler {
+            do {
+                let data = try await flight.task.value
+                if flights[key]?.id == flight.id { flights[key] = nil }
+                try Task.checkCancellation()
+                return data
+            } catch {
+                if flights[key]?.id == flight.id { flights[key] = nil }
+                if Task.isCancelled { throw CancellationError() }
+                throw error
+            }
+        } onCancel: {
+            Task { await self.release(key, flightID: flight.id, consumer: consumer) }
+        }
+    }
+
+    private func release(_ key: Key, flightID: UUID, consumer: UUID) {
+        guard var flight = flights[key], flight.id == flightID else { return }
+        flight.consumers.remove(consumer)
+        if flight.consumers.isEmpty {
+            flights[key] = nil
+            flight.task.cancel()
+        } else { flights[key] = flight }
     }
 }
