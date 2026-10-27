@@ -68,7 +68,6 @@ extension SettingsController {
         let mailController = MailController(
             type: .supportRequest,
             email: email,
-            userID: mailUserID,
             isPremium: cachedPremiumStatus,
             productID: configuration.productID,
             dataProvider: configuration.dataProvider
@@ -122,24 +121,5 @@ extension SettingsController {
         } else {
             UIApplication.shared.open(webURL)
         }
-    }
-}
-
-extension SettingsController {
-
-    var mailUserID: String? {
-        for section in sections {
-            guard case .rows(let rows) = section.kind else { continue }
-
-            for row in rows {
-                guard case .defaultRow(.about(let userID, _, _, _)) = row else {
-                    continue
-                }
-
-                return userID
-            }
-        }
-
-        return nil
     }
 }

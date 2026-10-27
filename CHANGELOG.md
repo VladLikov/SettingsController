@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Replace the old deprecated `SettingsMailInfo(adaptyProfileID:productID:isPremium:)` initializer with a single non-deprecated `SettingsMailInfo(userID:productID:isPremium:)`.
+- Use `SettingsMailInfo.userID` as the only source for User ID in support emails and the built-in About screen.
+- Retrieve About-screen User ID and premium status via the existing asynchronous data provider, avoiding separate User ID configuration.
+
+### Breaking changes
+
+- Remove `userID:` from `MailController.init`, the internal `LanguageController.init`, `MailBuilder.buildMail`, and the `.about` row.
+- Remove `adaptyProfileID` from `SettingsMailInfo`. Update consuming apps to set `userID: profile.profileId` in `settingsMailInfo()`.
+- Applications without a data provider now show `User ID: -` in support emails and About instead of reading an ID from the `.about` row.
+
 ## 3.1.5 — 2026-10-25
 
 ### Changed

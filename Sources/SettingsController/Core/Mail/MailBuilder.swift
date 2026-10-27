@@ -15,7 +15,6 @@ enum MailBuilder {
         with text: String,
         recipient: String,
         type: MailType,
-        userID: String?,
         isPremium: Bool?,
         productID: String? = nil,
         mailInfo: SettingsMailInfo? = nil
@@ -99,7 +98,7 @@ enum MailBuilder {
 
         ===== USER INFO =====
 
-        User ID: \(userID ?? "-")
+        User ID: \(mailInfo?.userID ?? "-")
         Product ID: \(effectiveProductID ?? "-")
         Pro Status: \(proStatus)
         

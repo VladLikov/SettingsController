@@ -74,7 +74,6 @@ public class MailController: UITableViewController {
 
     private let type: MailType
     private let email: String
-    private let userID: String?
     private let isPremium: Bool?
     private let productID: String?
     private weak var dataProvider: (any SettingsControllerDataProvider)?
@@ -104,10 +103,9 @@ public class MailController: UITableViewController {
     
     // MARK: Life Cycle
 
-    public init(type: MailType, email: String, userID: String? = nil, isPremium: Bool? = nil, productID: String? = nil, dataProvider: (any SettingsControllerDataProvider)? = nil) {
+    public init(type: MailType, email: String, isPremium: Bool? = nil, productID: String? = nil, dataProvider: (any SettingsControllerDataProvider)? = nil) {
         self.type = type
         self.email = email
-        self.userID = userID
         self.isPremium = isPremium
         self.productID = productID
         self.dataProvider = dataProvider
@@ -239,7 +237,7 @@ extension MailController {
 
             let urlString = MailBuilder.buildMail(
                 with: text, recipient: email, type: type,
-                userID: userID, isPremium: diagnostics.isPremium,
+                isPremium: diagnostics.isPremium,
                 productID: productID, mailInfo: diagnostics.info
             )
             if let url = URL(string: urlString) {

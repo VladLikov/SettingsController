@@ -44,7 +44,6 @@ extension SettingsController {
     }
 
     func pushAboutController(
-        userID: String?,
         appID: String,
         privacyURL: URL,
         termsURL: URL,
@@ -54,13 +53,17 @@ extension SettingsController {
         aboutStatusTask = Task { @MainActor [weak self] in
             guard let self else { return }
 
-            let isPremium = await resolvePremiumStatus()
+            let diagnostics = await MailInfoResolver.resolve(
+                provider: configuration.dataProvider,
+                fallbackPremium: cachedPremiumStatus
+            )
             guard !Task.isCancelled else { return }
 
+            let isPremium = diagnostics.isPremium ?? cachedPremiumStatus
             self.isPremium = isPremium
             showAboutController(
                 isPremium: isPremium,
-                userID: userID,
+                userID: diagnostics.info?.userID,
                 appID: appID,
                 privacyURL: privacyURL,
                 termsURL: termsURL,

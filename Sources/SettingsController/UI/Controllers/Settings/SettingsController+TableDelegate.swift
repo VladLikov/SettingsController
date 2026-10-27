@@ -126,7 +126,6 @@ extension SettingsController {
             pushViewController(
                 LanguageController(
                     email: email,
-                    userID: mailUserID,
                     isPremium: isPremium,
                     productID: configuration.productID,
                     dataProvider: configuration.dataProvider
@@ -166,9 +165,8 @@ extension SettingsController {
         case .redeemCode:
             redeemCode()
 
-        case .about(let userID, let appID, let privacyURL, let termsURL):
+        case .about(let appID, let privacyURL, let termsURL):
             pushAboutController(
-                userID: userID,
                 appID: appID,
                 privacyURL: privacyURL,
                 termsURL: termsURL,

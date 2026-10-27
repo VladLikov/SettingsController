@@ -145,7 +145,6 @@ struct SettingsControllerHelper {
 
             SettingsSection(kind: .rows([
                 .defaultRow(.about(
-                    userID: settings.userID,
                     appID: "1234567890",
                     privacyURL: URL(string: "https://example.com/privacy")!,
                     termsURL: URL(string: "https://example.com/terms")!
@@ -181,24 +180,25 @@ final class ViewController: UIViewController {
 }
 ```
 
-## Typed email diagnostics (3.1.5)
+## Typed email diagnostics (unreleased)
 
-Implement `settingsMailInfo()` on your existing `SettingsControllerDataProvider` (or `SettingsControllerDelegate`) to supply the product ID and premium status for support and language-request emails:
+Implement `settingsMailInfo()` on your existing `SettingsControllerDataProvider` (or `SettingsControllerDelegate`) to supply the User ID, product ID, and premium status for support and language-request emails:
 
 ```swift
 func settingsMailInfo() async -> SettingsMailInfo? {
     guard let profile = try? await Adapty.getProfile() else { return nil }
     let premium = profile.accessLevels["premium"] // Replace with your access level ID.
     return SettingsMailInfo(
+        userID: profile.profileId,
         productID: premium?.vendorProductId,
         isPremium: premium?.isActive ?? false
     )
 }
 ```
 
-`User ID` comes only from the existing `userID` parameter (the `.about` row for built-in support). It is **never** inferred from Adapty Profile ID. For source compatibility, the deprecated `adaptyProfileID` initializer argument remains accepted but is never shown or used as a fallback.
+`User ID` for support emails and the built-in About screen now comes only from `SettingsMailInfo.userID`. For apps using Adapty, return `profile.profileId` in that field. There is no `adaptyProfileID` property, deprecated initializer, or separate `userID` argument in the email controllers or the `.about` row. If the provider returns `nil`, the User ID is shown as `-`.
 
-The SDK itself has **no Adapty dependency**. The callback is invoked once when the user taps Send in the email form. This also works with a custom `MailController` when you pass its optional `dataProvider:` parameter. A default implementation returns `nil`, so old data providers remain compatible. Existing `productID` and `isPremium` initializer parameters remain fallbacks, but a provided typed value wins. Existing User ID and device/app/environment details are retained.
+The SDK itself has **no Adapty dependency**. The callback is invoked once when the user taps Send in the email form. This also works with a custom `MailController` when you pass its optional `dataProvider:` parameter. A default implementation returns `nil`, so old data providers remain compatible. Existing `productID` and `isPremium` initializer parameters remain fallbacks, but a provided typed value wins. Device, app, and environment diagnostics are unchanged.
 
 ## Events and Dynamic Data
 
@@ -386,7 +386,7 @@ SettingsIconGenerator.removeAllCachedImages()
 - `.telegram(id:)`
 - `.vkGroup(id:)`
 - `.redeemCode`
-- `.about(userID:appID:privacyURL:termsURL:)`
+- `.about(appID:privacyURL:termsURL:)`
 
 ## Premium Card
 

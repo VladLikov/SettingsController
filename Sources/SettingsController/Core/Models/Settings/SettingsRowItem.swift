@@ -36,7 +36,7 @@ public enum SettingsRowItem {
         case appearance(theme: ThemeStorage, colors: [any AppColorType] = AppColor.allCases)
         case tapticEngine(taptic: TapticStorage)
         
-        case about(userID: String?, appID: String, privacyURL: URL, termsURL: URL)
+        case about(appID: String, privacyURL: URL, termsURL: URL)
         
         var title: String? {
             switch self {

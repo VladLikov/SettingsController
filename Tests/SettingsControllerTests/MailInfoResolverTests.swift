@@ -26,10 +26,12 @@ final class MailInfoResolverTests: XCTestCase {
 
     func testModernProviderUsesTypedPremiumWithoutDuplicateLookup() async {
         let provider = ModernProvider(SettingsMailInfo(
+            userID: "adapty-profile-123",
             productID: "yearly",
             isPremium: false
         ))
         let result = await MailInfoResolver.resolve(provider: provider, fallbackPremium: true)
+        XCTAssertEqual(result.info?.userID, "adapty-profile-123")
         XCTAssertEqual(result.info?.productID, "yearly")
         XCTAssertEqual(result.isPremium, false)
         XCTAssertEqual(provider.mailRequests, 1)
@@ -37,8 +39,9 @@ final class MailInfoResolverTests: XCTestCase {
     }
 
     func testMissingPremiumFallsBackToExistingProvider() async {
-        let provider = ModernProvider(SettingsMailInfo())
+        let provider = ModernProvider(SettingsMailInfo(userID: "user-123"))
         let result = await MailInfoResolver.resolve(provider: provider, fallbackPremium: false)
+        XCTAssertEqual(result.info?.userID, "user-123")
         XCTAssertNil(result.info?.productID)
         XCTAssertEqual(result.isPremium, true)
         XCTAssertEqual(provider.premiumRequests, 1)

@@ -16,6 +16,20 @@ final class SettingsConfigurationTests: XCTestCase {
         init(_ value: Handler?) { self.value = value }
     }
 
+    func testAboutRowDoesNotRequireUserID() {
+        let row = SettingsRowItem.defaultRow(.about(
+            appID: "123",
+            privacyURL: URL(string: "https://example.com/privacy")!,
+            termsURL: URL(string: "https://example.com/terms")!
+        ))
+
+        if case .defaultRow(.about(let appID, _, _)) = row {
+            XCTAssertEqual(appID, "123")
+        } else {
+            XCTFail("Expected About row")
+        }
+    }
+
     func testDelegateIsNotRetained() {
         var delegate: Handler? = Handler()
         let configuration = SettingsConfiguration(sections: [], delegate: delegate)
