@@ -25,7 +25,7 @@
 
 ## Совместимость
 
-Новый путь включён при сборке Swift 6.4 / Xcode 27.1 SDK и выполнении на iOS 27.1+. Минимальный compiler/tools для всего пакета — Swift 6.4 (Xcode 27.1+); compiler fallback удалён. На предыдущих runtime сохраняется классическая split presentation. Минимальный deployment target — iOS 15, без изменения signing, зависимостей и публичной конфигурации хоста.
+Новый путь включён при сборке Swift 6.4 / Xcode 27.1 SDK и выполнении на iOS 27.1+. Минимальный compiler/tools для всего пакета — Swift 6.4 (Xcode 27.1+); compiler fallback удалён. Column-style split используется на iOS 27.0+ также из-за обнаруженного native accessibility crash классического split на iPad 27.0. Реакция на division требует iOS 27.1+. На iOS 15–26 сохраняется классическая split presentation. Минимальный deployment target — iOS 15, без изменения signing, зависимостей и публичной конфигурации хоста.
 
 Swift 6.3 больше не поддерживается и не требует отдельной проверки. Установлен Xcode 27.1 / Swift 6.4. Запуск на iOS 15 не выполнен; deployment target не заменяет runtime-проверку.
 

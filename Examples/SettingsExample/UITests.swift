@@ -40,9 +40,17 @@ final class SettingsExampleUITests: XCTestCase {
         let app = launch()
         app.buttons["open-fullscreen"].tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 10))
-        try app.performAccessibilityAudit()
+        try app.performAccessibilityAudit { issue in
+            print("Accessibility audit: \(issue.compactDescription) — \(issue.detailedDescription)")
+            print(issue.element?.debugDescription ?? "No associated element")
+            return false // Diagnostic logging only; never suppress an issue.
+        }
         app.tables.firstMatch.swipeUp()
-        try app.performAccessibilityAudit()
+        try app.performAccessibilityAudit { issue in
+            print("Accessibility audit: \(issue.compactDescription) — \(issue.detailedDescription)")
+            print(issue.element?.debugDescription ?? "No associated element")
+            return false // Diagnostic logging only; never suppress an issue.
+        }
         attach(app, name: "settings-accessibility-audit")
     }
 

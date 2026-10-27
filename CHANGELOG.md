@@ -5,13 +5,14 @@
 ### Added
 - Optional avatar content revisions to avoid false profile changes when hosts recreate UIImage snapshots. Existing initializers and reference comparison remain supported.
 - Synchronized source folders in the generated example and stable Mail action identifiers across horizontal and vertical native toolbars.
-- Native iPhone Duo split presentation: equal sidebar/detail columns for an active division, selected detail retention across fold transitions, and the existing empty state when nothing is selected. Tabletop keeps left/right columns. This path requires Xcode 27.1 / Swift 6.4 and iOS 27.1; earlier runtimes keep classic presentation.
+- Native iPhone Duo split presentation: equal sidebar/detail columns for an active division, selected detail retention across fold transitions, and the existing empty state when nothing is selected. Tabletop keeps left/right columns. This path requires Xcode 27.1 / Swift 6.4 and iOS 27.1; iOS 27.0 uses column-style presentation for native accessibility safety, while iOS 15–26 keep classic presentation.
 - A visible, localized preparation status in the mail form while diagnostics load; Send remains a standard disabled navigation action during preparation.
 - Lazy main-actor destination factories, explicit async state refresh and public AppItem construction.
 - Deterministic regression coverage, public-import example host and iPhone/iPad CI with evidence artifacts.
 - Retriable catalog state and recoverable external-mail opening failures.
 
 ### Fixed
+- Avoid the native iPadOS 27.0 accessibility separator crash by using supported column-style split presentation.
 - Reliable native Duo tabletop tracking, deferred column updates and restoration of minimum widths; cold empty detail remains visible.
 - Readable premium-card subtitle contrast verified by the complete native accessibility audit.
 - Incremental visible-table updates for account/premium/catalog changes, without rebuilding unrelated cells; safe offscreen synchronization is retained.

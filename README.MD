@@ -600,7 +600,7 @@ UIKit owns fold avoidance, safe areas and compact/expanded transitions. No model
 name, fixed device dimensions or hinge-angle thresholds determine the layout.
 When the division becomes inactive, the original column sizing is restored.
 The selected destination remains the same controller across these changes.
-Earlier OS versions retain the classic split presentation. Swift 6.4 / Xcode 27.1
+iOS 27.0 also uses column-style split presentation so the native accessibility divider can safely read column widths. iOS 15–26 retain the classic split presentation. Swift 6.4 / Xcode 27.1
 is now required to build the package, including when deploying to an older OS. The package minimum deployment target remains iOS 15.
 
 

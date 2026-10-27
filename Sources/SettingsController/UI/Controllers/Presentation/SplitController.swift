@@ -31,7 +31,9 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
     }
 
     init() {
-        if #available(iOS 27.1, *) {
+        // iOS 27 accessibility separators query column-only width APIs.
+        // A classic split can raise an exception during native accessibility auditing.
+        if #available(iOS 27.0, *) {
             super.init(style: .doubleColumn)
         } else {
             super.init(nibName: nil, bundle: nil)

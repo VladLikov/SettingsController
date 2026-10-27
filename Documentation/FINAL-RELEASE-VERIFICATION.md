@@ -5,7 +5,8 @@ PR: https://github.com/VladLikov/SettingsController/pull/2. No merge, release ta
 ## Changes discovered during acceptance
 
 - Duo reserved-region observation now uses `UIView.updateConstraints()`, where UIKit tracks reads. The controller hook did not reliably update tabletop layouts. Column writes are deferred to the next MainActor turn, avoiding a cold-start overlay that hid part of the empty state. Active division removes minimum-width constraints and uses 50/50 columns; disappearing division restores all original width values. Native gestures remain enabled.
-- Native full accessibility audit found insufficient premium subtitle contrast. The palette preserves the supplied hue and selects readable text/gradient colours. The audit now passes locally with no excluded checks.
+- Native iPadOS 27.0 accessibility auditing crashed when its separator read a column-only width from the classic split. iOS 27.0+ now uses the supported column-style initializer; iOS 15–26 retain classic presentation. A repeat of the full iPad audit passes.
+- Native full accessibility audit found insufficient premium subtitle contrast. The palette preserves the supplied hue direction and selects readable text/gradient colours with a 6:1 target reserve, including narrow iPad columns. The audit now passes locally with no excluded checks.
 - The sample declares all four iPad orientations and all 52 supported languages (English source plus 51 translations), so contextual localization tests exercise the real selected language.
 - Finnish Cancel and four update-available translations were corrected after context review. Catalog JSON, comments, placeholders and all locale validations pass.
 - Added UI checks for native interactive-dismissal cancellation, the complete accessibility audit and Russian/German/Arabic Mail preparation and About labels. Cancellation is observed through the actual transition coordinator; the sample probe does not prevent dismissal.

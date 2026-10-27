@@ -93,14 +93,25 @@ struct PremiumCardPalette {
         }
         var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 1
         UIColor.systemGroupedBackground.resolvedColor(with: traits).getRed(&br, green: &bg, blue: &bb, alpha: &ba)
-        let start = [r * a + br * (1 - a), g * a + bg * (1 - a), b * a + bb * (1 - a)]
-        let candidate = [min(start[0] + 0.07, 1), min(start[1] + 0.12, 1), min(start[2] + 0.18, 1)]
+        var start = [r * a + br * (1 - a), g * a + bg * (1 - a), b * a + bb * (1 - a)]
         let white = Self.luminance(start) < 0.179
         func contrast(_ rgb: [CGFloat]) -> Double {
             let value = Self.luminance(rgb)
             return white ? 1.05 / (value + 0.05) : (value + 0.05) / 0.05
         }
-        let target = min(4.8, contrast(start))
+        // Leave room for platform colour conversion and narrow-column text rendering.
+        let target = 6.0
+        if contrast(start) < target {
+            let endpoint: CGFloat = white ? 0 : 1
+            var low: CGFloat = 0, high: CGFloat = 1
+            for _ in 0..<12 {
+                let middle = (low + high) / 2
+                let rgb = start.map { $0 + (endpoint - $0) * middle }
+                if contrast(rgb) < target { low = middle } else { high = middle }
+            }
+            start = start.map { $0 + (endpoint - $0) * high }
+        }
+        let candidate = [min(start[0] + 0.07, 1), min(start[1] + 0.12, 1), min(start[2] + 0.18, 1)]
         var amount: CGFloat = 1
         if contrast(candidate) < target {
             var low: CGFloat = 0, high: CGFloat = 1
