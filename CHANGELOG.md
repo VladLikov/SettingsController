@@ -4,9 +4,9 @@
 
 ### Changed
 
-- Use compact navigation titles for library-managed custom destinations, including modal premium controllers and supplied navigation controller stacks.
-- Preserve the main SettingsController large title and leave app-managed custom actions unchanged.
-- Add iOS Simulator regression tests for ordinary destinations, nested navigation stacks, and the main settings screen.
+- Set `.never` directly on all library-managed destination controllers, including modal premium screens.
+- Disable large titles for supplied navigation-controller stacks while keeping the main SettingsController large title.
+- Leave app-managed custom actions unchanged, with iOS Simulator regression coverage of push, premium, nested navigation, and root settings.
 
 ## 3.1.5 — 2026-10-25
 

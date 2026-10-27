@@ -417,7 +417,7 @@ SettingsSection(kind: .premiumCard(card))
 
 Presentation helpers are `@MainActor`, because UIKit presentation must happen on the main actor.
 
-The main `SettingsController` screen uses a large navigation title. Destinations opened by the library (including custom `destinationControllerType` rows, user rows, and premium destination controllers) use compact titles. When the supplied destination is a `UINavigationController`, its existing navigation stack uses compact titles as well. Custom `action` closures manage their own presentation and title style.
+The main `SettingsController` screen uses a large navigation title. Destinations opened by the library (including custom `destinationControllerType` rows, user rows, and premium destination controllers) use compact titles. If a supplied destination is a `UINavigationController`, the library sets `.never` on its current navigation stack and disables large titles on that navigation bar. Custom `action` closures manage their own presentation and title style.
 
 Present immediately:
 

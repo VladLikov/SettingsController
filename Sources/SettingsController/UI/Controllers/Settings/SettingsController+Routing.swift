@@ -24,7 +24,13 @@ extension SettingsController {
 
     func pushViewController(_ viewController: UIViewController, navigationTitle: String?) {
         viewController.navigationItem.title = navigationTitle
-        SettingsNavigationTitleStyle.applyCompactTitles(to: viewController)
+        viewController.navigationItem.largeTitleDisplayMode = .never
+        if let navigation = viewController as? UINavigationController {
+            navigation.navigationBar.prefersLargeTitles = false
+            navigation.viewControllers.forEach {
+                $0.navigationItem.largeTitleDisplayMode = .never
+            }
+        }
 
         if UIDevice.current.userInterfaceIdiom != .phone {
             showDetailViewController(UINavigationController(rootViewController: viewController), sender: nil)
@@ -52,7 +58,13 @@ extension SettingsController {
 
         } else if let premiumControllerType = payload.destinationControllerType {
             let viewController = premiumControllerType.init()
-            SettingsNavigationTitleStyle.applyCompactTitles(to: viewController)
+            viewController.navigationItem.largeTitleDisplayMode = .never
+            if let navigation = viewController as? UINavigationController {
+                navigation.navigationBar.prefersLargeTitles = false
+                navigation.viewControllers.forEach {
+                    $0.navigationItem.largeTitleDisplayMode = .never
+                }
+            }
             if UIDevice.current.userInterfaceIdiom == .phone {
                 viewController.modalPresentationStyle = .fullScreen
             }
@@ -142,27 +154,5 @@ extension SettingsController {
         }
 
         return nil
-    }
-}
-
-// MARK: - Navigation Titles
-
-/// Only affects controllers opened by SettingsController itself.
-/// The SettingsController root keeps its large title.
-@MainActor
-enum SettingsNavigationTitleStyle {
-
-    static func applyCompactTitles(to viewController: UIViewController) {
-        viewController.navigationItem.largeTitleDisplayMode = .never
-
-        // A custom destination may itself be a navigation controller.
-        guard let navigationController = viewController as? UINavigationController else {
-            return
-        }
-
-        navigationController.navigationBar.prefersLargeTitles = false
-        for controller in navigationController.viewControllers {
-            controller.navigationItem.largeTitleDisplayMode = .never
-        }
     }
 }
