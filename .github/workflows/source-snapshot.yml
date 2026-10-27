@@ -1,0 +1,22 @@
+name: Source snapshot (implementation branch)
+on:
+  push:
+    branches: [codex/settingscontroller-4.0-hardening]
+    paths: [.github/workflows/source-snapshot.yml]
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Archive tracked source only
+        run: git archive --format=tar.gz --output="$RUNNER_TEMP/source.tar.gz" HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-snapshot
+          path: ${{ runner.temp }}/source.tar.gz
+          retention-days: 3
