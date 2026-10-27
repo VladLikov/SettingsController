@@ -43,6 +43,7 @@ final class NavigationTitleStyleTests: XCTestCase {
     func testPremiumDestinationUsesCompactTitle() throws {
         let settings = SettingsController(configuration: SettingsConfiguration(sections: []))
         PremiumProbeController.lastCreated = nil
+        defer { PremiumProbeController.lastCreated = nil }
 
         let payload = PremiumPayload(
             isPremium: false,
@@ -68,7 +69,7 @@ final class NavigationTitleStyleTests: XCTestCase {
 
 @MainActor
 private final class PremiumProbeController: UIViewController {
-    static weak var lastCreated: PremiumProbeController?
+    static var lastCreated: PremiumProbeController?
 
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
