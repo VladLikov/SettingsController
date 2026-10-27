@@ -121,26 +121,36 @@ final class StateRegressionTests: XCTestCase {
 
     func testNewRootRefreshInvalidatesPendingAboutAccountResponse() async throws {
         let gate = ControlledValue<SettingsMailInfo?>()
-        let provider = RegressionProvider()
-        provider.mailOperation = { try? await gate.value() }
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .premiumCard(premiumCard()))], dataProvider: provider))
+        let delayedProvider = RegressionProvider()
+        delayedProvider.mailOperation = { try? await gate.value() }
+        let freshProvider = RegressionProvider()
+        freshProvider.info = SettingsMailInfo(userID: "fresh", isPremium: true)
+        let settings = SettingsController(configuration: SettingsConfiguration(
+            sections: [SettingsSection(kind: .premiumCard(premiumCard()))], dataProvider: freshProvider))
         let about = makeAbout()
+        // Finish view setup before attaching a controlled provider, so UIKit
+        // cannot start an untracked second account request while this test waits.
+        about.loadViewIfNeeded()
+        about.dataProvider = delayedProvider
         settings.activeAboutController = about
-        about.dataProvider = provider
         about.onAccountUpdate = { [weak settings] info, premium in
             settings?.applyResolvedState(info: info, premium: premium, user: nil, includesAccount: true)
         }
         about.loadAccountInfo()
         let old = try XCTUnwrap(about.accountTask)
         await gate.waitUntilStarted()
-        provider.mailOperation = nil
-        provider.info = SettingsMailInfo(userID: "fresh", isPremium: true)
-        await settings.refreshState()
+        let fresh = try XCTUnwrap(settings.startStateRefresh())
+        XCTAssertTrue(old.isCancelled)
+        await fresh.value
+        XCTAssertEqual(about.userID, "fresh")
+        // The old provider deliberately ignores cancellation and responds last.
         gate.complete(.success(SettingsMailInfo(userID: "stale", isPremium: false)))
         await old.value
         XCTAssertTrue(settings.isPremium)
         XCTAssertTrue(about.isPremium)
         XCTAssertEqual(about.userID, "fresh")
+        XCTAssertEqual(freshProvider.mailRequests, 1)
+        XCTAssertEqual(delayedProvider.mailRequests, 1)
     }
 
     func testDismissalNotificationIsExactlyOncePerPresentation() {

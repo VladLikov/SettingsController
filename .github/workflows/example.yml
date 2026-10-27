@@ -1,7 +1,7 @@
 name: Public example and UI smoke
 on:
   push:
-    branches: [main, codex/settingscontroller-4.0-hardening]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
