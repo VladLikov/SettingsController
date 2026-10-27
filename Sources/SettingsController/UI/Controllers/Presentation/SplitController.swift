@@ -3,8 +3,8 @@ import UIKit
 final class SplitPlaceholderController: UIViewController {
     override func loadView() {
         view = EmptyStateView(
-            title: NSLocalizedString("Select an item", bundle: .module, comment: ""),
-            subtitle: NSLocalizedString("Additional information will appear here.", bundle: .module, comment: "")
+            title: NSLocalizedString("Select an item", bundle: .module, comment: "Empty iPad detail column prompt."),
+            subtitle: NSLocalizedString("Additional information will appear here.", bundle: .module, comment: "Explanation in the empty iPad detail column before a settings item is selected.")
         )
     }
 }

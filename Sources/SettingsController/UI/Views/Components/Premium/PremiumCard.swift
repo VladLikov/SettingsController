@@ -42,7 +42,8 @@ public struct PremiumCard: View {
             .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
         .buttonStyle(PremiumCardButtonStyle())
-        .accessibilityLabel(Text("\(title). \(subtitle). \(buttonTitle)"))
+        // The host supplies these already-localized strings; do not extract a placeholder-only key.
+        .accessibilityLabel(Text(verbatim: [title, subtitle, buttonTitle].joined(separator: ". ")))
     }
 
     private var heading: some View {

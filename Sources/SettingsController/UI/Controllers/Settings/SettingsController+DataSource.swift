@@ -90,7 +90,7 @@ private extension SettingsRowItem.DefaultRow {
         guard case .premium(let payload) = self else { return nil }
 
         return payload.isPremium
-            ? NSLocalizedString("Active", bundle: .module, comment: "")
-            : NSLocalizedString("Not active", bundle: .module, comment: "")
+            ? NSLocalizedString("Active", bundle: .module, comment: "Status displayed for an active premium entitlement.")
+            : NSLocalizedString("Not active", bundle: .module, comment: "Status displayed when premium is inactive.")
     }
 }

@@ -16,10 +16,10 @@ public enum MailType: Equatable {
     public var navigationTitle: String {
         switch self {
         case .supportRequest:
-            return NSLocalizedString("Ask Support a Question", bundle: .module, comment: "")
+            return NSLocalizedString("Ask Support a Question", bundle: .module, comment: "Navigation title of the support message form.")
             
         case .languageRequest:
-            return NSLocalizedString("Request a Language", bundle: .module, comment: "")
+            return NSLocalizedString("Request a Language", bundle: .module, comment: "Navigation title of the standalone language request form.")
             
         case .custom(_, _, let navigationTitle, _):
             return navigationTitle
@@ -29,10 +29,10 @@ public enum MailType: Equatable {
     public var placeholder: String {
         switch self {
         case .supportRequest:
-            return NSLocalizedString("What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module, comment: "")
+            return NSLocalizedString("What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module, comment: "Placeholder in the support form; a message needs at least ten characters.")
             
         case .languageRequest:
-            return NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "")
+            return NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "Placeholder asking for a desired language in the standalone language request form.")
             
         case .custom(let placeholder, _, _, _):
             return placeholder
@@ -80,7 +80,6 @@ public class MailController: UITableViewController {
     private var isPreparingMail = false
     private let mailLifetime = RequestLifetime()
     var openURL: OpenURLOperation = SystemActions.openURL
-    private lazy var progress = UIActivityIndicatorView(style: .medium)
 
     private var currentText: String = ""
         
@@ -184,7 +183,7 @@ extension MailController {
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 1 }
     
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        NSLocalizedString("Message", bundle: .module, comment: "")
+        NSLocalizedString("Message", bundle: .module, comment: "Section heading for the editable support message.")
     }
     
     public override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
@@ -231,14 +230,8 @@ extension MailController {
 
     private func setPreparingMail(_ preparing: Bool) {
         isPreparingMail = preparing
-        if preparing {
-            progress.startAnimating()
-            navigationItem.rightBarButtonItem = UIBarButtonItem(customView: progress)
-        } else {
-            progress.stopAnimating()
-            sendButton.isEnabled = currentText.count >= type.minCharactersCount
-            navigationItem.rightBarButtonItem = sendButton
-        }
+        sendButton.isEnabled = !preparing && currentText.count >= type.minCharactersCount
+        navigationItem.rightBarButtonItem = sendButton
     }
 
     func prepareMail() {

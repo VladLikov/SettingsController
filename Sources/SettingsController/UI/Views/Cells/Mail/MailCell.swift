@@ -83,7 +83,7 @@ extension MailCell {
         placeholderLabel.text = type.placeholder
         if let text { textView.text = text }
         placeholderLabel.isHidden = !textView.text.isEmpty
-        textView.accessibilityLabel = NSLocalizedString("Message", bundle: .module, comment: "")
+        textView.accessibilityLabel = NSLocalizedString("Message", bundle: .module, comment: "Section heading for the editable support message.")
         textView.accessibilityHint = type.placeholder
         lastMeasuredTextHeight = measuredTextHeight()
     }

@@ -72,16 +72,16 @@ extension AppearanceController {
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if section == 0 {
-            return NSLocalizedString("App color", bundle: .module, comment: "")
+            return NSLocalizedString("App color", bundle: .module, comment: "Appearance section heading for selecting the app accent color.")
         } else if section == 1 {
-            return NSLocalizedString("Light & Dark theme", bundle: .module, comment: "")
+            return NSLocalizedString("Light & Dark theme", bundle: .module, comment: "Appearance section heading for light and dark interface mode.")
         }
         return nil
     }
     
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        if section == 2 {
-            return NSLocalizedString("When the switch is on, the system appearance is used.", bundle: .module, comment: "")
+        if section == 1 {
+            return NSLocalizedString("When the switch is on, the system appearance is used.", bundle: .module, comment: "Footer explaining the automatic system appearance switch.")
         }
         return nil
     }
@@ -109,7 +109,7 @@ extension AppearanceController {
             let cell = tableView.dequeueReusableCell(withClass: SwitchCell.self, for: indexPath)
 
             cell.configure(
-                title: NSLocalizedString("Automatically", bundle: .module, comment: ""),
+                title: NSLocalizedString("Automatically", bundle: .module, comment: "Switch label for following the system light or dark appearance."),
                 isOn: theme.autoTheme,
                 onTintColor: theme.appColor
             ) { [weak self] isOn in
@@ -126,8 +126,8 @@ extension AppearanceController {
 
             var configuration = cell.defaultContentConfiguration()
             configuration.text = [
-                NSLocalizedString("Light Theme", bundle: .module, comment: ""),
-                NSLocalizedString("Dark Theme", bundle: .module, comment: "")
+                NSLocalizedString("Light Theme", bundle: .module, comment: "Option selecting light interface appearance."),
+                NSLocalizedString("Dark Theme", bundle: .module, comment: "Option selecting dark interface appearance.")
             ][row]
             configuration.textProperties.numberOfLines = 0
             configuration.textProperties.lineBreakMode = .byWordWrapping

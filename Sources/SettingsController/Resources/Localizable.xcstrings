@@ -309,7 +309,8 @@
             "value": "關於此 App"
           }
         }
-      }
+      },
+      "comment": "Title of the screen showing app, device and account diagnostics."
     },
     "Account": {
       "localizations": {
@@ -619,7 +620,8 @@
             "value": "帳戶"
           }
         }
-      }
+      },
+      "comment": "Section heading for the current User ID and premium status."
     },
     "Active": {
       "extractionState": "manual",
@@ -930,7 +932,8 @@
             "value": "已啟用"
           }
         }
-      }
+      },
+      "comment": "Status displayed for an active premium entitlement."
     },
     "Additional information will appear here.": {
       "extractionState": "manual",
@@ -1241,7 +1244,8 @@
             "value": "其他資訊會顯示於此。"
           }
         }
-      }
+      },
+      "comment": "Explanation in the empty iPad detail column before a settings item is selected."
     },
     "Adds taptic feedback to various actions in the app.": {
       "localizations": {
@@ -1551,7 +1555,8 @@
             "value": "為 App 內各項操作加入觸覺回饋。"
           }
         }
-      }
+      },
+      "comment": "Footer explaining the haptic feedback switch."
     },
     "After tapping Send, a draft opens in your mail app. Review it and send it there.": {
       "extractionState": "manual",
@@ -2173,7 +2178,8 @@
             "value": "App 語言"
           }
         }
-      }
+      },
+      "comment": "Diagnostic label for the language selected by the app bundle."
     },
     "App Region": {
       "localizations": {
@@ -2483,7 +2489,8 @@
             "value": "App 地區"
           }
         }
-      }
+      },
+      "comment": "Diagnostic label for the current locale region."
     },
     "App Version": {
       "localizations": {
@@ -2793,7 +2800,8 @@
             "value": "App 版本"
           }
         }
-      }
+      },
+      "comment": "Diagnostic label for the installed app version and build."
     },
     "App color": {
       "localizations": {
@@ -3103,7 +3111,8 @@
             "value": "App 顏色"
           }
         }
-      }
+      },
+      "comment": "Appearance section heading for selecting the app accent color."
     },
     "Appearance": {
       "localizations": {
@@ -3413,7 +3422,8 @@
             "value": "外觀"
           }
         }
-      }
+      },
+      "comment": "Settings row and destination title for color and interface appearance."
     },
     "Ask Support a Question": {
       "localizations": {
@@ -3723,7 +3733,8 @@
             "value": "向支援查詢"
           }
         }
-      }
+      },
+      "comment": "Navigation title of the support message form."
     },
     "Automatically": {
       "localizations": {
@@ -4033,7 +4044,8 @@
             "value": "自動"
           }
         }
-      }
+      },
+      "comment": "Switch label for following the system light or dark appearance."
     },
     "Blue": {
       "localizations": {
@@ -4343,7 +4355,8 @@
             "value": "藍色"
           }
         }
-      }
+      },
+      "comment": "Name of the blue accent color in the appearance palette."
     },
     "Build": {
       "localizations": {
@@ -4653,7 +4666,8 @@
             "value": "內部版本"
           }
         }
-      }
+      },
+      "comment": "About section heading for bundle identifier, version and update check."
     },
     "Bundle ID": {
       "shouldTranslate": false
@@ -5278,7 +5292,8 @@
             "value": "檢查更新"
           }
         }
-      }
+      },
+      "comment": "Action that checks the App Store for a newer app version."
     },
     "Checking…": {
       "extractionState": "manual",
@@ -5900,7 +5915,8 @@
             "value": "聯絡開發者"
           }
         }
-      }
+      },
+      "comment": "Settings row that opens the support message form."
     },
     "Copied": {
       "localizations": {
@@ -6210,7 +6226,8 @@
             "value": "已複製"
           }
         }
-      }
+      },
+      "comment": "Confirmation after the user explicitly copies an identifier."
     },
     "Copy Address": {
       "extractionState": "manual",
@@ -7144,7 +7161,8 @@
             "value": "深色主題"
           }
         }
-      }
+      },
+      "comment": "Option selecting dark interface appearance."
     },
     "Device": {
       "localizations": {
@@ -7454,7 +7472,8 @@
             "value": "裝置"
           }
         }
-      }
+      },
+      "comment": "About section heading for operating system and device model."
     },
     "Device Model": {
       "localizations": {
@@ -7764,7 +7783,8 @@
             "value": "裝置型號"
           }
         }
-      }
+      },
+      "comment": "Diagnostic label for the hardware model, without a user-assigned device name."
     },
     "Failed to load. Tap to retry.": {
       "extractionState": "manual",
@@ -8386,7 +8406,8 @@
             "value": "灰色"
           }
         }
-      }
+      },
+      "comment": "Name of the gray accent color in the appearance palette."
     },
     "Green": {
       "localizations": {
@@ -8696,7 +8717,8 @@
             "value": "綠色"
           }
         }
-      }
+      },
+      "comment": "Name of the green accent color in the appearance palette."
     },
     "Hard": {
       "localizations": {
@@ -9006,7 +9028,8 @@
             "value": "強烈"
           }
         }
-      }
+      },
+      "comment": "Strong haptic feedback intensity option."
     },
     "Language": {
       "extractionState": "manual",
@@ -9317,7 +9340,8 @@
             "value": "語言"
           }
         }
-      }
+      },
+      "comment": "Settings row opening the app page in system Settings."
     },
     "Language Request": {
       "shouldTranslate": false
@@ -9630,7 +9654,8 @@
             "value": "已安裝最新版本"
           }
         }
-      }
+      },
+      "comment": "Update check result when no newer version is available."
     },
     "Light": {
       "localizations": {
@@ -9940,7 +9965,8 @@
             "value": "輕微"
           }
         }
-      }
+      },
+      "comment": "Light haptic feedback intensity option."
     },
     "Light & Dark theme": {
       "localizations": {
@@ -10250,7 +10276,8 @@
             "value": "淺色與深色主題"
           }
         }
-      }
+      },
+      "comment": "Appearance section heading for light and dark interface mode."
     },
     "Light Theme": {
       "localizations": {
@@ -10560,7 +10587,8 @@
             "value": "淺色主題"
           }
         }
-      }
+      },
+      "comment": "Option selecting light interface appearance."
     },
     "Loading…": {
       "localizations": {
@@ -10870,7 +10898,8 @@
             "value": "載入中…"
           }
         }
-      }
+      },
+      "comment": "Placeholder while the developer app catalog loads."
     },
     "Locale": {
       "localizations": {
@@ -11180,7 +11209,8 @@
             "value": "區域設定"
           }
         }
-      }
+      },
+      "comment": "About section heading for language and region diagnostics."
     },
     "Medium": {
       "localizations": {
@@ -11490,7 +11520,8 @@
             "value": "中等"
           }
         }
-      }
+      },
+      "comment": "Medium haptic feedback intensity option."
     },
     "Message": {
       "localizations": {
@@ -11800,7 +11831,8 @@
             "value": "訊息"
           }
         }
-      }
+      },
+      "comment": "Section heading for the editable support message."
     },
     "More Apps": {
       "localizations": {
@@ -12110,7 +12142,8 @@
             "value": "更多 App"
           }
         }
-      }
+      },
+      "comment": "Settings action opening other apps from the same developer."
     },
     "Not Now": {
       "extractionState": "manual",
@@ -12733,7 +12766,8 @@
             "value": "未啟用"
           }
         }
-      }
+      },
+      "comment": "Status displayed when premium is inactive."
     },
     "OK": {
       "extractionState": "manual",
@@ -13355,7 +13389,8 @@
             "value": "系統版本"
           }
         }
-      }
+      },
+      "comment": "Diagnostic label for the operating system version."
     },
     "Orange": {
       "localizations": {
@@ -13665,7 +13700,8 @@
             "value": "橙色"
           }
         }
-      }
+      },
+      "comment": "Name of the orange accent color in the appearance palette."
     },
     "Pink": {
       "localizations": {
@@ -13975,7 +14011,8 @@
             "value": "粉紅色"
           }
         }
-      }
+      },
+      "comment": "Name of the pink accent color in the appearance palette."
     },
     "Preferred Language": {
       "extractionState": "manual",
@@ -14598,7 +14635,8 @@
             "value": "高級版"
           }
         }
-      }
+      },
+      "comment": "Title of the premium settings row."
     },
     "Premium is active": {
       "extractionState": "manual",
@@ -14909,7 +14947,8 @@
             "value": "高級版已啟用"
           }
         }
-      }
+      },
+      "comment": "Confirmation shown when an already-premium user taps the premium action."
     },
     "Privacy Policy": {
       "shouldTranslate": false
@@ -15222,7 +15261,8 @@
             "value": "紫色"
           }
         }
-      }
+      },
+      "comment": "Name of the purple accent color in the appearance palette."
     },
     "Red": {
       "localizations": {
@@ -15532,7 +15572,8 @@
             "value": "紅色"
           }
         }
-      }
+      },
+      "comment": "Name of the red accent color in the appearance palette."
     },
     "Redeem Code": {
       "localizations": {
@@ -15842,7 +15883,8 @@
             "value": "兌換代碼"
           }
         }
-      }
+      },
+      "comment": "Action opening the system App Store code redemption sheet."
     },
     "Request a Language": {
       "localizations": {
@@ -16152,7 +16194,8 @@
             "value": "要求新增語言"
           }
         }
-      }
+      },
+      "comment": "Navigation title of the standalone language request form."
     },
     "Select an item": {
       "extractionState": "manual",
@@ -16463,7 +16506,8 @@
             "value": "選取項目"
           }
         }
-      }
+      },
+      "comment": "Empty iPad detail column prompt."
     },
     "Send": {
       "extractionState": "manual",
@@ -17085,7 +17129,8 @@
             "value": "分享 App"
           }
         }
-      }
+      },
+      "comment": "Settings action opening the app sharing sheet."
     },
     "Support Request": {
       "shouldTranslate": false
@@ -17398,7 +17443,8 @@
             "value": "點按用戶 ID 以複製。支援團隊可能會要求提供。"
           }
         }
-      }
+      },
+      "comment": "Account section footer explaining the explicit copy action."
     },
     "Taptic Engine": {
       "localizations": {
@@ -17708,7 +17754,8 @@
             "value": "Taptic 引擎"
           }
         }
-      }
+      },
+      "comment": "Settings row and switch label for haptic feedback."
     },
     "Taptic Force": {
       "localizations": {
@@ -18018,7 +18065,8 @@
             "value": "觸覺強度"
           }
         }
-      }
+      },
+      "comment": "Section heading for haptic feedback intensity."
     },
     "Telegram Channel": {
       "localizations": {
@@ -18328,7 +18376,8 @@
             "value": "Telegram 頻道"
           }
         }
-      }
+      },
+      "comment": "Settings action opening the configured Telegram channel."
     },
     "Terms of Use": {
       "shouldTranslate": false
@@ -20513,7 +20562,8 @@
             "value": "用戶 ID"
           }
         }
-      }
+      },
+      "comment": "Diagnostic label for the current account identifier supplied by the host app."
     },
     "VK Group": {
       "localizations": {
@@ -20823,7 +20873,8 @@
             "value": "VK 群組"
           }
         }
-      }
+      },
+      "comment": "Settings action opening the configured VK group."
     },
     "Version %@ is available.": {
       "extractionState": "manual",
@@ -21445,7 +21496,8 @@
             "value": "發生了甚麼問題？請至少輸入 10 個字元。提供越多詳情，我們越能更快協助。"
           }
         }
-      }
+      },
+      "comment": "Placeholder in the support form; a message needs at least ten characters."
     },
     "When the switch is on, the system appearance is used.": {
       "localizations": {
@@ -21755,7 +21807,8 @@
             "value": "開啟此開關後，會使用系統外觀。"
           }
         }
-      }
+      },
+      "comment": "Footer explaining the automatic system appearance switch."
     },
     "Which language would you like to see in the app?": {
       "localizations": {
@@ -22065,7 +22118,8 @@
             "value": "你希望在 App 中使用哪種語言？"
           }
         }
-      }
+      },
+      "comment": "Placeholder asking for a desired language in the standalone language request form."
     },
     "Write a Review": {
       "localizations": {
@@ -22375,7 +22429,8 @@
             "value": "撰寫評論"
           }
         }
-      }
+      },
+      "comment": "Settings action opening the App Store review page."
     },
     "Yellow": {
       "localizations": {
@@ -22685,7 +22740,8 @@
             "value": "黃色"
           }
         }
-      }
+      },
+      "comment": "Name of the yellow accent color in the appearance palette."
     },
     "Your message is still here. You can copy the support address or message.": {
       "extractionState": "manual",

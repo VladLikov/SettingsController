@@ -23,6 +23,7 @@ placeholder = re.compile(r'%(?:\d+\$)?(?:@|[diuoxXfFeEgGcs])')
 for key, item in catalog['strings'].items():
     if item.get('shouldTranslate') is False:
         continue
+    assert item.get('comment', '').strip(), f'Missing translator context: {key}'
     translations = item.get('localizations', {})
     assert set(translations) >= locales, f'Missing locales for {key}: {locales-set(translations)}'
     for locale, translation in translations.items():

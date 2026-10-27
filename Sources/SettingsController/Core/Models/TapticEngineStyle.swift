@@ -14,9 +14,9 @@ enum TapticEngineStyle: Int, CaseIterable {
     
     var title: String {
         switch self {
-        case .light:  NSLocalizedString("Light", bundle: .module, comment: "")
-        case .medium: NSLocalizedString("Medium", bundle: .module, comment: "")
-        case .hard:   NSLocalizedString("Hard", bundle: .module, comment: "")
+        case .light:  NSLocalizedString("Light", bundle: .module, comment: "Light haptic feedback intensity option.")
+        case .medium: NSLocalizedString("Medium", bundle: .module, comment: "Medium haptic feedback intensity option.")
+        case .hard:   NSLocalizedString("Hard", bundle: .module, comment: "Strong haptic feedback intensity option.")
         }
     }
 }

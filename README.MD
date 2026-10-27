@@ -380,7 +380,7 @@ SettingsIconGenerator.removeAllCachedImages()
 - `.premium(_:)`
 - `.appearance(theme:colors:)`
 - `.tapticEngine(taptic:)`
-- `.language(email:)`
+- `.language`
 - `.contactDeveloper(email:)`
 - `.shareApp(appID:)`
 - `.rateApp(appID:)`
@@ -498,8 +498,7 @@ The package currently uses:
 
 - AlertKit
 - SafeSFSymbols
-- CheckUpdate (1.0.0+)
-- SwiftBoost
+- CheckUpdate (1.0.1+)
 
 ## Localization
 
@@ -517,7 +516,8 @@ bash scripts/test-ios.sh
 ```
 
 The script resolves dependencies and builds and tests the package on an available
-iPhone simulator. Override `SIMULATOR_ID` to choose a specific device.
+iPhone simulator. Set `DEVICE_FAMILY=iPad` for iPad or `IOS_RUNTIME=27.0` to select an installed runtime.
+The script selects the first available device of that family by name.
 Tests run without App Store access or credentials. UIKit requires an iOS
 Simulator; plain macOS `swift test` is not supported.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and

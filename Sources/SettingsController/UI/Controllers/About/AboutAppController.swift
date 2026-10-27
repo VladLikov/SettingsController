@@ -24,22 +24,22 @@ final class AboutAppController: UITableViewController {
         var title: String? {
             switch self {
             case .build:
-                return NSLocalizedString("Build", bundle: .module, comment: "")
+                return NSLocalizedString("Build", bundle: .module, comment: "About section heading for bundle identifier, version and update check.")
             case .links:
                 return nil
             case .device:
-                return NSLocalizedString("Device", bundle: .module, comment: "")
+                return NSLocalizedString("Device", bundle: .module, comment: "About section heading for operating system and device model.")
             case .account:
-                return NSLocalizedString("Account", bundle: .module, comment: "")
+                return NSLocalizedString("Account", bundle: .module, comment: "Section heading for the current User ID and premium status.")
             case .locale:
-                return NSLocalizedString("Locale", bundle: .module, comment: "")
+                return NSLocalizedString("Locale", bundle: .module, comment: "About section heading for language and region diagnostics.")
             }
         }
 
         var footer: String? {
             switch self {
             case .account:
-                return NSLocalizedString("Tap User ID to copy. Support may request it.", bundle: .module, comment: "")
+                return NSLocalizedString("Tap User ID to copy. Support may request it.", bundle: .module, comment: "Account section footer explaining the explicit copy action.")
             case .build, .links, .device, .locale:
                 return nil
             }
@@ -236,14 +236,14 @@ private extension AboutAppController {
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("App Version", bundle: .module, comment: ""),
+                        title: NSLocalizedString("App Version", bundle: .module, comment: "Diagnostic label for the installed app version and build."),
                         subtitle: nil,
                         value: fullVersion,
                         icon: Self.icon("doc.fill"),
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("Check for Update", bundle: .module, comment: ""),
+                        title: NSLocalizedString("Check for Update", bundle: .module, comment: "Action that checks the App Store for a newer app version."),
                         subtitle: nil,
                         value: nil,
                         icon: nil,
@@ -274,14 +274,14 @@ private extension AboutAppController {
                 .device,
                 [
                     .init(
-                        title: NSLocalizedString("OS Version", bundle: .module, comment: ""),
+                        title: NSLocalizedString("OS Version", bundle: .module, comment: "Diagnostic label for the operating system version."),
                         subtitle: osVersion,
                         value: nil,
                         icon: Self.icon("gearshape.fill"),
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("Device Model", bundle: .module, comment: ""),
+                        title: NSLocalizedString("Device Model", bundle: .module, comment: "Diagnostic label for the hardware model, without a user-assigned device name."),
                         subtitle: deviceModel,
                         value: nil,
                         icon: Self.icon("iphone"),
@@ -293,14 +293,14 @@ private extension AboutAppController {
                 .account,
                 [
                     .init(
-                        title: NSLocalizedString("User ID", bundle: .module, comment: ""),
+                        title: NSLocalizedString("User ID", bundle: .module, comment: "Diagnostic label for the current account identifier supplied by the host app."),
                         subtitle: userID ?? "-",
                         value: nil,
                         icon: Self.icon("person.fill"),
                         action: userID == nil ? .none : .copyUserID
                     ),
                     .init(
-                        title: NSLocalizedString("Premium", bundle: .module, comment: ""),
+                        title: NSLocalizedString("Premium", bundle: .module, comment: "Title of the premium settings row."),
                         subtitle: nil,
                         value: isPremium ? "true" : "false",
                         icon: Self.icon("star.fill"),
@@ -319,14 +319,14 @@ private extension AboutAppController {
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("App Language", bundle: .module, comment: ""),
+                        title: NSLocalizedString("App Language", bundle: .module, comment: "Diagnostic label for the language selected by the app bundle."),
                         subtitle: nil,
                         value: appLanguage,
                         icon: Self.icon("at"),
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("App Region", bundle: .module, comment: ""),
+                        title: NSLocalizedString("App Region", bundle: .module, comment: "Diagnostic label for the current locale region."),
                         subtitle: nil,
                         value: region.lowercased(),
                         icon: Self.icon("globe"),
@@ -435,7 +435,7 @@ extension AboutAppController {
             if let userID {
                 UIPasteboard.general.string = userID
                 AlertKitAPI.present(
-                    title: NSLocalizedString("Copied", bundle: .module, comment: ""),
+                    title: NSLocalizedString("Copied", bundle: .module, comment: "Confirmation after the user explicitly copies an identifier."),
                     icon: .custom(UIImage(.doc.onClipboard)),
                     style: .iOS17AppleMusic,
                     haptic: .success
@@ -487,7 +487,7 @@ extension AboutAppController {
                 guard let version, let update = try await lookup(appID) else { throw URLError(.cannotParseResponse) }
                 guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else { return }
                 if AppUpdateLookup.compare(version, update.version) != .orderedAscending {
-                    self?.showUpdateMessage(NSLocalizedString("Latest version is installed", bundle: .module, comment: ""))
+                    self?.showUpdateMessage(NSLocalizedString("Latest version is installed", bundle: .module, comment: "Update check result when no newer version is available."))
                 } else if AppUpdateLookup.compare(osVersion, update.minimumOSVersion) == .orderedAscending {
                     self?.showUpdateMessage(NSLocalizedString("Update requires a newer iOS version", bundle: .module, comment: "Update cannot run on this OS"))
                 } else {

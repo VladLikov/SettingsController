@@ -88,6 +88,27 @@ final class MailRegressionTests: XCTestCase {
         controller.dismiss(animated: false)
     }
 
+    func testPreparingMailKeepsStandardSendButtonDisabled() async throws {
+        let gate = ControlledValue<SettingsMailInfo?>()
+        let provider = RegressionProvider()
+        provider.mailOperation = { try? await gate.value() }
+        let controller = MailController(type: .supportRequest, email: "support@example.com", dataProvider: provider)
+        controller.loadViewIfNeeded()
+        controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Please help with this", needsHeightUpdate: false)
+        let send = try XCTUnwrap(controller.navigationItem.rightBarButtonItem)
+        controller.prepareMail()
+        let task = try XCTUnwrap(controller.mailTask)
+        await gate.waitUntilStarted()
+        XCTAssertTrue(controller.navigationItem.rightBarButtonItem === send)
+        XCTAssertNil(controller.navigationItem.rightBarButtonItem?.customView)
+        XCTAssertFalse(send.isEnabled)
+        controller.cancelMailPreparation()
+        XCTAssertTrue(controller.navigationItem.rightBarButtonItem === send)
+        XCTAssertTrue(send.isEnabled)
+        gate.complete(.success(nil))
+        await task.value
+    }
+
     func testStandaloneMailProviderIsWeak() {
         var provider: RegressionProvider? = RegressionProvider()
         let weakProvider = MailWeakReference(provider)

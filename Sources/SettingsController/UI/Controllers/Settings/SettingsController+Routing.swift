@@ -48,7 +48,7 @@ extension SettingsController {
 #endif
 
             AlertKitAPI.present(
-                title: NSLocalizedString("Premium is active", bundle: .module, comment: ""),
+                title: NSLocalizedString("Premium is active", bundle: .module, comment: "Confirmation shown when an already-premium user taps the premium action."),
                 icon: .custom(UIImage(.star.fill)),
                 style: style,
                 haptic: .success

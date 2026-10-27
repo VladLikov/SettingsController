@@ -93,7 +93,7 @@ extension AppCell {
 
         switch row {
         case .placeholder:
-            currentTitle = NSLocalizedString("Loading…", bundle: .module, comment: "")
+            currentTitle = NSLocalizedString("Loading…", bundle: .module, comment: "Placeholder while the developer app catalog loads.")
             accessoryType = .none
 
         case .failed:

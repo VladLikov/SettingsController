@@ -60,6 +60,18 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertTrue(cell.contentView.constraints.isEmpty)
     }
 
+    func testAutomaticAppearanceExplanationBelongsToSwitchSection() {
+        let theme = RegressionTheme()
+        let controller = AppearanceController(themeStorage: theme, colors: SameColor.allCases, eventHandler: nil)
+        controller.loadViewIfNeeded()
+        XCTAssertEqual(controller.numberOfSections(in: controller.tableView), 2)
+        XCTAssertNotNil(controller.tableView(controller.tableView, titleForFooterInSection: 1))
+        theme.autoTheme = false
+        XCTAssertEqual(controller.numberOfSections(in: controller.tableView), 3)
+        XCTAssertNotNil(controller.tableView(controller.tableView, titleForFooterInSection: 1))
+        XCTAssertNil(controller.tableView(controller.tableView, titleForFooterInSection: 2))
+    }
+
     func testRemovedSavedColorDoesNotPreventSelection() {
         let theme = RegressionTheme()
         let provider = RegressionProvider()
