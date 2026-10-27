@@ -1,3 +1,5 @@
+> **4.0 implementation / unreleased.** This branch includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged.
+
 # SettingsController
 
 SettingsController is a modular UIKit settings screen for iOS apps. It gives you a ready-to-present `UITableViewController` with common settings flows: appearance, haptics, language, premium, support, App Store actions, social links, app metadata, and an App Store "more apps" section.
@@ -125,7 +127,7 @@ struct SettingsControllerHelper {
                 )),
                 .defaultRow(.appearance(theme: settings)),
                 .defaultRow(.tapticEngine(taptic: settings)),
-                .defaultRow(.language(email: "support@example.com"))
+                .defaultRow(.language)
             ])),
 
             SettingsSection(title: "Feedback", kind: .rows([
@@ -198,7 +200,7 @@ func settingsMailInfo() async -> SettingsMailInfo? {
 
 `User ID` for support emails and the built-in About screen now comes only from `SettingsMailInfo.userID`. For apps using Adapty, return `profile.profileId` in that field. There is no `adaptyProfileID` property, deprecated initializer, or separate `userID` argument in the email controllers or the `.about` row. If the provider returns `nil`, the User ID is shown as `-`.
 
-The SDK itself has **no Adapty dependency**. The callback is invoked once when the user taps Send in the email form. This also works with a custom `MailController` when you pass its optional `dataProvider:` parameter. A default implementation returns `nil`, so old data providers remain compatible. Existing `productID` and `isPremium` initializer parameters remain fallbacks, but a provided typed value wins. Device, app, and environment diagnostics are unchanged.
+The SDK itself has **no Adapty dependency**. The callback is invoked when preparing a mail draft, opening About, or refreshing relevant premium/account state. Typed premium values avoid a duplicate premium lookup. This also works with a custom `MailController` when you pass its optional `dataProvider:` parameter. A default implementation returns `nil`, so old data providers remain compatible. Existing `productID` and `isPremium` initializer parameters remain fallbacks, but a provided typed value wins. Device, app, and environment diagnostics are unchanged.
 
 ## Events and Dynamic Data
 
@@ -524,3 +526,24 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
 ## License
 
 [MIT](LICENSE). Dependencies retain their own licenses.
+
+## 4.0 integration contracts
+
+The language row is `.defaultRow(.language)`. It directly opens the host app’s Settings page using the public API; iOS controls the nested language choice. There is no in-app language controller.
+
+`SettingsDestinationFactory` is `@MainActor () -> UIViewController`. Custom rows, user rows and premium payloads accept lazy destination factories. Existing type-based destinations remain supported. Factories should return a fresh controller and avoid owner/configuration retain cycles.
+
+Call `await settingsController.refreshState()` after purchases, restores, account changes and profile edits. This explicitly updates an always-visible iPad list or a screen behind a custom sheet. A nil user snapshot means no new profile data; return an explicit guest `UserInfo` for logout. Missing typed User ID always becomes `-`, never an older account’s ID.
+
+Catalog limits at or below zero and successful empty results hide the section. Errors show Retry without discarding the source configuration. Theme selection no longer requests a review automatically.
+
+The [public example](Examples/SettingsExample/README.md) demonstrates factories, provider ownership, profile/premium refresh, full-screen and sheet presentation without Adapty or real purchases.
+
+```sh
+bash scripts/test-ios.sh
+DEVICE_FAMILY=iPad bash scripts/test-ios.sh
+python3 scripts/validate-resources.py
+bash scripts/test-example.sh
+```
+
+CI logs record the exact simulator, toolchain and commit. An iOS 15 deployment target and forced legacy-hosting regression tests do not substitute for execution on iOS 15 itself.

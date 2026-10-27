@@ -1,6 +1,31 @@
 # Changelog
 
-## Unreleased
+## 4.0.0 — Unreleased
+
+### Added
+- Lazy main-actor destination factories, explicit async state refresh and public AppItem construction.
+- Deterministic regression coverage, public-import example host and iPhone/iPad CI with evidence artifacts.
+- Retriable catalog state and recoverable external-mail opening failures.
+
+### Fixed
+- Percent encoding in mail drafts, cancelled/obsolete StoreKit fallbacks, late account/update results and task-handle races.
+- Premium card restoration, profile updates behind sheets/on iPad, and missing typed User ID clearing.
+- Removed-color selection, nil/zero inset cache collision, dynamic trait refresh, overlay inset restoration and bounded tile rendering.
+- Dynamic Type, legacy hosting containment and shared image-request cancellation/scale behavior.
+
+### Changed
+- Language directly opens app Settings; the internal language controller is removed.
+- About opens before account loading and owns its cancellable request. CheckUpdate 1.0.1 provides data without automatic UI.
+- Removed unused SwiftBoost and the automatic review request on theme changes.
+- Mail diagnostics use public locale APIs and the accurate Preferred Language label. Added package privacy metadata.
+- Updated new UI strings across all existing locales; linguistic review remains a release checklist item.
+
+### Breaking changes
+- `.language(email:)` becomes `.language`.
+- `SettingsMailInfo.userID` is the only User ID source; remove the old Adapty-specific ID and separate About/Mail userID arguments.
+- See Documentation/MIGRATION-4.0.md for provider invocation, nil semantics, ownership and refresh requirements.
+
+## Earlier unreleased User ID changes
 
 ### Changed
 
