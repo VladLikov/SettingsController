@@ -129,10 +129,12 @@ final class RoutingRegressionTests: XCTestCase {
         XCTAssertEqual(opens, 1)
     }
 
-    func testSplitDiscardsOnlyPlaceholder() {
+    func testSplitDiscardsOnlyPlaceholder() throws {
         let primary = UINavigationController(rootViewController: UIViewController())
         let split = SplitController.makeDefault(for: primary)
-        XCTAssertTrue(split.splitViewController(split, collapseSecondary: split.viewControllers[1], onto: primary))
+        let secondary = split.style == .unspecified ? split.viewControllers[1]
+            : try XCTUnwrap(split.viewController(for: .secondary))
+        XCTAssertTrue(split.splitViewController(split, collapseSecondary: secondary, onto: primary))
         let actual = UINavigationController(rootViewController: UIViewController())
         XCTAssertFalse(split.splitViewController(split, collapseSecondary: actual, onto: primary))
     }
