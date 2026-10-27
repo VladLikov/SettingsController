@@ -51,6 +51,49 @@ final class SettingsExampleUITests: XCTestCase {
         attach(app, name: "dark-rtl-large-text")
     }
 
+    func testAutomaticAppearanceHelpIsVisible() {
+        let app = launch()
+        app.buttons["open-fullscreen"].tap()
+        let appearance = app.staticTexts["Appearance"].firstMatch
+        XCTAssertTrue(appearance.waitForExistence(timeout: 10))
+        appearance.tap()
+        let automatic = app.switches["Automatically"].firstMatch
+        if !automatic.isHittable { app.tables.element(boundBy: app.tables.count - 1).swipeUp() }
+        XCTAssertTrue(automatic.waitForExistence(timeout: 5))
+        let help = app.staticTexts["When the switch is on, the system appearance is used."].firstMatch
+        XCTAssertTrue(help.waitForExistence(timeout: 5))
+        attach(app, name: "appearance-automatic-footer")
+    }
+
+    func testSimulatedRestoreActivatesPremium() {
+        let app = launch()
+        app.buttons["open-fullscreen"].tap()
+        let premium = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "All example features")).firstMatch
+        XCTAssertTrue(premium.waitForExistence(timeout: 10))
+        premium.tap()
+        XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
+        app.buttons["restore"].tap()
+        XCTAssertTrue(app.staticTexts["Active"].firstMatch.waitForExistence(timeout: 5))
+        attach(app, name: "simulated-restore")
+    }
+
+    func testStandaloneMailCanTypeAndCloseWithoutSending() {
+        let app = launch()
+        app.buttons["open-fullscreen"].tap()
+        let standalone = app.staticTexts["Standalone mail"].firstMatch
+        XCTAssertTrue(standalone.waitForExistence(timeout: 10))
+        if !standalone.isHittable { app.tables.firstMatch.swipeUp() }
+        standalone.tap()
+        let field = app.textViews.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        field.typeText("Message & plus + 10% = #?\nhttps://example.com?a=1&b=2")
+        XCTAssertTrue(app.buttons["Send"].firstMatch.isEnabled)
+        attach(app, name: "standalone-mail-keyboard")
+        app.buttons["Close"].firstMatch.tap()
+        XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 5))
+    }
+
     private func attach(_ app: XCUIApplication, name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = name
