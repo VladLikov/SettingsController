@@ -81,10 +81,10 @@ extension SettingsController {
             self?.languageSettingsTask = nil
             guard !success, let self, settingsCanPresent else { return }
             let alert = UIAlertController(
-                title: NSLocalizedString("Unable to open Settings", bundle: .module, comment: "Opening system settings failed"),
+                title: NSLocalizedString("Unable to open Settings", bundle: .module, comment: "Alert title when opening the host app page in system Settings fails."),
                 message: nil, preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: ""), style: .default))
+            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."), style: .default))
             present(alert, animated: true)
         }
     }

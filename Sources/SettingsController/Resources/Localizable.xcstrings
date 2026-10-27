@@ -1868,7 +1868,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Mail form footer explaining that the external mail app opens a draft and the user sends it there."
     },
     "App Language": {
       "localizations": {
@@ -4982,7 +4982,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Cancel action dismissing the mail recovery alert without changing the message."
     },
     "Check for Update": {
       "localizations": {
@@ -5605,7 +5605,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "About row status while the App Store update check is running."
     },
     "Contact Developer": {
       "localizations": {
@@ -6539,7 +6539,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Mail recovery action copying only the support email address to the clipboard."
     },
     "Copy Message": {
       "extractionState": "manual",
@@ -6851,7 +6851,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Mail recovery action copying the draft subject and full body to the clipboard."
     },
     "Dark Theme": {
       "localizations": {
@@ -8096,7 +8096,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Developer app catalog error row; tapping retries the same catalog request."
     },
     "Gray": {
       "localizations": {
@@ -12455,7 +12455,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Dismiss the optional available-update alert without opening the App Store."
     },
     "Not active": {
       "extractionState": "manual",
@@ -13079,7 +13079,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Confirmation button dismissing an informational or recoverable error alert."
     },
     "OS Version": {
       "localizations": {
@@ -14324,7 +14324,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "About diagnostic label for the first public Locale.preferredLanguages value; not an independently read global system language."
     },
     "Premium": {
       "extractionState": "manual",
@@ -16819,7 +16819,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Mail navigation action preparing an external draft; it does not send the email itself."
     },
     "Share App": {
       "localizations": {
@@ -18692,7 +18692,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "About alert title when retrieving App Store update information fails."
     },
     "Unable to open Settings": {
       "extractionState": "manual",
@@ -19004,7 +19004,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Alert title when opening the host app page in system Settings fails."
     },
     "Unable to open a mail app": {
       "extractionState": "manual",
@@ -19316,7 +19316,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Recovery alert title when the external mailto handler cannot be opened."
     },
     "Update": {
       "extractionState": "manual",
@@ -19628,7 +19628,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Action opening the App Store page from the available-update alert."
     },
     "Update available": {
       "extractionState": "manual",
@@ -19940,7 +19940,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "About alert title when the App Store version is newer than the installed version."
     },
     "Update requires a newer iOS version": {
       "extractionState": "manual",
@@ -20252,7 +20252,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "About alert explaining that the available version cannot run on the current operating system."
     },
     "User ID": {
       "localizations": {
@@ -21186,7 +21186,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Available-update alert message. %@ is the App Store version number, for example 4.0.1."
     },
     "What went wrong? Add at least 10 characters. The more detail, the faster we can help.": {
       "localizations": {
@@ -23053,7 +23053,7 @@
           }
         }
       },
-      "comment": "SettingsController 4.0 UI. Mail opens a draft, not an automatically sent message. %@ is a version number when present."
+      "comment": "Mail recovery explanation: the editable message is preserved and the user can explicitly copy the address or full draft."
     }
   },
   "version": "1.0"

@@ -97,7 +97,7 @@ extension AppCell {
             accessoryType = .none
 
         case .failed:
-            currentTitle = NSLocalizedString("Failed to load. Tap to retry.", bundle: .module, comment: "App catalog error")
+            currentTitle = NSLocalizedString("Failed to load. Tap to retry.", bundle: .module, comment: "Developer app catalog error row; tapping retries the same catalog request.")
             accessoryType = .none
 
         case .loaded(let item):

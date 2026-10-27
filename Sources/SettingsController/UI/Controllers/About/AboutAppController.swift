@@ -312,7 +312,7 @@ private extension AboutAppController {
                 .locale,
                 [
                     .init(
-                        title: NSLocalizedString("Preferred Language", bundle: .module, comment: ""),
+                        title: NSLocalizedString("Preferred Language", bundle: .module, comment: "About diagnostic label for the first public Locale.preferredLanguages value; not an independently read global system language."),
                         subtitle: nil,
                         value: systemLanguage,
                         icon: Self.icon("keyboard.fill"),
@@ -400,7 +400,7 @@ extension AboutAppController {
         config.textProperties.lineBreakMode = .byWordWrapping
 
         config.secondaryText = item.action == .checkForUpdate && checkUpdateTask != nil
-            ? NSLocalizedString("Checking…", bundle: .module, comment: "Update check in progress")
+            ? NSLocalizedString("Checking…", bundle: .module, comment: "About row status while the App Store update check is running.")
             : item.subtitle ?? item.value
         config.secondaryTextProperties.color = .secondaryLabel
         config.secondaryTextProperties.numberOfLines = 0
@@ -489,14 +489,14 @@ extension AboutAppController {
                 if AppUpdateLookup.compare(version, update.version) != .orderedAscending {
                     self?.showUpdateMessage(NSLocalizedString("Latest version is installed", bundle: .module, comment: "Update check result when no newer version is available."))
                 } else if AppUpdateLookup.compare(osVersion, update.minimumOSVersion) == .orderedAscending {
-                    self?.showUpdateMessage(NSLocalizedString("Update requires a newer iOS version", bundle: .module, comment: "Update cannot run on this OS"))
+                    self?.showUpdateMessage(NSLocalizedString("Update requires a newer iOS version", bundle: .module, comment: "About alert explaining that the available version cannot run on the current operating system."))
                 } else {
                     self?.showAvailableUpdate(update)
                 }
             } catch {
                 guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled,
                       lifetime.isCurrent(request), self?.settingsCanPresent == true else { return }
-                self?.showUpdateMessage(NSLocalizedString("Unable to check for updates", bundle: .module, comment: "Retry the update check later"))
+                self?.showUpdateMessage(NSLocalizedString("Unable to check for updates", bundle: .module, comment: "About alert title when retrieving App Store update information fails."))
             }
         }
         tableView.reloadData()
@@ -504,19 +504,19 @@ extension AboutAppController {
 
     private func showUpdateMessage(_ title: String) {
         let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: ""), style: .default))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."), style: .default))
         present(alert, animated: true)
     }
 
     private func showAvailableUpdate(_ update: AppUpdate) {
         let alert = UIAlertController(
-            title: NSLocalizedString("Update available", bundle: .module, comment: "App Store update"),
-            message: String(format: NSLocalizedString("Version %@ is available.", bundle: .module, comment: "App version number"), update.version),
+            title: NSLocalizedString("Update available", bundle: .module, comment: "About alert title when the App Store version is newer than the installed version."),
+            message: String(format: NSLocalizedString("Version %@ is available.", bundle: .module, comment: "Available-update alert message. %@ is the App Store version number, for example 4.0.1."), update.version),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Not Now", bundle: .module, comment: ""), style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Not Now", bundle: .module, comment: "Dismiss the optional available-update alert without opening the App Store."), style: .cancel))
         let open = openURL
-        let action = UIAlertAction(title: NSLocalizedString("Update", bundle: .module, comment: ""), style: .default) { _ in
+        let action = UIAlertAction(title: NSLocalizedString("Update", bundle: .module, comment: "Action opening the App Store page from the available-update alert."), style: .default) { _ in
             Task { @MainActor in _ = await open(update.url) }
         }
         alert.addAction(action)

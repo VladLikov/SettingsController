@@ -97,7 +97,7 @@ public class MailController: UITableViewController {
             button.style = .prominent
         }
         
-        button.accessibilityLabel = NSLocalizedString("Send", bundle: .module, comment: "Prepare a draft in the mail app")
+        button.accessibilityLabel = NSLocalizedString("Send", bundle: .module, comment: "Mail navigation action preparing an external draft; it does not send the email itself.")
         button.isEnabled = false
         
         return button
@@ -187,7 +187,7 @@ extension MailController {
     }
     
     public override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        NSLocalizedString("After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module, comment: "")
+        NSLocalizedString("After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module, comment: "Mail form footer explaining that the external mail app opens a draft and the user sends it there.")
     }
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -274,17 +274,17 @@ extension MailController {
 
     private func showMailFallback(_ draft: MailDraft) {
         let alert = UIAlertController(
-            title: NSLocalizedString("Unable to open a mail app", bundle: .module, comment: "Mail URL failed"),
-            message: NSLocalizedString("Your message is still here. You can copy the support address or message.", bundle: .module, comment: "Mail fallback"),
+            title: NSLocalizedString("Unable to open a mail app", bundle: .module, comment: "Recovery alert title when the external mailto handler cannot be opened."),
+            message: NSLocalizedString("Your message is still here. You can copy the support address or message.", bundle: .module, comment: "Mail recovery explanation: the editable message is preserved and the user can explicitly copy the address or full draft."),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Address", bundle: .module, comment: "Mail fallback"), style: .default) { _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Address", bundle: .module, comment: "Mail recovery action copying only the support email address to the clipboard."), style: .default) { _ in
             UIPasteboard.general.string = draft.recipient
         })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Message", bundle: .module, comment: "Mail fallback"), style: .default) { _ in
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Message", bundle: .module, comment: "Mail recovery action copying the draft subject and full body to the clipboard."), style: .default) { _ in
             UIPasteboard.general.string = draft.subject + "\n\n" + draft.body
         })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", bundle: .module, comment: ""), style: .cancel))
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", bundle: .module, comment: "Cancel action dismissing the mail recovery alert without changing the message."), style: .cancel))
         present(alert, animated: true)
     }
 }
