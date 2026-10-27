@@ -21,6 +21,7 @@ public final class SettingsCell: UITableViewCell {
     private var currentTitle: String?
     private var currentDetail: String?
     private var currentIcon: UIImage?
+    private var iconDescription: SettingsIcon?
 
     // MARK: Properties [Public]
 
@@ -30,15 +31,17 @@ public final class SettingsCell: UITableViewCell {
 
     // MARK: Life Cycle
 
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         accessoryType = .disclosureIndicator
         selectionStyle = .default
+        observeAppearance()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+        observeAppearance()
     }
 
     public override func prepareForReuse() {
@@ -46,6 +49,25 @@ public final class SettingsCell: UITableViewCell {
 
         resetContent()
     }
+    private func observeAppearance() {
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (cell: SettingsCell, _: UITraitCollection) in
+                cell.refreshIconForTraits()
+            }
+        }
+    }
+
+    @available(iOS, introduced: 8, deprecated: 17)
+    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17) { refreshIconForTraits() }
+    }
+
+    func refreshIconForTraits() {
+        currentIcon = iconDescription?.generateSettingsImage(traitCollection: traitCollection)
+        updateContentConfiguration()
+    }
+
 }
 
 // MARK: - Configure
@@ -57,6 +79,7 @@ extension SettingsCell {
 
         currentTitle = title
         currentDetail = detail
+        iconDescription = icon
         currentIcon = icon?.generateSettingsImage(traitCollection: traitCollection)
         updateContentConfiguration()
     }
@@ -88,6 +111,7 @@ extension SettingsCell {
         currentTitle = nil
         currentDetail = nil
         currentIcon = nil
+        iconDescription = nil
 
         accessoryType = .disclosureIndicator
         accessoryView = nil

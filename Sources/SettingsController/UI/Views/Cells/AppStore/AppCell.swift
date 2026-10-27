@@ -21,27 +21,45 @@ final class AppCell: UITableViewCell {
     private var currentTitle: String?
     private var currentIcon: UIImage?
 
-    private static let placeholderIcon: UIImage = {
-        let renderer = UIGraphicsImageRenderer(size: Metrics.iconSize)
-        return renderer.image { _ in
-            UIColor.secondarySystemBackground.setFill()
-            UIBezierPath(
-                roundedRect: CGRect(origin: .zero, size: Metrics.iconSize),
-                cornerRadius: Metrics.iconCornerRadius
-            ).fill()
+    private var isShowingPlaceholder = true
+    private func makePlaceholder() -> UIImage {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = max(traitCollection.displayScale, 1)
+        return UIGraphicsImageRenderer(size: Metrics.iconSize, format: format).image { _ in
+            UIColor.secondarySystemBackground.resolvedColor(with: traitCollection).setFill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: Metrics.iconSize), cornerRadius: Metrics.iconCornerRadius).fill()
         }
-    }()
-    
+    }
+
     // MARK: Life Cycle
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         accessoryType = .disclosureIndicator
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (cell: AppCell, previous: UITraitCollection) in
+                cell.refreshAppearance(previous)
+            }
+        }
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+
+    @available(iOS, introduced: 8, deprecated: 17)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17) { refreshAppearance(previousTraitCollection) }
+    }
+
+    private func refreshAppearance(_ previous: UITraitCollection?) {
+        if isShowingPlaceholder { currentIcon = makePlaceholder(); updateContentConfiguration() }
+        if previous?.displayScale != traitCollection.displayScale, let url = representedIconURL {
+            iconTask?.cancel()
+            load(icon: url)
+        }
     }
 
     override func prepareForReuse() {
@@ -70,7 +88,8 @@ extension AppCell {
         iconTask?.cancel()
         iconTask = nil
         representedIconURL = nil
-        currentIcon = Self.placeholderIcon
+        isShowingPlaceholder = true
+        currentIcon = makePlaceholder()
 
         switch row {
         case .placeholder:
@@ -78,7 +97,7 @@ extension AppCell {
             accessoryType = .none
 
         case .failed:
-            currentTitle = NSLocalizedString("Failed to load", bundle: .module, comment: "")
+            currentTitle = NSLocalizedString("Failed to load. Tap to retry.", bundle: .module, comment: "App catalog error")
             accessoryType = .none
 
         case .loaded(let item):
@@ -93,19 +112,21 @@ extension AppCell {
     private func load(icon url: URL) {
 
         representedIconURL = url
+        let scale = max(traitCollection.displayScale, 1)
 
         iconTask = Task { [weak self] in
             do {
                 let image = try await RemoteImageLoader.shared.image(
                     from: url,
                     maxPixelSize: Metrics.iconSize.width,
-                    scale: await MainActor.run { UIScreen.main.scale }
+                    scale: scale
                 )
 
                 guard !Task.isCancelled else { return }
 
                 await MainActor.run { [weak self] in
                     guard let self, representedIconURL == url else { return }
+                    isShowingPlaceholder = false
                     currentIcon = image
                     updateContentConfiguration()
                 }
@@ -113,8 +134,9 @@ extension AppCell {
                 return
             } catch {
                 await MainActor.run { [weak self] in
-                    guard let self, representedIconURL == url else { return }
-                    currentIcon = Self.placeholderIcon
+                    guard !Task.isCancelled, let self, representedIconURL == url else { return }
+                    isShowingPlaceholder = true
+                    currentIcon = makePlaceholder()
                     updateContentConfiguration()
                 }
             }

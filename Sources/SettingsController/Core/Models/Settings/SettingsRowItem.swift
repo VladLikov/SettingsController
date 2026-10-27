@@ -18,6 +18,12 @@ public enum SettingsRowItem {
     public enum DefaultRow {
                 
         case user(String, UIImage?, UIViewController.Type)
+        case userFactory(String, UIImage?, SettingsDestinationFactory)
+
+        public static func user(_ name: String, _ avatar: UIImage? = nil,
+                                destinationFactory: @escaping SettingsDestinationFactory) -> Self {
+            .userFactory(name, avatar, destinationFactory)
+        }
 
         case premium(PremiumPayload)
 
@@ -28,7 +34,7 @@ public enum SettingsRowItem {
         case redeemCode
         
         case contactDeveloper(email: String)
-        case language(email: String)
+        case language
 
         case telegram(id: String)
         case vkGroup(id: String)
@@ -105,7 +111,7 @@ public enum SettingsRowItem {
                              color: .systemBlue,
                              inset: .init())
 
-            case .language(_):
+            case .language:
                 SettingsIcon(symbol: .globe,
                              color: .gray,
                              inset: .init())

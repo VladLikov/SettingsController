@@ -12,27 +12,15 @@ import UIKit
 extension SettingsController {
 
     public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        switch sections[indexPath.section].kind {
-        case .rows(let rows):
-            if case .defaultRow(let row) = rows[indexPath.row], case .user = row {
-                return userRowHeight
-            }
-
-        case .premiumCard:
-            return 100
-
-        default:
-            break
-        }
-
-        return UITableView.automaticDimension
+        UITableView.automaticDimension
     }
 
     public override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         switch sections[indexPath.section].kind {
         case .rows(let rows):
-            if case .defaultRow(let row) = rows[indexPath.row], case .user = row {
-                return userRowHeight
+            switch rows[indexPath.row] {
+            case .defaultRow(.user), .defaultRow(.userFactory): return userRowHeight
+            default: break
             }
 
         case .premiumCard:
@@ -85,7 +73,10 @@ extension SettingsController {
     private func select(_ item: SettingsRowItem, at indexPath: IndexPath, in tableView: UITableView) {
         switch item {
         case .row(let row):
-            if let destinationControllerType = row.destinationControllerType {
+            if let factory = row.destinationFactory {
+                guard navigationController?.transitionCoordinator == nil else { return }
+                pushViewController(factory(), navigationTitle: row.title)
+            } else if let destinationControllerType = row.destinationControllerType {
                 let viewController = destinationControllerType.init()
                 pushViewController(viewController, navigationTitle: row.title)
             } else if let action = row.action {
@@ -98,6 +89,11 @@ extension SettingsController {
 
         case .app(.loaded(let app)):
             openApp(app.id, url: app.storeURL)
+
+        case .app(.failed):
+            tableView.deselectRow(at: indexPath, animated: true)
+            guard visibleSectionIDs.indices.contains(indexPath.section) else { return }
+            loadOurApps(for: visibleSectionIDs[indexPath.section])
 
         default:
             break
@@ -116,22 +112,15 @@ extension SettingsController {
             moreApps(developerID)
 
         case .premium(let payload):
-            pendingRefresh = .premium(indexPath)
+            needsStateRefresh = true
             presentPremium(payload)
 
         case .contactDeveloper(let email):
             sendMail(email)
 
-        case .language(let email):
-            pushViewController(
-                LanguageController(
-                    email: email,
-                    isPremium: isPremium,
-                    productID: configuration.productID,
-                    dataProvider: configuration.dataProvider
-                ),
-                navigationTitle: row.title
-            )
+        case .language:
+            tableView.deselectRow(at: indexPath, animated: true)
+            openLanguageSettings()
 
         case .appearance(let theme, let colors):
             pushViewController(
@@ -150,8 +139,13 @@ extension SettingsController {
             openVKGroup(groupID)
 
         case .user(_, _, let destinationControllerType):
-            pendingRefresh = .user(indexPath)
+            needsStateRefresh = true
             pushViewController(destinationControllerType.init(), navigationTitle: row.title)
+
+        case .userFactory(_, _, let factory):
+            guard navigationController?.transitionCoordinator == nil else { return }
+            needsStateRefresh = true
+            pushViewController(factory(), navigationTitle: row.title)
 
         case .tapticEngine(let taptic):
             pushViewController(

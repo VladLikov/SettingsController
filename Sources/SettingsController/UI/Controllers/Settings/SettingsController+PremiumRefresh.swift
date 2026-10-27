@@ -1,216 +1,86 @@
-//
-//  SettingsController+PremiumRefresh.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 05.05.2026.
-//
-
 import UIKit
 
-// MARK: - Premium and User Refresh
-
 extension SettingsController {
+    var cachedPremiumStatus: Bool { isPremium }
 
-    var cachedPremiumStatus: Bool {
-        for section in sections {
-            switch section.kind {
-            case .premiumCard(let payload):
-                return payload.premium.isPremium
+    /// Call after purchases, restores, account changes and profile edits, including on iPad.
+    /// Cancelling the caller also cancels its request. The latest refresh wins.
+    @MainActor
+    public func refreshState() async {
+        guard let task = startStateRefresh() else { return }
+        await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
 
-            case .rows(let rows):
-                for row in rows {
-                    guard case .defaultRow(let defaultRow) = row,
-                          case .premium(let payload) = defaultRow else {
-                        continue
-                    }
-
-                    return payload.isPremium
+    @discardableResult
+    func startStateRefresh() -> Task<Void, Never>? {
+        let wantsUser = configuration.sections.contains { section in
+            guard case .rows(let rows) = section.kind else { return false }
+            return rows.contains { row in
+                switch row {
+                case .defaultRow(.user), .defaultRow(.userFactory): return true
+                default: return false
                 }
-
-            case .ourApps:
-                continue
             }
         }
-
-        return isPremium
-    }
-
-    func resolvePremiumStatus() async -> Bool {
-        guard let dataProvider = configuration.dataProvider else {
-            return cachedPremiumStatus
-        }
-
-        return await dataProvider.settingsIsPremiumActive()
-    }
-
-    func pushAboutController(
-        appID: String,
-        privacyURL: URL,
-        termsURL: URL,
-        navigationTitle: String?
-    ) {
-        aboutStatusTask?.cancel()
-        aboutStatusTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-
-            let diagnostics = await MailInfoResolver.resolve(
-                provider: configuration.dataProvider,
-                fallbackPremium: cachedPremiumStatus
-            )
-            guard !Task.isCancelled else { return }
-
-            let isPremium = diagnostics.isPremium ?? cachedPremiumStatus
-            self.isPremium = isPremium
-            showAboutController(
-                isPremium: isPremium,
-                userID: diagnostics.info?.userID,
-                appID: appID,
-                privacyURL: privacyURL,
-                termsURL: termsURL,
-                navigationTitle: navigationTitle
-            )
-            aboutStatusTask = nil
-        }
-    }
-
-    func refreshPendingRowIfNeeded() {
-        guard let pendingRefresh else { return }
-        self.pendingRefresh = nil
-
-        pendingRefreshTask?.cancel()
-        pendingRefreshTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-
-            switch pendingRefresh {
-            case .premium(let indexPath):
-                await refreshPremiumRow(at: indexPath)
-
-            case .user(let indexPath):
-                await refreshUserRow(at: indexPath)
+        let wantsAccount = activeAboutController != nil || configuration.sections.contains { section in
+            switch section.kind {
+            case .premiumCard: return true
+            case .rows(let rows):
+                return rows.contains { if case .defaultRow(.premium) = $0 { return true }; return false }
+            case .ourApps: return false
             }
-
-            guard !Task.isCancelled else { return }
-            pendingRefreshTask = nil
         }
-    }
-
-    private func showAboutController(
-        isPremium: Bool,
-        userID: String?,
-        appID: String,
-        privacyURL: URL,
-        termsURL: URL,
-        navigationTitle: String?
-    ) {
-        let viewController = AboutAppController(
-            isPremium: isPremium,
-            userID: userID,
-            appID: appID,
-            privacyURL: privacyURL,
-            termsURL: termsURL
-        )
-
-        pushViewController(viewController, navigationTitle: navigationTitle)
-    }
-
-    private func refreshPremiumRow(at indexPath: IndexPath) async {
-        guard containsRow(at: indexPath) else { return }
-
-        let isPremium = await resolvePremiumStatus()
-        guard !Task.isCancelled, containsRow(at: indexPath) else { return }
-
-        self.isPremium = isPremium
-        updatePremiumStatus(isPremium, at: indexPath)
-    }
-
-    private func refreshUserRow(at indexPath: IndexPath) async {
-        guard let dataProvider = configuration.dataProvider,
-              containsRow(at: indexPath) else { return }
-
-        guard let user = await dataProvider.settingsCurrentUserInfo(),
-              !Task.isCancelled,
-              containsRow(at: indexPath) else { return }
-
-        updateUserInfo(user, at: indexPath)
-    }
-
-    private func updatePremiumStatus(_ isPremium: Bool, at indexPath: IndexPath) {
-        guard sections.indices.contains(indexPath.section) else { return }
-
-        switch sections[indexPath.section].kind {
-        case .premiumCard(let payload):
-            guard payload.premium.isPremium != isPremium else { return }
-            sections[indexPath.section].kind = .premiumCard(payload.withPremiumStatus(isPremium))
-            tableView?.reloadRows(at: [indexPath], with: .fade)
-
-        case .rows(var rows):
-            guard rows.indices.contains(indexPath.row),
-                  case .defaultRow(.premium(let payload)) = rows[indexPath.row],
-                  payload.isPremium != isPremium else {
-                return
+        guard let provider = configuration.dataProvider, wantsUser || wantsAccount else { return nil }
+        let lifetime = stateLifetime
+        let request = lifetime.begin()
+        stateRefreshTask?.cancel()
+        let fallback = isPremium
+        let task = Task { @MainActor [weak self] in
+            defer { if lifetime.finish(request) { self?.stateRefreshTask = nil } }
+            let context: (info: SettingsMailInfo?, isPremium: Bool?)
+            if wantsAccount {
+                context = await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback)
+            } else {
+                context = (nil, nil)
             }
-
-            rows[indexPath.row] = .defaultRow(.premium(payload.withPremiumStatus(isPremium)))
-            sections[indexPath.section].kind = .rows(rows)
-            tableView?.reloadRows(at: [indexPath], with: .fade)
-
-        default:
-            break
+            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
+            let user = wantsUser ? await provider.settingsCurrentUserInfo() : nil
+            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
+            self?.applyResolvedState(info: context.info, premium: context.isPremium, user: user, includesAccount: wantsAccount)
         }
+        stateRefreshTask = task
+        return task
     }
 
-    private func updateUserInfo(_ user: UserInfo, at indexPath: IndexPath) {
-        guard sections.indices.contains(indexPath.section),
-              case .rows(var rows) = sections[indexPath.section].kind,
-              rows.indices.contains(indexPath.row),
-              case .defaultRow(.user(_, _, let destinationControllerType)) = rows[indexPath.row] else {
-            return
+    func applyResolvedState(info: SettingsMailInfo?, premium: Bool?, user: UserInfo?, includesAccount: Bool) {
+        var changed = false
+        if includesAccount {
+            currentMailInfo = info // nil must clear a previous account ID.
+            if let premium, premium != isPremium { isPremium = premium; changed = true }
+            activeAboutController?.applyAccountInfo(info, premium: isPremium)
         }
-
-        rows[indexPath.row] = .defaultRow(.user(user.name, user.avatar, destinationControllerType))
-        sections[indexPath.section].kind = .rows(rows)
-        tableView?.reloadRows(at: [indexPath], with: .fade)
+        // nil means "no new snapshot". A guest UserInfo explicitly represents logout.
+        if let user, currentUser?.name != user.name || currentUser?.avatar !== user.avatar {
+            currentUser = user
+            changed = true
+        }
+        if changed { rebuildSections() }
     }
 
-    private func containsRow(at indexPath: IndexPath) -> Bool {
-        guard sections.indices.contains(indexPath.section) else {
-            return false
+    func pushAboutController(appID: String, privacyURL: URL, termsURL: URL, navigationTitle: String?) {
+        let controller = AboutAppController(isPremium: isPremium, userID: currentMailInfo?.userID,
+                                            appID: appID, privacyURL: privacyURL, termsURL: termsURL)
+        controller.dataProvider = configuration.dataProvider
+        controller.openURL = openURL
+        controller.onAccountUpdate = { [weak self] info, premium in
+            self?.applyResolvedState(info: info, premium: premium, user: nil, includesAccount: true)
         }
-
-        switch sections[indexPath.section].kind {
-        case .rows(let rows):
-            return rows.indices.contains(indexPath.row)
-
-        case .ourApps(_, let limit, _):
-            return (0..<limit).contains(indexPath.row)
-
-        case .premiumCard:
-            return indexPath.row == 0
-        }
-    }
-}
-
-private extension PremiumPayload {
-
-    func withPremiumStatus(_ isPremium: Bool) -> PremiumPayload {
-        .init(
-            isPremium: isPremium,
-            color: color,
-            destinationControllerType: destinationControllerType,
-            action: action
-        )
-    }
-}
-
-private extension PremiumCardPayload {
-
-    func withPremiumStatus(_ isPremium: Bool) -> PremiumCardPayload {
-        .init(
-            image: image,
-            title: title,
-            subtitle: subtitle,
-            buttonTitle: buttonTitle,
-            premium: premium.withPremiumStatus(isPremium)
-        )
+        activeAboutController = controller
+        // Navigate first; the destination owns its cancellable account request.
+        pushViewController(controller, navigationTitle: navigationTitle)
     }
 }

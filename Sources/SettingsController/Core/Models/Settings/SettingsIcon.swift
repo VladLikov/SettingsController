@@ -37,7 +37,8 @@ public struct SettingsIcon {
         cornerRadius: CGFloat = 7.5,
         traitCollection: UITraitCollection = .current
     ) -> UIImage? {
-        guard size.width > 0, size.height > 0, cornerRadius >= 0 else {
+        guard size.width.isFinite, size.height.isFinite, cornerRadius.isFinite,
+              size.width > 0, size.height > 0, cornerRadius >= 0 else {
             return nil
         }
 
@@ -189,7 +190,8 @@ private extension SettingsIcon {
         cornerRadius: CGFloat,
         traitCollection: UITraitCollection
     ) -> UIImage? {
-        guard let glyph = generateImage() else { return nil }
+        guard let glyph = image, glyph.size.width > 0, glyph.size.height > 0,
+              let target = glyphRect(for: glyph, in: CGRect(origin: .zero, size: size)) else { return nil }
 
         let resolvedColor = color.resolvedColor(with: traitCollection)
         let format = UIGraphicsImageRendererFormat.default()
@@ -204,21 +206,22 @@ private extension SettingsIcon {
             glyph
                 .withRenderingMode(.alwaysTemplate)
                 .withTintColor(.white, renderingMode: .alwaysOriginal)
-                .draw(in: glyphRect(for: glyph, in: rect))
+                .draw(in: target)
         }
     }
 
-    func glyphRect(for glyph: UIImage, in bounds: CGRect) -> CGRect {
-        let maxGlyphSize = inset == nil
-            ? bounds.size.applyingScale(0.7)
-            : bounds.size
-        let fittedSize = glyph.size.aspectFit(in: maxGlyphSize)
-        let origin = CGPoint(
-            x: bounds.midX - fittedSize.width / 2,
-            y: bounds.midY - fittedSize.height / 2
-        )
-
-        return CGRect(origin: origin, size: fittedSize)
+    func glyphRect(for glyph: UIImage, in bounds: CGRect) -> CGRect? {
+        let padding = inset?.value ?? 0
+        guard padding.isFinite, padding >= 0 else { return nil }
+        let virtualSize = CGSize(width: glyph.size.width + padding * 2,
+                                 height: glyph.size.height + padding * 2)
+        guard virtualSize.width.isFinite, virtualSize.height.isFinite else { return nil }
+        let maxSize = inset == nil ? bounds.size.applyingScale(0.7) : bounds.size
+        let fitted = virtualSize.aspectFit(in: maxSize)
+        let scale = fitted.width / virtualSize.width
+        return CGRect(x: bounds.midX - fitted.width / 2 + padding * scale,
+                      y: bounds.midY - fitted.height / 2 + padding * scale,
+                      width: glyph.size.width * scale, height: glyph.size.height * scale)
     }
 
     @MainActor
@@ -241,7 +244,7 @@ private extension SettingsIcon {
             size.height.cacheKeyComponent,
             cornerRadius.cacheKeyComponent,
             scale.cacheKeyComponent,
-            insetValue.cacheKeyComponent,
+            inset == nil ? "inset:none" : "inset:" + insetValue.cacheKeyComponent,
             "\(traitCollection.userInterfaceStyle.rawValue)"
         ].joined(separator: "|") as NSString
     }

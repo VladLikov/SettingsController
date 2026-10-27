@@ -9,7 +9,6 @@ import UIKit
 import SafariServices
 import AlertKit
 import SafeSFSymbols
-import CheckUpdate
 
 // MARK: - AboutAppController
 
@@ -82,8 +81,18 @@ final class AboutAppController: UITableViewController {
     private var data: [(section: AboutSection, items: [AboutItem])] = []
     private var checkUpdateTask: Task<Void, Never>?
     
-    private let isPremium: Bool
-    private let userID: String?
+    private(set) var isPremium: Bool
+    private(set) var userID: String?
+    weak var dataProvider: (any SettingsControllerDataProvider)?
+    var openURL: OpenURLOperation = SystemActions.openURL
+    var loadUpdate: @Sendable (String) async throws -> AppUpdate? = AppUpdateLookup.fetch
+    var currentVersion: @MainActor () -> String? = { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String }
+    var currentOSVersion: @MainActor () -> String = { UIDevice.current.systemVersion }
+    var onAccountUpdate: (@MainActor (SettingsMailInfo?, Bool) -> Void)?
+    private var accountTask: Task<Void, Never>?
+    private let accountLifetime = RequestLifetime()
+    private let updateLifetime = RequestLifetime()
+    private var accountResolved = false
     private let appID: String
     private let privacyURL: URL
     private let termsURL: URL
@@ -103,6 +112,7 @@ final class AboutAppController: UITableViewController {
 
     deinit {
         checkUpdateTask?.cancel()
+        accountTask?.cancel()
     }
     
     override func viewDidLoad() {
@@ -113,6 +123,65 @@ final class AboutAppController: UITableViewController {
         tableView.estimatedRowHeight = 58
 
         setupData()
+        observeAppearance()
+        loadAccountInfo()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if settingsIsLeavingHierarchy { cancelRequests() }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if !accountResolved && accountTask == nil { loadAccountInfo() }
+    }
+
+    func cancelRequests() {
+        accountLifetime.invalidate()
+        updateLifetime.invalidate()
+        accountTask?.cancel()
+        accountTask = nil
+        checkUpdateTask?.cancel()
+        checkUpdateTask = nil
+        accountResolved = false
+    }
+
+    func applyAccountInfo(_ info: SettingsMailInfo?, premium: Bool) {
+        let changed = userID != info?.userID || isPremium != premium
+        userID = info?.userID
+        isPremium = premium
+        if changed, isViewLoaded { setupData(); tableView.reloadData() }
+    }
+
+    func loadAccountInfo() {
+        guard let provider = dataProvider else { return }
+        let lifetime = accountLifetime
+        let request = lifetime.begin()
+        accountTask?.cancel()
+        let fallback = isPremium
+        accountTask = Task { @MainActor [weak self] in
+            defer { if lifetime.finish(request) { self?.accountTask = nil } }
+            let result = await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback)
+            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
+            self?.accountResolved = true
+            self?.applyAccountInfo(result.info, premium: result.isPremium ?? fallback)
+            self?.onAccountUpdate?(result.info, result.isPremium ?? fallback)
+        }
+    }
+
+    private func observeAppearance() {
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (controller: AboutAppController, _: UITraitCollection) in
+                controller.tableView.reloadData()
+            }
+        }
+    }
+
+    @available(iOS, introduced: 8, deprecated: 17)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17), isViewLoaded { tableView.reloadData() }
     }
 }
 
@@ -140,7 +209,7 @@ private extension AboutAppController {
         let bundleID = bundle.bundleIdentifier ?? "-"
         let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
         let deviceModel = DeviceModel.supportDescription
-        let systemLanguage = Locale.current.languageCode ?? "-"
+        let systemLanguage = Locale.preferredLanguages.first ?? "-"
         let appLanguage = Bundle.main.preferredLocalizations.first ?? "-"
         
         let region = Locale.current.regionCode ?? "-"
@@ -218,7 +287,7 @@ private extension AboutAppController {
                         subtitle: userID ?? "-",
                         value: nil,
                         icon: Self.icon("person.fill"),
-                        action: .copyUserID
+                        action: userID == nil ? .none : .copyUserID
                     ),
                     .init(
                         title: NSLocalizedString("Premium", bundle: .module, comment: ""),
@@ -233,7 +302,7 @@ private extension AboutAppController {
                 .locale,
                 [
                     .init(
-                        title: NSLocalizedString("System Language", bundle: .module, comment: ""),
+                        title: NSLocalizedString("Preferred Language", bundle: .module, comment: ""),
                         subtitle: nil,
                         value: systemLanguage,
                         icon: Self.icon("keyboard.fill"),
@@ -320,7 +389,9 @@ extension AboutAppController {
         config.textProperties.numberOfLines = 0
         config.textProperties.lineBreakMode = .byWordWrapping
 
-        config.secondaryText = item.subtitle ?? item.value
+        config.secondaryText = item.action == .checkForUpdate && checkUpdateTask != nil
+            ? NSLocalizedString("Checking…", bundle: .module, comment: "Update check in progress")
+            : item.subtitle ?? item.value
         config.secondaryTextProperties.color = .secondaryLabel
         config.secondaryTextProperties.numberOfLines = 0
         config.secondaryTextProperties.lineBreakMode = .byWordWrapping
@@ -362,29 +433,8 @@ extension AboutAppController {
             }
             
         case .checkForUpdate:
-            checkUpdateTask?.cancel()
-            checkUpdateTask = Task { @MainActor [weak self] in
-                guard let self else { return }
-                defer { checkUpdateTask = nil }
+            checkForUpdate()
 
-                do {
-                    try await CheckUpdate().showUpdate(for: appID, withConfirmation: true, fromVC: self)
-                } catch let error as CheckUpdateError {
-                    if error == .noUpdateAvailable {
-                        AlertKitAPI.present(
-                            title: NSLocalizedString("Latest version is installed", bundle: .module, comment: ""),
-                            icon: .custom(UIImage(.checkmark.sealFill)),
-                            style: .iOS17AppleMusic,
-                            haptic: .success
-                        )
-                    }
-                } catch is CancellationError {
-                    return
-                } catch {
-                    return
-                }
-            }
-            
         case .none:
             break
         }
@@ -404,5 +454,63 @@ extension AboutAppController {
         
         let safari = SFSafariViewController(url: url)
         present(safari, animated: true)
+    }
+}
+
+extension AboutAppController {
+    func checkForUpdate() {
+        guard checkUpdateTask == nil else { return }
+        let lifetime = updateLifetime
+        let request = lifetime.begin()
+        let lookup = loadUpdate
+        let appID = appID
+        let version = currentVersion()
+        let osVersion = currentOSVersion()
+        checkUpdateTask = Task { @MainActor [weak self] in
+            defer {
+                if lifetime.finish(request) {
+                    self?.checkUpdateTask = nil
+                    self?.tableView.reloadData()
+                }
+            }
+            do {
+                guard let version, let update = try await lookup(appID) else { throw URLError(.cannotParseResponse) }
+                guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else { return }
+                if AppUpdateLookup.compare(version, update.version) != .orderedAscending {
+                    self?.showUpdateMessage(NSLocalizedString("Latest version is installed", bundle: .module, comment: ""))
+                } else if AppUpdateLookup.compare(osVersion, update.minimumOSVersion) == .orderedAscending {
+                    self?.showUpdateMessage(NSLocalizedString("Update requires a newer iOS version", bundle: .module, comment: "Update cannot run on this OS"))
+                } else {
+                    self?.showAvailableUpdate(update)
+                }
+            } catch {
+                guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled,
+                      lifetime.isCurrent(request), self?.settingsCanPresent == true else { return }
+                self?.showUpdateMessage(NSLocalizedString("Unable to check for updates", bundle: .module, comment: "Retry the update check later"))
+            }
+        }
+        tableView.reloadData()
+    }
+
+    private func showUpdateMessage(_ title: String) {
+        let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: ""), style: .default))
+        present(alert, animated: true)
+    }
+
+    private func showAvailableUpdate(_ update: AppUpdate) {
+        let alert = UIAlertController(
+            title: NSLocalizedString("Update available", bundle: .module, comment: "App Store update"),
+            message: String(format: NSLocalizedString("Version %@ is available.", bundle: .module, comment: "App version number"), update.version),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Not Now", bundle: .module, comment: ""), style: .cancel))
+        let open = openURL
+        let action = UIAlertAction(title: NSLocalizedString("Update", bundle: .module, comment: ""), style: .default) { _ in
+            Task { @MainActor in _ = await open(update.url) }
+        }
+        alert.addAction(action)
+        alert.preferredAction = action
+        present(alert, animated: true)
     }
 }

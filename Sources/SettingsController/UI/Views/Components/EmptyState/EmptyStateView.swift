@@ -1,69 +1,52 @@
-//
-//  EmptyStateView.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 12.09.2024.
-//
-
 import UIKit
 
 final class EmptyStateView: UIView {
-
-    private let title: String?
-    private let subtitle: String?
-
-    private lazy var headerLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = title
-        label.textColor = .gray
-        label.font = .systemFont(ofSize: 30, weight: .black)
-        label.textAlignment = .center
-        return label
-    }()
-    
-    private lazy var footerLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = subtitle
-        label.textColor = .gray
-        label.font = .systemFont(ofSize: 20, weight: .bold)
-        label.textAlignment = .center
-        label.numberOfLines = 3
-        label.adjustsFontSizeToFitWidth = true
-        label.minimumScaleFactor = 0.8
-        return label
-    }()
-    
     init(title: String?, subtitle: String?) {
-        self.title = title
-        self.subtitle = subtitle
         super.init(frame: .zero)
-
-        setupView()
-        setConstraints()
-    }
-    
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupView() {
         backgroundColor = .systemGroupedBackground
-        
-        addSubview(headerLabel)
-        addSubview(footerLabel)
-    }
-    
-    private func setConstraints() {
+        let header = UILabel()
+        header.text = title
+        header.font = .preferredFont(forTextStyle: .largeTitle)
+        header.accessibilityTraits.insert(.header)
+        let footer = UILabel()
+        footer.text = subtitle
+        footer.font = .preferredFont(forTextStyle: .body)
+        for label in [header, footer] {
+            label.numberOfLines = 0
+            label.adjustsFontForContentSizeCategory = true
+            label.textAlignment = .center
+            label.textColor = .secondaryLabel
+        }
+        let scroll = UIScrollView()
+        let content = UIView()
+        let stack = UIStackView(arrangedSubviews: [header, footer])
+        stack.axis = .vertical
+        stack.spacing = 12
+        [scroll, content, stack].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
+        addSubview(scroll)
+        scroll.addSubview(content)
+        content.addSubview(stack)
+        let preferredHeight = content.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor)
+        preferredHeight.priority = .defaultLow
         NSLayoutConstraint.activate([
-            headerLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            headerLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            
-            footerLabel.topAnchor.constraint(equalTo: headerLabel.bottomAnchor, constant: 8),
-            footerLabel.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.9),
-            footerLabel.centerXAnchor.constraint(equalTo: centerXAnchor)
+            scroll.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor),
+            scroll.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
+            scroll.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor),
+            content.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
+            content.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
+            content.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
+            content.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor),
+            content.heightAnchor.constraint(greaterThanOrEqualTo: scroll.frameLayoutGuide.heightAnchor),
+            preferredHeight,
+            stack.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -24),
+            stack.topAnchor.constraint(greaterThanOrEqualTo: content.topAnchor, constant: 24),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: content.bottomAnchor, constant: -24),
+            stack.centerYAnchor.constraint(equalTo: content.centerYAnchor)
         ])
     }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }

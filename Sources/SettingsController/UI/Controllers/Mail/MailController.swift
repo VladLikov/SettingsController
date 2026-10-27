@@ -7,7 +7,6 @@
 
 import UIKit
 import SafeSFSymbols
-import MessageUI
 
 public enum MailType: Equatable {
     case supportRequest,
@@ -79,6 +78,9 @@ public class MailController: UITableViewController {
     private weak var dataProvider: (any SettingsControllerDataProvider)?
     private var mailTask: Task<Void, Never>?
     private var isPreparingMail = false
+    private let mailLifetime = RequestLifetime()
+    var openURL: OpenURLOperation = SystemActions.openURL
+    private lazy var progress = UIActivityIndicatorView(style: .medium)
 
     private var currentText: String = ""
         
@@ -96,6 +98,7 @@ public class MailController: UITableViewController {
             button.style = .prominent
         }
         
+        button.accessibilityLabel = NSLocalizedString("Send", bundle: .module, comment: "Prepare a draft in the mail app")
         button.isEnabled = false
         
         return button
@@ -126,6 +129,11 @@ public class MailController: UITableViewController {
         setupView()
     }
     
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if settingsIsLeavingHierarchy { cancelMailPreparation() }
+    }
+
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
@@ -158,7 +166,7 @@ extension MailController {
         
         let closeButton = UIBarButtonItem(systemItem: .close,
                                           primaryAction: .init { [weak self] _ in
-            self?.mailTask?.cancel()
+            self?.cancelMailPreparation()
             self?.dismiss(animated: true)
         })
         
@@ -180,7 +188,7 @@ extension MailController {
     }
     
     public override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        NSLocalizedString("After tapping Send, you'll be redirected to the Mail app and the message will be sent from your mailbox.", bundle: .module, comment: "")
+        NSLocalizedString("After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module, comment: "")
     }
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -188,7 +196,7 @@ extension MailController {
         let cell = tableView.dequeueReusableCell(withClass: MailCell.self, for: indexPath)
         
         cell.delegate = self
-        cell.configure(type: type)
+        cell.configure(type: type, text: currentText)
         
         return cell
     }
@@ -214,35 +222,76 @@ extension MailController: MailCellDelegate {
 }
 
 extension MailController {
-    private func prepareMail() {
-        guard !isPreparingMail, currentText.count >= type.minCharactersCount,
-              MailAvailability.canSendEmail() else { return }
-        isPreparingMail = true
-        sendButton.isEnabled = false
+    func cancelMailPreparation() {
+        mailLifetime.invalidate()
+        mailTask?.cancel()
+        mailTask = nil
+        setPreparingMail(false)
+    }
+
+    private func setPreparingMail(_ preparing: Bool) {
+        isPreparingMail = preparing
+        if preparing {
+            progress.startAnimating()
+            navigationItem.rightBarButtonItem = UIBarButtonItem(customView: progress)
+        } else {
+            progress.stopAnimating()
+            sendButton.isEnabled = currentText.count >= type.minCharactersCount
+            navigationItem.rightBarButtonItem = sendButton
+        }
+    }
+
+    func prepareMail() {
+        guard !isPreparingMail, currentText.count >= type.minCharactersCount else { return }
+        setPreparingMail(true)
+        let request = mailLifetime.begin()
+        let lifetime = mailLifetime
         let text = currentText
+        let provider = dataProvider
+        let fallback = isPremium
+        let recipient = email
+        let type = type
+        let product = productID
+        let open = openURL
 
         mailTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            defer {
-                isPreparingMail = false
-                sendButton.isEnabled = currentText.count >= type.minCharactersCount
-                mailTask = nil
+            let diagnostics = await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback)
+            guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else {
+                self?.finishMailPreparation(request)
+                return
             }
-
-            let diagnostics = await MailInfoResolver.resolve(
-                provider: dataProvider,
-                fallbackPremium: isPremium
+            let draft = MailBuilder.makeDraft(
+                with: text, recipient: recipient, type: type,
+                isPremium: diagnostics.isPremium, productID: product,
+                mailInfo: diagnostics.info, environment: .current()
             )
-            guard !Task.isCancelled else { return }
-
-            let urlString = MailBuilder.buildMail(
-                with: text, recipient: email, type: type,
-                isPremium: diagnostics.isPremium,
-                productID: productID, mailInfo: diagnostics.info
-            )
-            if let url = URL(string: urlString) {
-                await UIApplication.shared.open(url)
-            }
+            let opened: Bool
+            if let url = draft.url { opened = await open(url) } else { opened = false }
+            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
+            self?.finishMailPreparation(request)
+            if !opened, self?.settingsCanPresent == true { self?.showMailFallback(draft) }
         }
+    }
+
+    private func finishMailPreparation(_ request: UUID) {
+        guard mailLifetime.finish(request) else { return }
+        mailTask = nil
+        setPreparingMail(false)
+    }
+
+    private func showMailFallback(_ draft: MailDraft) {
+        let alert = UIAlertController(
+            title: NSLocalizedString("Unable to open a mail app", bundle: .module, comment: "Mail URL failed"),
+            message: NSLocalizedString("Your message is still here. You can copy the support address or message.", bundle: .module, comment: "Mail fallback"),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Address", bundle: .module, comment: "Mail fallback"), style: .default) { _ in
+            UIPasteboard.general.string = draft.recipient
+        })
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Message", bundle: .module, comment: "Mail fallback"), style: .default) { _ in
+            UIPasteboard.general.string = draft.subject + "\n\n" + draft.body
+        })
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", bundle: .module, comment: ""), style: .cancel))
+        present(alert, animated: true)
     }
 }

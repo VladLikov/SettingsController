@@ -28,7 +28,8 @@ public class MailCell: UITableViewCell {
         
         let textView = UITextView()
         
-        textView.font = .systemFont(ofSize: 16)
+        textView.font = .preferredFont(forTextStyle: .body)
+        textView.adjustsFontForContentSizeCategory = true
         textView.isEditable = true
         textView.isSelectable = true
         textView.isScrollEnabled = false
@@ -47,7 +48,9 @@ public class MailCell: UITableViewCell {
         let label = UILabel()
         
         label.textColor = .systemGray
-        label.font = textView.font
+        label.font = .preferredFont(forTextStyle: .body)
+        label.adjustsFontForContentSizeCategory = true
+        label.isAccessibilityElement = false
         label.numberOfLines = 0
         label.isHidden = false
         label.backgroundColor = .clear
@@ -59,7 +62,7 @@ public class MailCell: UITableViewCell {
     
     // MARK: Life Cycle
 
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
         setupView()
@@ -75,9 +78,13 @@ public class MailCell: UITableViewCell {
 
 extension MailCell {
     
-    public func configure(type: MailType) {
+    public func configure(type: MailType, text: String? = nil) {
 
         placeholderLabel.text = type.placeholder
+        if let text { textView.text = text }
+        placeholderLabel.isHidden = !textView.text.isEmpty
+        textView.accessibilityLabel = NSLocalizedString("Message", bundle: .module, comment: "")
+        textView.accessibilityHint = type.placeholder
         lastMeasuredTextHeight = measuredTextHeight()
     }
     
@@ -135,6 +142,7 @@ extension MailCell {
                 equalTo: textView.leadingAnchor,
                 constant: textView.textContainer.lineFragmentPadding
             ),
+            placeholderLabel.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -16),
             placeholderLabel.trailingAnchor.constraint(
                 equalTo: textView.trailingAnchor,
                 constant: -textView.textContainer.lineFragmentPadding

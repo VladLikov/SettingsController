@@ -23,15 +23,19 @@ actor RemoteImageLoader {
     }
 
     func image(from url: URL, maxPixelSize: CGFloat, scale: CGFloat) async throws -> UIImage {
+        try Task.checkCancellation()
+        let scale = scale.isFinite && scale > 0 ? scale : 1
         let pixelSize = Self.pixelSize(maxPixelSize: maxPixelSize, scale: scale)
-        let cacheKey = "\(url.absoluteString)#\(pixelSize)" as NSString
+        let cacheKey = "\(url.absoluteString)#\(pixelSize)@\(scale)" as NSString
 
         if let cached = cache.object(forKey: cacheKey) {
             return cached
         }
 
         if let task = inFlightTasks[cacheKey] {
-            return try await task.value
+            let image = try await task.value
+            try Task.checkCancellation()
+            return image
         }
 
         let task = Task<UIImage, Error> { [session] in
@@ -51,6 +55,7 @@ actor RemoteImageLoader {
             let image = try await task.value
             cache.setObject(image, forKey: cacheKey)
             inFlightTasks[cacheKey] = nil
+            try Task.checkCancellation()
             return image
         } catch {
             inFlightTasks[cacheKey] = nil
@@ -105,6 +110,8 @@ actor RemoteImageLoader {
 
     private static func pixelSize(maxPixelSize: CGFloat, scale: CGFloat) -> Int {
         guard maxPixelSize.isFinite, scale.isFinite else { return 1 }
-        return max(1, Int((maxPixelSize * scale).rounded(.up)))
+        let product = maxPixelSize * scale
+        guard product.isFinite else { return 1 }
+        return Int(min(8192, max(1, product.rounded(.up))))
     }
 }

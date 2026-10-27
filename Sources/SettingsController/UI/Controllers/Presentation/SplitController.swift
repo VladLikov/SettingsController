@@ -1,70 +1,60 @@
-//
-//  SplitController.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 12.09.2024.
-//
-
 import UIKit
 
-// MARK: - SplitController
-
-final class SplitController: UISplitViewController {
-        
-    // MARK: Life Cycle
-    
-    init() {
-        super.init(nibName: nil, bundle: nil)
-
-        setupController()
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-    
-    // MARK: Status Bar
-    
-    override var preferredStatusBarStyle: UIStatusBarStyle {
-        viewControllers.first?.preferredStatusBarStyle ?? .lightContent
-    }
-    
-    // MARK: Private Methods
-    
-    private func setupController() {
-        
-        delegate = self
-        preferredDisplayMode = .oneBesideSecondary
-    }
-}
-
-// MARK: - UISplitViewControllerDelegate
-
-extension SplitController: UISplitViewControllerDelegate {
-    
-    func splitViewController(_ splitViewController: UISplitViewController, collapseSecondary secondaryViewController: UIViewController, onto primaryViewController: UIViewController) -> Bool {
-        return true
-    }
-}
-
-// MARK: - Get Default
-
-extension SplitController {
-    
-    static func makeDefault(for primaryViewController: UIViewController) -> UIViewController {
-        let detailController = UIViewController()
-        detailController.view = EmptyStateView(
+final class SplitPlaceholderController: UIViewController {
+    override func loadView() {
+        view = EmptyStateView(
             title: NSLocalizedString("Select an item", bundle: .module, comment: ""),
             subtitle: NSLocalizedString("Additional information will appear here.", bundle: .module, comment: "")
         )
+    }
+}
 
-        let splitViewController = SplitController()
-        splitViewController.viewControllers = [
-            primaryViewController,
-            UINavigationController(rootViewController: detailController)
-        ]
-                
-        return splitViewController
-        
+final class SplitController: UISplitViewController, UISplitViewControllerDelegate {
+    var onWillDismiss: (@MainActor () -> Void)?
+    var onDidDismiss: (@MainActor () -> Void)?
+    private var dismissingModal = false
+
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        delegate = self
+        preferredDisplayMode = .oneBesideSecondary
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        viewControllers.first?.preferredStatusBarStyle ?? .default
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        dismissingModal = settingsIsLeavingHierarchy && presentingViewController != nil
+        if dismissingModal { onWillDismiss?() }
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if dismissingModal { onDidDismiss?() }
+        dismissingModal = false
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        dismissingModal = false // An interactive dismissal can be cancelled.
+    }
+
+    func splitViewController(_ splitViewController: UISplitViewController,
+                             collapseSecondary secondaryViewController: UIViewController,
+                             onto primaryViewController: UIViewController) -> Bool {
+        if let navigation = secondaryViewController as? UINavigationController {
+            return navigation.viewControllers.count == 1 && navigation.viewControllers.first is SplitPlaceholderController
+        }
+        return secondaryViewController is SplitPlaceholderController
+    }
+
+    static func makeDefault(for primaryViewController: UIViewController) -> SplitController {
+        let split = SplitController()
+        split.viewControllers = [primaryViewController, UINavigationController(rootViewController: SplitPlaceholderController())]
+        return split
     }
 }

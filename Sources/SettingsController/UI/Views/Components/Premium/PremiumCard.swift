@@ -1,24 +1,15 @@
-//
-//  PremiumCard.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 20.05.2025.
-//
-
 import SwiftUI
 
-// MARK: - PremiumCard
 public struct PremiumCard: View {
-    // Public API
     public let image: Image
     public let title: String
     public let subtitle: String
     public let buttonTitle: String
     public let color: UIColor
     public let onTap: () -> Void
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.colorScheme) private var colorScheme
 
-    // Cache gradient once
-    private let gradient: LinearGradient
     public init(image: Image, title: String, subtitle: String, buttonTitle: String, color: UIColor, onTap: @escaping () -> Void) {
         self.image = image
         self.title = title
@@ -26,93 +17,73 @@ public struct PremiumCard: View {
         self.buttonTitle = buttonTitle
         self.color = color
         self.onTap = onTap
-        self.gradient = LinearGradient(
-            colors: Self.makeGradientColors(from: color),
-            startPoint: .top, endPoint: .bottom)
     }
 
     public var body: some View {
         Button(action: onTap) {
-            ZStack {
-                // Background card
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(gradient)
-                    .shadow(color: .black.opacity(0.10), radius: 6, x: 0, y: 2)
-
-                // Content stack
-                HStack(spacing: 8) {
-                    image
-                        .renderingMode(.template)
-                        .foregroundColor(.white.opacity(0.93))
-                        .font(.system(size: 25, weight: .regular))
-                        .padding(.leading, 20)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(title)
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundColor(.white)
-                            .shadow(color: .black.opacity(0.08), radius: 2, x: 0, y: 1)
-                            .lineLimit(1)
-                        Text(subtitle)
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.7))
-                            .lineLimit(2)
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 16) {
+                        heading
+                        callToAction
                     }
-                    .padding(.leading, 2)
-
-                    Spacer(minLength: 0)
-
-                    Text(buttonTitle)
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(width: 100, height: 35)
-                        .background(
-                            RoundedRectangle(cornerRadius: 22)
-                                .fill(.white.opacity(0.14))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 22)
-                                .stroke(.white.opacity(0.42), lineWidth: 1)
-                        )
-                        .padding(.trailing, 20)
+                } else {
+                    HStack(spacing: 12) {
+                        heading
+                        Spacer(minLength: 0)
+                        callToAction
+                    }
                 }
             }
+            .padding(16)
+            .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
+            .foregroundColor(.white)
+            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(gradient))
+            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
         .buttonStyle(PremiumCardButtonStyle())
+        .accessibilityLabel(Text("\(title). \(subtitle). \(buttonTitle)"))
     }
 
-    // MARK: Private helpers
-    private static func makeGradientColors(from ui: UIColor) -> [Color] {
-        guard let c = ui.cgColor.components, c.count >= 3 else { return [.init(ui), .init(ui)] }
-        let light = UIColor(
-            red: min(c[0] + 0.07, 1),
-            green: min(c[1] + 0.12, 1),
-            blue: min(c[2] + 0.18, 1),
-            alpha: 1)
-        return [.init(ui), .init(light)]
+    private var heading: some View {
+        HStack(alignment: .center, spacing: 10) {
+            image.renderingMode(.template).font(.title2).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.title2.bold()).fixedSize(horizontal: false, vertical: true)
+                Text(subtitle).font(.subheadline).fixedSize(horizontal: false, vertical: true)
+            }
+            .layoutPriority(1)
+        }
+    }
+
+    private var callToAction: some View {
+        Text(buttonTitle)
+            .font(.headline)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(minHeight: 44)
+            .background(RoundedRectangle(cornerRadius: 22).fill(.white.opacity(0.14)))
+            .overlay(RoundedRectangle(cornerRadius: 22).stroke(.white.opacity(0.42), lineWidth: 1))
+    }
+
+    private var gradient: LinearGradient {
+        let resolved = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light))
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        let lighter: UIColor
+        if resolved.getRed(&r, green: &g, blue: &b, alpha: &a) {
+            lighter = UIColor(red: min(r + 0.07, 1), green: min(g + 0.12, 1), blue: min(b + 0.18, 1), alpha: a)
+        } else { lighter = resolved }
+        return LinearGradient(colors: [Color(resolved), Color(lighter)], startPoint: .top, endPoint: .bottom)
     }
 }
 
-// MARK: - PremiumCardButtonStyle
 private struct PremiumCardButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1)
-            .animation(.interactiveSpring(), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
+            .animation(reduceMotion ? nil : .interactiveSpring(), value: configuration.isPressed)
     }
 }
-
-#if DEBUG
-#Preview {
-    PremiumCard(
-        image: Image(systemName: "star.fill"),
-        title: "Go Premium",
-        subtitle: "Unlock all features",
-        buttonTitle: "Upgrade",
-        color: .systemBlue,
-        onTap: {}
-    )
-    .padding()
-    .frame(height: 150)
-}
-#endif

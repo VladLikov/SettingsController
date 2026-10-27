@@ -1,15 +1,15 @@
-//
-//  AppItem.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 02.05.2025.
-//
-
 import Foundation
 
-public struct AppItem: Sendable {
+public struct AppItem: Sendable, Equatable {
     public let id: Int
     public let name: String
     public let iconURL: URL
     public let storeURL: URL
+
+    public init(id: Int, name: String, iconURL: URL, storeURL: URL) {
+        self.id = id
+        self.name = name
+        self.iconURL = iconURL
+        self.storeURL = storeURL
+    }
 }

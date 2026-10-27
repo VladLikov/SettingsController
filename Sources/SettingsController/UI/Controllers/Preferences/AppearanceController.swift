@@ -18,7 +18,6 @@ class AppearanceController: UITableViewController {
     private var theme: ThemeStorage
     private weak var eventHandler: (any SettingsControllerEventHandler)?
     
-    private var reviewRequested: Bool = false
     
     // MARK: Life Cycle
     
@@ -99,7 +98,7 @@ extension AppearanceController {
             
             cell.configure(appColor: appColor)
             
-            let isSelected = theme.appColor == appColor.color
+            let isSelected = theme.appColorRawValue == appColor.rawValue
             
             cell.accessoryType = isSelected ? .checkmark : .none
                         
@@ -160,13 +159,10 @@ extension AppearanceController {
         
         if indexPath.section == 0 {
             let currentRaw = theme.appColorRawValue
-            guard let oldIndex = colors.firstIndex(where: { $0.rawValue == currentRaw }) else {
-                return
+            guard colors.indices.contains(indexPath.row) else { return }
+            if let oldIndex = colors.firstIndex(where: { $0.rawValue == currentRaw }) {
+                tableView.cellForRow(at: IndexPath(row: oldIndex, section: 0))?.accessoryType = .none
             }
-            
-            let oldIndexPath = IndexPath(row: oldIndex, section: indexPath.section)
-
-            tableView.cellForRow(at: oldIndexPath)?.accessoryType = .none
             tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
 
             let newAppColor = colors[indexPath.row]
@@ -174,17 +170,13 @@ extension AppearanceController {
             let newColor = newAppColor.color
             
             theme.appColor = newColor
+            theme.appColorRawValue = newAppColor.rawValue
             eventHandler?.settingsDidUpdateTheme(theme)
             
             navigationController?.navigationBar.tintColor = newColor
                                                 
             updateVisibleThemeControlsTint(newColor)
             
-            if !reviewRequested {
-                reviewRequested = true
-                AppReviewRequester.requestReview()
-            }
-                        
 #if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()
 #endif

@@ -10,7 +10,13 @@ import Foundation
 public enum AppStoreAppsLoader {
 
     public static func fetch(developerId: String, limit: Int, excludeAppID: String? = nil) async throws -> [AppItem] {
+        try await fetch(developerId: developerId, limit: limit, excludeAppID: excludeAppID, session: .shared)
+    }
+
+    static func fetch(developerId: String, limit: Int, excludeAppID: String? = nil,
+                      session: URLSession) async throws -> [AppItem] {
         guard limit > 0 else { return [] }
+        try Task.checkCancellation()
 
         var components = URLComponents(string: "https://itunes.apple.com/lookup")
         components?.queryItems = [
@@ -23,10 +29,11 @@ public enum AppStoreAppsLoader {
         }
 
         var request = URLRequest(url: url)
-        request.cachePolicy = .returnCacheDataElseLoad
+        request.cachePolicy = .useProtocolCachePolicy
         request.timeoutInterval = 15
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
+        try Task.checkCancellation()
 
         if let httpResponse = response as? HTTPURLResponse,
            !(200...299).contains(httpResponse.statusCode) {
@@ -43,7 +50,11 @@ public enum AppStoreAppsLoader {
                       let icon = $0.artworkUrl100,
                       let link = $0.trackViewUrl,
                       let iconURL = URL(string: icon),
-                      let storeURL = URL(string: link)
+                      let storeURL = URL(string: link),
+                      id > 0, !name.isEmpty,
+                      ["https", "http"].contains(iconURL.scheme?.lowercased() ?? ""),
+                      ["https", "http"].contains(storeURL.scheme?.lowercased() ?? ""),
+                      iconURL.host != nil, storeURL.host != nil
                 else { return nil }
                 return AppItem(id: id, name: name, iconURL: iconURL, storeURL: storeURL)
             }
