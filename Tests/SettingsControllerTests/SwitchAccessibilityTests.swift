@@ -14,10 +14,11 @@ final class SwitchAccessibilityTests: XCTestCase {
 
         // This Swift-package test has no UIApplicationMain host. Exercise the
         // actual installed target/action directly instead of UIApplication dispatch.
-        let targets: [(NSObject, String)] = cell.switchControl.allTargets.flatMap { target in
-            guard let object = target.base as? NSObject else { return [] }
-            return (cell.switchControl.actions(forTarget: object, forControlEvent: .valueChanged) ?? [])
-                .map { (object, $0) }
+        var targets: [(NSObject, String)] = []
+        for target in cell.switchControl.allTargets {
+            guard let object = target.base as? NSObject else { continue }
+            let actions = cell.switchControl.actions(forTarget: object, forControlEvent: .valueChanged) ?? []
+            for action in actions { targets.append((object, action)) }
         }
         XCTAssertEqual(targets.count, 1)
         cell.switchControl.isOn = false
