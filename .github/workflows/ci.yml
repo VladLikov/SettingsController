@@ -11,17 +11,38 @@ permissions:
   contents: read
 jobs:
   test:
-    name: Regression / ${{ matrix.device }}
-    runs-on: macos-26
+    name: Regression / ${{ matrix.name }}
+    runs-on: xcode-27
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        device: [iPhone, iPad]
+        include:
+          - name: iPhone
+            family: iPhone
+            runtime: '27.0'
+            device: iPhone 18 Pro
+          - name: iPad
+            family: iPad
+            runtime: '27.0'
+            device: iPad Pro 11-inch (M5)
+          - name: Duo
+            family: iPhone
+            runtime: '27.1'
+            device: iPhone Duo
     env:
       DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
-      DEVICE_FAMILY: ${{ matrix.device }}
+      DEVICE_FAMILY: ${{ matrix.family }}
+      DEVICE_NAME: ${{ matrix.device }}
+      IOS_RUNTIME: ${{ matrix.runtime }}
+      RESULT_LABEL: ${{ matrix.name }}
     steps:
+      - name: Toolchain evidence
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          xcrun swift --version
+          xcrun simctl list runtimes
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
@@ -38,7 +59,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: regression-${{ matrix.device }}
+          name: regression-${{ matrix.name }}
           path: |
             .build/verification/**/*.json
             .build/verification/**/*.txt
@@ -48,6 +69,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: result-bundle-${{ matrix.device }}
-          path: .build/verification/${{ matrix.device }}/TestResults.xcresult
+          name: result-bundle-${{ matrix.name }}
+          path: .build/verification/${{ matrix.name }}/TestResults.xcresult
           retention-days: 3

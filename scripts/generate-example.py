@@ -8,6 +8,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = ROOT / 'Examples/SettingsExample'
 PROJECT = EXAMPLE / 'SettingsExample.xcodeproj'
+catalog = json.loads((ROOT / 'Sources/SettingsController/Resources/Localizable.xcstrings').read_text())
+locales = sorted({catalog['sourceLanguage']} | {locale for entry in catalog['strings'].values() for locale in entry.get('localizations', {})})
 objects = {}
 
 def uid(label):
@@ -62,10 +64,10 @@ test_target = obj('test-target', 'PBXNativeTarget', buildConfigurationList=test_
 app_exceptions = obj('app-membership', 'PBXFileSystemSynchronizedBuildFileExceptionSet', target=app_target, membershipExceptions=['UITests.swift', 'Info.plist', 'README.md'])
 test_exceptions = obj('test-membership', 'PBXFileSystemSynchronizedBuildFileExceptionSet', target=test_target, membershipExceptions=['App.swift', 'Info.plist', 'README.md'])
 objects[sources]['exceptions'] = [app_exceptions, test_exceptions]
-project = obj('project', 'PBXProject', attributes=dict(BuildIndependentTargetsInParallel='YES', LastUpgradeCheck='2600', TargetAttributes={app_target: dict(CreatedOnToolsVersion='26.0'), test_target: dict(CreatedOnToolsVersion='26.0', TestTargetID=app_target)}), buildConfigurationList=project_configs, compatibilityVersion='Xcode 16.0', developmentRegion='en', hasScannedForEncodings='0', knownRegions=['en', 'ru', 'ar', 'Base'], mainGroup=main_group, packageReferences=[package], productRefGroup=products, projectDirPath='', projectRoot='', targets=[app_target, test_target])
+project = obj('project', 'PBXProject', attributes=dict(BuildIndependentTargetsInParallel='YES', LastUpgradeCheck='2600', TargetAttributes={app_target: dict(CreatedOnToolsVersion='26.0'), test_target: dict(CreatedOnToolsVersion='26.0', TestTargetID=app_target)}), buildConfigurationList=project_configs, compatibilityVersion='Xcode 16.0', developmentRegion='en', hasScannedForEncodings='0', knownRegions=locales + ['Base'], mainGroup=main_group, packageReferences=[package], productRefGroup=products, projectDirPath='', projectRoot='', targets=[app_target, test_target])
 PROJECT.mkdir(parents=True, exist_ok=True)
 (PROJECT / 'project.pbxproj').write_text('// !$*UTF8*$!\n' + encode(dict(archiveVersion='1', classes={}, objectVersion='77', objects=objects, rootObject=project)) + '\n')
-info_values = dict(CFBundleDevelopmentRegion='en', CFBundleLocalizations=['en', 'ru', 'ar'], CFBundleExecutable='$(EXECUTABLE_NAME)', CFBundleIdentifier='$(PRODUCT_BUNDLE_IDENTIFIER)', CFBundleInfoDictionaryVersion='6.0', CFBundleName='$(PRODUCT_NAME)', CFBundlePackageType='APPL', CFBundleShortVersionString='1.0', CFBundleVersion='1', LSRequiresIPhoneOS=True, AdaptyAppleSearchAdsAttributionCollectionEnabled=True, ITSAppUsesNonExemptEncryption=False, UILaunchScreen={}, UIApplicationSceneManifest={'UIApplicationSupportsMultipleScenes': False, 'UISceneConfigurations': {}}, UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight'], UIRequiredDeviceCapabilities=['arm64'])
+info_values = dict(CFBundleDevelopmentRegion='en', CFBundleLocalizations=locales, CFBundleExecutable='$(EXECUTABLE_NAME)', CFBundleIdentifier='$(PRODUCT_BUNDLE_IDENTIFIER)', CFBundleInfoDictionaryVersion='6.0', CFBundleName='$(PRODUCT_NAME)', CFBundlePackageType='APPL', CFBundleShortVersionString='1.0', CFBundleVersion='1', LSRequiresIPhoneOS=True, AdaptyAppleSearchAdsAttributionCollectionEnabled=True, ITSAppUsesNonExemptEncryption=False, UILaunchScreen={}, UIApplicationSceneManifest={'UIApplicationSupportsMultipleScenes': False, 'UISceneConfigurations': {}}, UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight'], UIRequiredDeviceCapabilities=['arm64'])
 with (EXAMPLE / 'Info.plist').open('wb') as handle:
     plistlib.dump(info_values, handle)
 reference = lambda identifier, name: f'<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="{identifier}" BuildableName="{name}" BlueprintName="{name.split(".")[0]}" ReferencedContainer="container:SettingsExample.xcodeproj"/>'

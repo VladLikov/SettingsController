@@ -4,14 +4,14 @@ cd "$(dirname "$0")/.."
 DEVICE_FAMILY=${DEVICE_FAMILY:-iPhone}
 case "$DEVICE_FAMILY" in iPhone|iPad) ;; *) exit 2;; esac
 RUNTIME=${IOS_RUNTIME:-$(xcrun --sdk iphonesimulator --show-sdk-version)}
-OUT=".build/example-results/$DEVICE_FAMILY"
+OUT=".build/example-results/${RESULT_LABEL:-$DEVICE_FAMILY}"
 mkdir -p "$OUT"
 python3 scripts/generate-example.py
 xcrun simctl list devices available -j > "$OUT/simulators.json"
-ID=$(python3 - "$OUT/simulators.json" "$RUNTIME" "$DEVICE_FAMILY" <<'PY'
+ID=$(python3 - "$OUT/simulators.json" "$RUNTIME" "$DEVICE_FAMILY" "${DEVICE_NAME:-}" <<'PY'
 import json,sys
 runtime='com.apple.CoreSimulator.SimRuntime.iOS-'+sys.argv[2].replace('.','-')
-devices=sorted((d for d in json.load(open(sys.argv[1]))['devices'].get(runtime,[]) if d.get('isAvailable') and d['name'].startswith(sys.argv[3])),key=lambda d:d['name'])
+devices=sorted((d for d in json.load(open(sys.argv[1]))['devices'].get(runtime,[]) if d.get('isAvailable') and (d['name'] == sys.argv[4] if sys.argv[4] else d['name'].startswith(sys.argv[3]))),key=lambda d:d['name'])
 assert devices, 'Missing requested runtime/device: '+runtime+' '+sys.argv[3]
 print(devices[0]['udid'])
 PY
@@ -29,6 +29,6 @@ collect() {
 trap collect EXIT
 xcodebuild -project Examples/SettingsExample/SettingsExample.xcodeproj -scheme SettingsExample \
   -destination "platform=iOS Simulator,id=$ID" -derivedDataPath .build/example-derived \
-  -resultBundlePath "$OUT/TestResults.xcresult" -parallel-testing-enabled NO \
+  -resultBundlePath "$OUT/TestResults.xcresult" -parallel-testing-enabled NO -collect-test-diagnostics never \
   -test-timeouts-enabled YES -maximum-test-execution-time-allowance 120 \
   test CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0 2>&1 | tee "$OUT/test.log"
