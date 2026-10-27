@@ -90,7 +90,7 @@ final class SettingsExampleUITests: XCTestCase {
         field.typeText("Message & plus + 10% = #?\nhttps://example.com?a=1&b=2")
         XCTAssertTrue(app.buttons["Send"].firstMatch.isEnabled)
         attach(app, name: "standalone-mail-keyboard")
-        app.buttons["Close"].firstMatch.tap()
+        app.navigationBars["Contact"].buttons["close"].tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 5))
     }
 
