@@ -87,6 +87,10 @@ final class SettingsExampleUITests: XCTestCase {
         let field = app.textViews.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.tap()
+        // A fresh simulator can show the system QuickPath introduction above the keyboard.
+        let keyboardIntroduction = app.buttons["Continue"].firstMatch
+        if keyboardIntroduction.exists && keyboardIntroduction.isHittable { keyboardIntroduction.tap() }
+        XCTAssertTrue(app.keyboards.firstMatch.exists)
         field.typeText("Message & plus + 10% = #?\nhttps://example.com?a=1&b=2")
         XCTAssertTrue(app.buttons["Send"].firstMatch.isEnabled)
         attach(app, name: "standalone-mail-keyboard")
