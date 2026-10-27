@@ -12,6 +12,8 @@
 - Retriable catalog state and recoverable external-mail opening failures.
 
 ### Fixed
+- Reliable native Duo tabletop tracking, deferred column updates and restoration of minimum widths; cold empty detail remains visible.
+- Readable premium-card subtitle contrast verified by the complete native accessibility audit.
 - Incremental visible-table updates for account/premium/catalog changes, without rebuilding unrelated cells; safe offscreen synchronization is retained.
 - Reused app placeholders, stable icon tasks, reduced cell configuration work, cached Mail status sizing and bounded Send-length checks.
 - Shared catalog requests and consumer-aware image cancellation; bitmap caches now account for byte cost as well as object count.
@@ -26,7 +28,7 @@
 - About opens before account loading and owns its cancellable request. CheckUpdate 1.0.1 provides data without automatic UI.
 - Removed unused SwiftBoost and the automatic review request on theme changes.
 - Mail diagnostics use public locale APIs and the accurate Preferred Language label. Added package privacy metadata.
-- Updated new UI strings across all existing locales; linguistic review remains a release checklist item.
+- Reviewed new UI strings in context, corrected Finnish Cancel and four update messages, and verified ru/de/ar Mail/About rendering; this is not native-speaker certification of all locales.
 
 ### Breaking changes
 - `.language(email:)` becomes `.language`.

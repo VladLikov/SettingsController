@@ -34,6 +34,8 @@ Native Release Time Profiler and baseline/after Memory Graph sessions use an iso
 
 The first profiling pass found zero reported leaks in both graphs and no SettingsController/ProfileController/PaywallController remaining after the workload. Time Profiler recorded two microhangs (258 and 263 ms); their cause was not established. Inclusive CPU sample weights overlap and must not be interpreted as wall time or summed percentages. A repeat on the final source is retained separately under `final-profiling-final`; see the delivered evidence report for its measured results.
 
+Final-source repeat: 90.665 seconds, all 30 cycles completed, 7,432 CPU samples and no recorded hang rows. Both baseline and after graphs report **0 leaks / 0 bytes**; no SettingsController/ProfileController/PaywallController remains. Live malloc bytes changed from 9,402,560 to 9,540,176 (+137,616 bytes). Physical footprint changed from 38.6M to 88.1M; VM analysis shows Performance Tool Data increasing from 16.2M to 62.6M in the MallocStackLogging run, accounting for most of that increase. This is not an uninstrumented app memory benchmark. Native Instruments reported one table without a known input source; CPU samples exported successfully. No hang rows does not prove zero jank on physical devices. Trace symbols match arm64 UUID `47385CEC-99D4-36E5-AC32-5975199F9FB5`.
+
 ## CI and remaining scope
 
 Both workflows now use GitHub's `xcode-27` image and explicit Xcode 27.1 / Swift 6.4 destinations: iPhone 18 Pro 27.0, iPad Pro 11-inch (M5) 27.0, iPhone Duo 27.1. UI results include screenshots/hierarchies and expected device-specific skips. The phone sheet gesture test explicitly skips iPad; it does not claim tablet cancellation coverage.
