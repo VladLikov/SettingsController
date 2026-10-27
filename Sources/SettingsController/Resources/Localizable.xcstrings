@@ -4738,7 +4738,7 @@
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kumoa"
+            "value": "Peruuta"
           }
         },
         "fr": {
@@ -21289,7 +21289,7 @@
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elérhető a(z) %@ verzió."
+            "value": "Új verzió érhető el: %@."
           }
         },
         "id": {
@@ -21463,13 +21463,13 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "版本 %@ 已可用。"
+            "value": "新版本 %@ 已发布。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "版本 %@ 已可用。"
+            "value": "新版本 %@ 已推出。"
           }
         },
         "en-IN": {
@@ -21493,7 +21493,7 @@
         "zh-HK": {
           "stringUnit": {
             "state": "translated",
-            "value": "版本 %@ 已可用。"
+            "value": "新版本 %@ 現已推出。"
           }
         }
       },

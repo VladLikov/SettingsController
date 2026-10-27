@@ -20,25 +20,28 @@ public struct PremiumCard: View {
     }
 
     public var body: some View {
+        let palette = PremiumCardPalette(color: color, traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light))
         Button(action: onTap) {
             Group {
                 if dynamicTypeSize.isAccessibilitySize {
                     VStack(alignment: .leading, spacing: 16) {
                         heading
-                        callToAction
+                        callToAction(palette)
                     }
                 } else {
                     HStack(spacing: 12) {
                         heading
                         Spacer(minLength: 0)
-                        callToAction
+                        callToAction(palette)
                     }
                 }
             }
             .padding(16)
             .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
-            .foregroundColor(.white)
-            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(gradient))
+            .foregroundColor(Color(palette.text))
+            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(
+                LinearGradient(colors: [Color(palette.base), Color(palette.end)], startPoint: .top, endPoint: .bottom)
+            ))
             .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
         .buttonStyle(PremiumCardButtonStyle())
@@ -60,7 +63,7 @@ public struct PremiumCard: View {
         }
     }
 
-    private var callToAction: some View {
+    private func callToAction(_ palette: PremiumCardPalette) -> some View {
         Text(buttonTitle)
             .font(.headline)
             .multilineTextAlignment(.center)
@@ -68,18 +71,59 @@ public struct PremiumCard: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .frame(minHeight: 44)
-            .background(RoundedRectangle(cornerRadius: 22).fill(.white.opacity(0.14)))
-            .overlay(RoundedRectangle(cornerRadius: 22).stroke(.white.opacity(0.42), lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: 22).fill(Color(palette.controlFill)))
+            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color(palette.text).opacity(0.42), lineWidth: 1))
     }
 
-    private var gradient: LinearGradient {
-        let resolved = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light))
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        let lighter: UIColor
-        if resolved.getRed(&r, green: &g, blue: &b, alpha: &a) {
-            lighter = UIColor(red: min(r + 0.07, 1), green: min(g + 0.12, 1), blue: min(b + 0.18, 1), alpha: a)
-        } else { lighter = resolved }
-        return LinearGradient(colors: [Color(resolved), Color(lighter)], startPoint: .top, endPoint: .bottom)
+}
+
+/// Preserves the supplied hue while keeping readable text across the whole gradient.
+struct PremiumCardPalette {
+    let base: UIColor
+    let end: UIColor
+    let text: UIColor
+    let controlFill: UIColor
+
+    init(color: UIColor, traits: UITraitCollection) {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
+        let resolved = color.resolvedColor(with: traits)
+        guard resolved.getRed(&r, green: &g, blue: &b, alpha: &a) else {
+            base = .black; end = .black; text = .white; controlFill = UIColor.white.withAlphaComponent(0.14)
+            return
+        }
+        var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 1
+        UIColor.systemGroupedBackground.resolvedColor(with: traits).getRed(&br, green: &bg, blue: &bb, alpha: &ba)
+        let start = [r * a + br * (1 - a), g * a + bg * (1 - a), b * a + bb * (1 - a)]
+        let candidate = [min(start[0] + 0.07, 1), min(start[1] + 0.12, 1), min(start[2] + 0.18, 1)]
+        let white = Self.luminance(start) < 0.179
+        func contrast(_ rgb: [CGFloat]) -> Double {
+            let value = Self.luminance(rgb)
+            return white ? 1.05 / (value + 0.05) : (value + 0.05) / 0.05
+        }
+        let target = min(4.8, contrast(start))
+        var amount: CGFloat = 1
+        if contrast(candidate) < target {
+            var low: CGFloat = 0, high: CGFloat = 1
+            for _ in 0..<12 {
+                let middle = (low + high) / 2
+                let rgb = zip(start, candidate).map { $0 + ($1 - $0) * middle }
+                if contrast(rgb) >= target { low = middle } else { high = middle }
+            }
+            amount = low
+        }
+        let finish = zip(start, candidate).map { $0 + ($1 - $0) * amount }
+        base = UIColor(red: start[0], green: start[1], blue: start[2], alpha: 1)
+        end = UIColor(red: finish[0], green: finish[1], blue: finish[2], alpha: 1)
+        text = white ? .white : .black
+        controlFill = (white ? UIColor.black : UIColor.white).withAlphaComponent(0.14)
+    }
+
+    private static func luminance(_ rgb: [CGFloat]) -> Double {
+        let linear = rgb.map { channel -> Double in
+            let value = Double(channel)
+            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722
     }
 }
 

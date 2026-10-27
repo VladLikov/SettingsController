@@ -143,9 +143,12 @@ final class RoutingRegressionTests: XCTestCase {
         guard #available(iOS 27.1, *) else { throw XCTSkip("Reserved-region column policy requires iOS 27.1; exercised on the Duo runtime.") }
         let split = SplitController.makeDefault(for: UINavigationController(rootViewController: UIViewController()))
         XCTAssertEqual(split.style, .doubleColumn)
+        split.traitOverrides.horizontalSizeClass = .regular
         split.preferredPrimaryColumnWidthFraction = 0.31
         split.preferredPrimaryColumnWidth = 300
         split.maximumPrimaryColumnWidth = 350
+        split.minimumPrimaryColumnWidth = 220
+        split.minimumSecondaryColumnWidth = 300
         split.preferredSecondaryColumnWidthFraction = 0.69
         split.preferredSecondaryColumnWidth = 600
         let secondary = split.viewController(for: .secondary)
@@ -154,11 +157,15 @@ final class RoutingRegressionTests: XCTestCase {
         XCTAssertEqual(split.preferredSecondaryColumnWidthFraction, 0.5)
         XCTAssertEqual(split.preferredPrimaryColumnWidth, UISplitViewController.automaticDimension)
         XCTAssertGreaterThan(split.maximumPrimaryColumnWidth, 475)
+        XCTAssertEqual(split.minimumPrimaryColumnWidth, 0)
+        XCTAssertEqual(split.minimumSecondaryColumnWidth, 0)
         split.applyDivisionLayout(hasActiveDivision: true) // Repeated region updates must not overwrite the snapshot.
         split.applyDivisionLayout(hasActiveDivision: false)
         XCTAssertEqual(split.preferredPrimaryColumnWidthFraction, 0.31)
         XCTAssertEqual(split.preferredPrimaryColumnWidth, 300)
         XCTAssertEqual(split.maximumPrimaryColumnWidth, 350)
+        XCTAssertEqual(split.minimumPrimaryColumnWidth, 220)
+        XCTAssertEqual(split.minimumSecondaryColumnWidth, 300)
         XCTAssertEqual(split.preferredSecondaryColumnWidthFraction, 0.69)
         XCTAssertEqual(split.preferredSecondaryColumnWidth, 600)
         XCTAssertTrue(split.viewController(for: .secondary) === secondary)

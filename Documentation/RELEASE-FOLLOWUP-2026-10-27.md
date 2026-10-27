@@ -1,5 +1,7 @@
 # Исправления после сверки плана 4.0.0
 
+Исторический отчёт 27 октября. Актуальные результаты и оставшиеся ограничения: [28 октября](FINAL-RELEASE-VERIFICATION.md).
+
 27 октября 2026. Функциональная ревизия библиотеки — `10ecf605309155da7e2cb9e41a0e6370c91d63b4`; генератор synchronized sample — `7c41ec6`, semantic Mail accessibility IDs — `095e2e9`. После уточнения пользователя вся дальнейшая работа ведётся только внутри `/Users/vladlikov/Downloads/app store current app lock/AppLock`.
 
 ## Исправлено

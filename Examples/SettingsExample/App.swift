@@ -28,6 +28,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 /// Stored strongly by the dashboard and explicit configuration; never retains settings.
 @MainActor
 final class DemoStore: SettingsControllerDelegate {
+    var dismissalProbe: QADismissalProbe?
     weak var settings: SettingsController?
     var premium = false
     var name = "Demo User"
@@ -43,7 +44,7 @@ final class DemoStore: SettingsControllerDelegate {
         }
         return SettingsMailInfo(userID: userID, productID: premium ? "demo.annual" : nil, isPremium: premium)
     }
-    func settingsDidDismiss() { settings = nil }
+    func settingsDidDismiss() { settings = nil; dismissalProbe = nil }
     func settingsDidUpdateTheme(_ theme: ThemeStorage) { settings?.view.window?.tintColor = theme.appColor }
     func settingsDidUpdateTaptic(_ taptic: TapticStorage) {}
 
@@ -81,6 +82,20 @@ final class DemoStore: SettingsControllerDelegate {
     }
 }
 
+/// QA-only observer records actual UIKit cancellation, without preventing dismissal.
+@MainActor
+final class QADismissalProbe: NSObject, UIAdaptivePresentationControllerDelegate {
+    weak var settings: SettingsController?
+    func presentationControllerWillDismiss(_ presentationController: UIPresentationController) {
+        guard ProcessInfo.processInfo.arguments.contains("-qa-track-dismissal"),
+              let coordinator = presentationController.presentedViewController.transitionCoordinator,
+              coordinator.isInteractive else { return }
+        coordinator.notifyWhenInteractionChanges { [weak self] context in
+            self?.settings?.tableView.accessibilityValue = context.isCancelled ? "qa-cancelled" : "qa-completed"
+        }
+    }
+}
+
 final class DemoTheme: ThemeStorage {
     var appColor: UIColor = .systemIndigo
     var appColorRawValue = AppColor.allCases.first!.rawValue
@@ -105,6 +120,16 @@ final class DashboardController: UIViewController {
         store.settings = findSettings(in: root)
         root.modalPresentationStyle = .fullScreen
         present(root, animated: false) { [weak self] in
+            if let settings = self?.store.settings {
+                if ProcessInfo.processInfo.arguments.contains("-qa-open-mail") {
+                    settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: 0, section: 3))
+                    return
+                }
+                if ProcessInfo.processInfo.arguments.contains("-qa-open-about") {
+                    settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: 1, section: 3))
+                    return
+                }
+            }
             guard ProcessInfo.processInfo.arguments.contains("-demo-select-appearance"),
                   let settings = self?.store.settings else { return }
             settings.loadViewIfNeeded()
@@ -138,6 +163,14 @@ final class DashboardController: UIViewController {
             let root = SettingsController.getSplitPresentationSettingsController(configuration: store.configuration())
             store.settings = findSettings(in: root)
             root.modalPresentationStyle = .pageSheet
+            if ProcessInfo.processInfo.arguments.contains("-qa-track-dismissal") {
+                let probe = QADismissalProbe()
+                probe.settings = store.settings
+                store.dismissalProbe = probe
+                root.presentationController?.delegate = probe
+                store.settings?.tableView.accessibilityIdentifier = "qa-settings-table"
+                store.settings?.tableView.accessibilityValue = "qa-none"
+            }
             present(root, animated: true)
         } else {
             store.settings = SettingsController.present(configuration: store.configuration(), from: self)

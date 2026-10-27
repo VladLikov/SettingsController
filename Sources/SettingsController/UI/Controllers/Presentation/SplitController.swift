@@ -15,11 +15,17 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
     var onDidDismiss: (@MainActor () -> Void)?
     private var dismissingModal = false
     private var unfoldedColumnWidths: ColumnWidths?
+    private var divisionUpdateTask: Task<Void, Never>?
+    private var divisionUpdateGeneration = 0
+
+    deinit { divisionUpdateTask?.cancel() }
 
     private struct ColumnWidths {
         let primaryFraction: CGFloat
         let primaryWidth: CGFloat
         let primaryMaximum: CGFloat
+        let primaryMinimum: CGFloat
+        let secondaryMinimum: CGFloat
         let secondaryFraction: CGFloat
         let secondaryWidth: CGFloat
     }
@@ -37,13 +43,36 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    override func updateViewConstraints() {
+    override func viewDidLoad() {
+        super.viewDidLoad()
         if #available(iOS 27.1, *) {
-            // An active division, rather than a model name or hinge angle, defines
-            // this layout. Widths change only when the division state changes.
-            applyDivisionLayout(hasActiveDivision: view.reservedRegions(kind: .division).contains { $0.isActive })
+            // UIKit tracks reserved-region reads in UIView.updateConstraints().
+            // Preserve UISplitViewController's own root view and layout machinery.
+            let tracker = DivisionTrackingView()
+            tracker.translatesAutoresizingMaskIntoConstraints = false
+            tracker.isUserInteractionEnabled = false
+            tracker.accessibilityElementsHidden = true
+            tracker.onDivisionChange = { [weak self] active in
+                guard let self else { return }
+                self.divisionUpdateTask?.cancel()
+                self.divisionUpdateGeneration &+= 1
+                let generation = self.divisionUpdateGeneration
+                self.divisionUpdateTask = Task { @MainActor [weak self] in
+                    guard let self, !Task.isCancelled else { return }
+                    self.applyDivisionLayout(hasActiveDivision: active)
+                    if self.divisionUpdateGeneration == generation {
+                        self.divisionUpdateTask = nil
+                    }
+                }
+            }
+            view.addSubview(tracker)
+            NSLayoutConstraint.activate([
+                tracker.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                tracker.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                tracker.topAnchor.constraint(equalTo: view.topAnchor),
+                tracker.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ])
         }
-        super.updateViewConstraints()
     }
 
     @available(iOS 27.1, *)
@@ -55,12 +84,16 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
                 primaryFraction: preferredPrimaryColumnWidthFraction,
                 primaryWidth: preferredPrimaryColumnWidth,
                 primaryMaximum: maximumPrimaryColumnWidth,
+                primaryMinimum: minimumPrimaryColumnWidth,
+                secondaryMinimum: minimumSecondaryColumnWidth,
                 secondaryFraction: preferredSecondaryColumnWidthFraction,
                 secondaryWidth: preferredSecondaryColumnWidth
             )
             preferredPrimaryColumnWidth = UISplitViewController.automaticDimension
             preferredSecondaryColumnWidth = UISplitViewController.automaticDimension
             maximumPrimaryColumnWidth = .greatestFiniteMagnitude
+            minimumPrimaryColumnWidth = 0
+            minimumSecondaryColumnWidth = 0
             preferredPrimaryColumnWidthFraction = 0.5
             preferredSecondaryColumnWidthFraction = 0.5
             preferredDisplayMode = .oneBesideSecondary
@@ -69,6 +102,8 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
             preferredPrimaryColumnWidthFraction = widths.primaryFraction
             preferredPrimaryColumnWidth = widths.primaryWidth
             maximumPrimaryColumnWidth = widths.primaryMaximum
+            minimumPrimaryColumnWidth = widths.primaryMinimum
+            minimumSecondaryColumnWidth = widths.secondaryMinimum
             preferredSecondaryColumnWidthFraction = widths.secondaryFraction
             preferredSecondaryColumnWidth = widths.secondaryWidth
         }
@@ -149,5 +184,23 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
             split.setViewController(secondary, for: .secondary)
         }
         return split
+    }
+}
+
+@available(iOS 27.1, *)
+final class DivisionTrackingView: UIView {
+    var onDivisionChange: ((Bool) -> Void)?
+    private var lastActiveDivision: Bool?
+    private var lastHorizontalSizeClass: UIUserInterfaceSizeClass?
+
+    override func updateConstraints() {
+        let active = reservedRegions(kind: .division).contains { $0.isActive }
+        let horizontalSizeClass = traitCollection.horizontalSizeClass
+        if lastActiveDivision != active || lastHorizontalSizeClass != horizontalSizeClass {
+            lastActiveDivision = active
+            lastHorizontalSizeClass = horizontalSizeClass
+            onDivisionChange?(active)
+        }
+        super.updateConstraints()
     }
 }

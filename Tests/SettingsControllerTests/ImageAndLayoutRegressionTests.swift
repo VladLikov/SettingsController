@@ -19,6 +19,13 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertGreaterThan(content.bounds.width, 0)
     }
 
+    func testPremiumPaletteKeepsLightAndDarkHostTintsReadable() {
+        let traits = UITraitCollection(userInterfaceStyle: .light)
+        XCTAssertTrue(PremiumCardPalette(color: .white, traits: traits).text.isEqual(UIColor.black))
+        XCTAssertTrue(PremiumCardPalette(color: .yellow, traits: traits).text.isEqual(UIColor.black))
+        XCTAssertTrue(PremiumCardPalette(color: .black, traits: traits).text.isEqual(UIColor.white))
+    }
+
     func testNilAndZeroInsetDoNotCollide() throws {
         SettingsIconGenerator.removeAllCachedImages()
         let image = UIImage(systemName: "square.fill")!

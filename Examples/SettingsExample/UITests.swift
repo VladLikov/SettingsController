@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 @MainActor
 final class SettingsExampleUITests: XCTestCase {
@@ -32,6 +33,74 @@ final class SettingsExampleUITests: XCTestCase {
         app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", language == "ar" ? "ar_SA" : "en_US"] + arguments
         app.launch()
         return app
+    }
+
+    func testSettingsAccessibilityAudit() throws {
+        guard #available(iOS 17, *) else { throw XCTSkip("Native accessibility audits require iOS 17 or newer.") }
+        let app = launch()
+        app.buttons["open-fullscreen"].tap()
+        XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 10))
+        try app.performAccessibilityAudit()
+        app.tables.firstMatch.swipeUp()
+        try app.performAccessibilityAudit()
+        attach(app, name: "settings-accessibility-audit")
+    }
+
+    func testLocalizedMailPreparationAndAbout() {
+        for (locale, preparing, preferred) in [
+            ("ru", "Подготовка сообщения…", "Предпочитаемый язык"),
+            ("de", "Nachricht wird vorbereitet…", "Bevorzugte Sprache"),
+            ("ar", "جارٍ تحضير الرسالة…", "اللغة المفضلة")
+        ] {
+            let direction = locale == "ar" ? ["-demo-rtl"] : []
+            let app = launch(["-demo-open-settings", "-qa-open-mail", "-demo-slow-provider"] + direction, language: locale)
+            let field = app.textViews.firstMatch
+            XCTAssertTrue(field.waitForExistence(timeout: 10))
+            field.tap()
+            let introduction = app.buttons["Continue"].firstMatch
+            if introduction.exists && introduction.isHittable { introduction.tap() }
+            field.typeText("Please help with this message")
+            let send = app.buttons["settings.mail.send"].firstMatch
+            XCTAssertTrue(send.isEnabled)
+            send.tap()
+            XCTAssertTrue(app.staticTexts[preparing].waitForExistence(timeout: 5))
+            XCTAssertFalse(send.isEnabled)
+            attach(app, name: "localized-mail-" + locale)
+            app.buttons["settings.mail.close"].firstMatch.tap()
+            app.terminate()
+            let about = launch(["-demo-open-settings", "-qa-open-about"] + direction, language: locale)
+            let label = about.staticTexts[preferred].firstMatch
+            for _ in 0..<4 {
+                if label.exists && label.isHittable { break }
+                about.tables.element(boundBy: about.tables.count - 1).swipeUp()
+            }
+            XCTAssertTrue(label.exists && label.isHittable)
+            attach(about, name: "localized-about-" + locale)
+            about.terminate()
+        }
+    }
+
+    func testPhoneSheetInteractiveCancellation() throws {
+        guard UIDevice.current.userInterfaceIdiom == .phone else {
+            throw XCTSkip("This test exercises the phone page-sheet drag gesture.")
+        }
+        let app = launch(["-qa-track-dismissal"])
+        app.buttons["open-sheet"].tap()
+        XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 10))
+        let bar = app.navigationBars["Settings"].firstMatch
+        let start = bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+        let end = start.withOffset(CGVector(dx: 0, dy: 100))
+        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.4)
+        let table = app.tables["qa-settings-table"].firstMatch
+        let cancelled = NSPredicate(format: "value == %@", "qa-cancelled")
+        expectation(for: cancelled, evaluatedWith: table)
+        waitForExpectations(timeout: 5)
+        XCTAssertTrue(app.cells["Demo User"].firstMatch.isHittable)
+        app.cells["Demo User"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["rename"].waitForExistence(timeout: 5))
+        app.buttons["rename"].tap()
+        XCTAssertTrue(app.cells["Updated User"].firstMatch.waitForExistence(timeout: 5))
+        attach(app, name: "cancelled-interactive-sheet")
     }
 
     func testProfilePurchaseAndLogout() {
