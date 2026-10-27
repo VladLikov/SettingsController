@@ -25,11 +25,15 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
     }
 
     init() {
+#if compiler(>=6.4)
         if #available(iOS 27.1, *) {
             super.init(style: .doubleColumn)
         } else {
             super.init(nibName: nil, bundle: nil)
         }
+#else
+        super.init(nibName: nil, bundle: nil)
+#endif
         delegate = self
         preferredDisplayMode = .oneBesideSecondary
         if style != .unspecified { preferredSplitBehavior = .tile }
@@ -38,14 +42,17 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override func updateViewConstraints() {
+#if compiler(>=6.4)
         if #available(iOS 27.1, *) {
             // UIKit tracks reserved-region reads during constraint updates. An active
             // division, rather than a model name or hinge angle, defines this layout.
             applyDivisionLayout(hasActiveDivision: view.reservedRegions(kind: .division).contains { $0.isActive })
         }
+#endif
         super.updateViewConstraints()
     }
 
+#if compiler(>=6.4)
     @available(iOS 27.1, *)
     func applyDivisionLayout(hasActiveDivision: Bool) {
         guard style != .unspecified else { return }
@@ -73,6 +80,8 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
             preferredSecondaryColumnWidth = widths.secondaryWidth
         }
     }
+
+#endif
 
     func showSettingsDetail(_ controller: UIViewController) {
         let navigation = (controller as? UINavigationController)
