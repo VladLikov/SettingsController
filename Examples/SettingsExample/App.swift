@@ -185,10 +185,10 @@ final class ProfileController: UIViewController {
         })
     }
     private func returnToSettingsIfCompact() {
-        guard splitViewController?.isCollapsed != false else { return }
         if let split = splitViewController, split.style != .unspecified {
-            split.show(.primary)
-        } else {
+            // A narrow sheet can hide the primary without collapsing the split.
+            if split.isCollapsed || split.displayMode == .secondaryOnly { split.show(.primary) }
+        } else if splitViewController?.isCollapsed != false {
             navigationController?.popViewController(animated: true)
         }
     }

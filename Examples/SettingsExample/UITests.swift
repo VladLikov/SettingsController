@@ -19,7 +19,7 @@ final class SettingsExampleUITests: XCTestCase {
         user.tap()
         XCTAssertTrue(app.buttons["rename"].waitForExistence(timeout: 5))
         app.buttons["rename"].tap()
-        XCTAssertTrue(app.cells["Updated User"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.cells["Updated User"].firstMatch.waitForExistence(timeout: 5), app.debugDescription)
         let premium = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "All example features")).firstMatch
         XCTAssertTrue(premium.waitForExistence(timeout: 5))
         premium.tap()
@@ -42,7 +42,7 @@ final class SettingsExampleUITests: XCTestCase {
         destination.tap()
         XCTAssertTrue(app.buttons["rename"].waitForExistence(timeout: 5))
         app.buttons["rename"].tap()
-        XCTAssertTrue(app.cells["Updated User"].firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.cells["Updated User"].firstMatch.waitForExistence(timeout: 5), app.debugDescription)
         attach(app, name: "sheet-factory")
     }
 
