@@ -47,7 +47,10 @@ public struct PremiumCard: View {
 
     private var heading: some View {
         HStack(alignment: .center, spacing: 10) {
-            image.renderingMode(.template).font(.title2).accessibilityHidden(true)
+            // In narrow iPad columns, scaled decoration must not squeeze the text.
+            if !dynamicTypeSize.isAccessibilitySize {
+                image.renderingMode(.template).font(.title2).accessibilityHidden(true)
+            }
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.title2.bold()).fixedSize(horizontal: false, vertical: true)
                 Text(subtitle).font(.subheadline).fixedSize(horizontal: false, vertical: true)
