@@ -1,4 +1,4 @@
-> **4.0 implementation / unreleased.** This branch includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged.
+> **4.0 implementation / unreleased.** This branch includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [final verification and its limits](Documentation/FINAL-RELEASE-VERIFICATION.md).
 
 # SettingsController
 
