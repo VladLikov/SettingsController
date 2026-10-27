@@ -19,7 +19,7 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
 
     func testSettingsIconRejectsNonfiniteGeometry() {
         let icon = SettingsIcon(image: UIImage(systemName: "star"), color: .blue)
-        XCTAssertNil(icon.generateSettingsImage(size: CGSize(width: .infinity, height: 30)))
+        XCTAssertNil(icon.generateSettingsImage(size: CGSize(width: CGFloat.infinity, height: 30)))
         XCTAssertNil(icon.generateSettingsImage(cornerRadius: .nan))
         let invalid = SettingsIcon(image: UIImage(systemName: "star"), color: .blue, inset: Inset(.infinity))
         XCTAssertNil(invalid.generateSettingsImage())

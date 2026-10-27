@@ -1,24 +1,51 @@
 name: iOS package
 on:
   push:
-    branches: [main]
+    branches: [main, codex/settingscontroller-4.0-hardening]
   pull_request:
   workflow_dispatch:
 concurrency:
   group: ios-package-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 permissions:
   contents: read
 jobs:
   test:
+    name: Regression / ${{ matrix.device }}
     runs-on: macos-26
-    timeout-minutes: 30
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [iPhone, iPad]
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      DEVICE_FAMILY: ${{ matrix.device }}
     steps:
       - uses: actions/checkout@v4
-      - name: Show toolchain
-        run: xcodebuild -version && xcrun swift --version
-      - name: Build and test on iOS Simulator
+        with:
+          persist-credentials: false
+      - name: Build and test the iOS 15 deployment target
         run: bash scripts/test-ios.sh
+      - name: Source and warning evidence
+        if: always()
+        run: |
+          mkdir -p .build/verification
+          git archive --format=tar.gz --output=.build/verification/source.tar.gz HEAD
+          grep -n 'error:\|warning:\|Executed .* tests' .build/verification/*/test.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: regression-${{ matrix.device }}
+          path: |
+            .build/verification/**/*.json
+            .build/verification/**/*.txt
+            .build/verification/**/*.log
+            .build/verification/source.tar.gz
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: result-bundle-${{ matrix.device }}
+          path: .build/verification/${{ matrix.device }}/TestResults.xcresult
+          retention-days: 3
