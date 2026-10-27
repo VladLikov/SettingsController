@@ -1,13 +1,5 @@
 # Changelog
 
-## Unreleased
-
-### Changed
-
-- Set `.never` directly on all library-managed destination controllers, including modal premium screens.
-- Disable large titles for supplied navigation-controller stacks while keeping the main SettingsController large title.
-- Leave app-managed custom actions unchanged, with iOS Simulator regression coverage of push, premium, nested navigation, and root settings.
-
 ## 3.1.5 — 2026-10-25
 
 ### Changed

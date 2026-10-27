@@ -25,12 +25,6 @@ extension SettingsController {
     func pushViewController(_ viewController: UIViewController, navigationTitle: String?) {
         viewController.navigationItem.title = navigationTitle
         viewController.navigationItem.largeTitleDisplayMode = .never
-        if let navigation = viewController as? UINavigationController {
-            navigation.navigationBar.prefersLargeTitles = false
-            navigation.viewControllers.forEach {
-                $0.navigationItem.largeTitleDisplayMode = .never
-            }
-        }
 
         if UIDevice.current.userInterfaceIdiom != .phone {
             showDetailViewController(UINavigationController(rootViewController: viewController), sender: nil)
@@ -58,13 +52,6 @@ extension SettingsController {
 
         } else if let premiumControllerType = payload.destinationControllerType {
             let viewController = premiumControllerType.init()
-            viewController.navigationItem.largeTitleDisplayMode = .never
-            if let navigation = viewController as? UINavigationController {
-                navigation.navigationBar.prefersLargeTitles = false
-                navigation.viewControllers.forEach {
-                    $0.navigationItem.largeTitleDisplayMode = .never
-                }
-            }
             if UIDevice.current.userInterfaceIdiom == .phone {
                 viewController.modalPresentationStyle = .fullScreen
             }
