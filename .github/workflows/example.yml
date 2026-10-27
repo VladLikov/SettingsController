@@ -1,0 +1,37 @@
+name: Public example and UI smoke
+on:
+  push:
+    branches: [main, codex/settingscontroller-4.0-hardening]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: example-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  example:
+    runs-on: macos-26
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [iPhone, iPad]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      DEVICE_FAMILY: ${{ matrix.device }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: bash scripts/test-example.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: example-${{ matrix.device }}
+          path: |
+            .build/example-results/**/*.json
+            .build/example-results/**/*.txt
+            .build/example-results/**/*.log
+            .build/example-results/**/attachments
+          retention-days: 7
