@@ -95,11 +95,16 @@ final class SettingsExampleUITests: XCTestCase {
         let app = launch(["-qa-track-dismissal"])
         app.buttons["open-sheet"].tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 10))
-        let bar = app.navigationBars["Settings"].firstMatch
-        let start = bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
-        let end = start.withOffset(CGVector(dx: 0, dy: 100))
-        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.4)
         let table = app.tables["qa-settings-table"].firstMatch
+        XCTAssertTrue(table.waitForExistence(timeout: 10), "The real sheet probe must be ready before dragging.")
+        XCTAssertEqual(table.value as? String, "qa-none")
+        let bar = app.navigationBars["Settings"].firstMatch
+        print("Cancellation geometry: window=\(app.windows.firstMatch.frame), bar=\(bar.frame), table=\(table.frame)")
+        attach(app, name: "interactive-sheet-before-drag")
+        let start = bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2))
+        // A short drag enters the transition without crossing the dismissal threshold.
+        let end = start.withOffset(CGVector(dx: 0, dy: 50))
+        start.press(forDuration: 0.1, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 1.0)
         let cancelled = NSPredicate(format: "value == %@", "qa-cancelled")
         expectation(for: cancelled, evaluatedWith: table)
         waitForExpectations(timeout: 5)

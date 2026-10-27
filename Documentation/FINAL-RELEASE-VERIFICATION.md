@@ -22,6 +22,7 @@ Evidence is retained in the authorized test folder, `.settings-4-verification`.
 | Localized Mail preparing/disabled Send and About, ru/de/ar | Passed; screenshots and AX hierarchies retained |
 | Phone interactive sheet cancellation | Passed; cancellation callback plus subsequent profile rename verified |
 | Native Duo cold empty and selected Appearance, book/tabletop | Both columns visible, approximately 50/50; selected detail preserved across Open/Closed/Partial |
+| Real AppLock host, final library | Official Apple Xcode MCP build succeeded; 2 integration tests passed |
 | iPad maximum accessibility text size | Wrapping and final footer reachability passed |
 | VoiceOver | Real setting and focus ring confirmed; complete traversal/activation not verified |
 | Reduce Motion | Real setting enabled and screen inspected; animation suppression not measured |
@@ -46,3 +47,7 @@ Both workflows now use GitHub's `xcode-27` image and explicit Xcode 27.1 / Swift
 Only a successful run for the final PR SHA closes the CI gate. The initial ab05952 package matrix passed, while its iPad UI job timed out during the first test; that failure is retained, not counted as a pass.
 
 Unverified: full VoiceOver flow, measured Reduce Motion animations, native iPad resizing, real iOS 15 runtime, physical Mail handlers, real StoreKit and physical-device performance. Context review is not native-speaker certification of all locales. These limits remain explicit for the sole consuming application.
+
+## Cloud cancellation-fixture follow-up
+
+At caf1f0b all three package destinations passed and iPhone UI passed. Duo UI passed 9/10; the cancellation test did not observe its QA table after the drag. The old fixture did not assert observer readiness before starting, so that output alone cannot establish whether the gesture completed or observation was absent. The sample now installs the observer after adaptive presentation finishes and resolves the actual visible table. The test requires the initial qa-none value before dragging, uses a shorter 50-point drag with a one-second stop before releasing, and still requires the actual native isCancelled callback plus a subsequent profile update. No issues are ignored and no dismissal is programmatically prevented. This fixture passed locally on both Duo and iPhone. Subsequent changes are sample/QA-only; library profiling source remains faf417d.

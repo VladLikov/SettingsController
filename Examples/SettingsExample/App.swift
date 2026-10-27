@@ -163,15 +163,21 @@ final class DashboardController: UIViewController {
             let root = SettingsController.getSplitPresentationSettingsController(configuration: store.configuration())
             store.settings = findSettings(in: root)
             root.modalPresentationStyle = .pageSheet
-            if ProcessInfo.processInfo.arguments.contains("-qa-track-dismissal") {
+            present(root, animated: true) { [weak self, weak root] in
+                guard let self, let root,
+                      ProcessInfo.processInfo.arguments.contains("-qa-track-dismissal"),
+                      let settings = self.findSettings(in: root) else { return }
+                // Observe the final adaptive presentation controller and actual visible table.
+                // UIKit may materialize/adapt them only while presenting a cold native split.
+                self.store.settings = settings
+                settings.loadViewIfNeeded()
                 let probe = QADismissalProbe()
-                probe.settings = store.settings
-                store.dismissalProbe = probe
+                probe.settings = settings
+                self.store.dismissalProbe = probe
                 root.presentationController?.delegate = probe
-                store.settings?.tableView.accessibilityIdentifier = "qa-settings-table"
-                store.settings?.tableView.accessibilityValue = "qa-none"
+                settings.tableView.accessibilityIdentifier = "qa-settings-table"
+                settings.tableView.accessibilityValue = "qa-none"
             }
-            present(root, animated: true)
         } else {
             store.settings = SettingsController.present(configuration: store.configuration(), from: self)
         }
