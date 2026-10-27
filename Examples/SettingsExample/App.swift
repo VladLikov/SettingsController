@@ -185,7 +185,12 @@ final class ProfileController: UIViewController {
         })
     }
     private func returnToSettingsIfCompact() {
-        if splitViewController?.isCollapsed != false { navigationController?.popViewController(animated: true) }
+        guard splitViewController?.isCollapsed != false else { return }
+        if let split = splitViewController, split.style != .unspecified {
+            split.show(.primary)
+        } else {
+            navigationController?.popViewController(animated: true)
+        }
     }
 }
 
