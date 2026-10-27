@@ -98,6 +98,7 @@ public class MailController: UITableViewController {
             button.style = .prominent
         }
         
+        button.accessibilityIdentifier = "settings.mail.send"
         button.accessibilityLabel = NSLocalizedString("Send", bundle: .module, comment: "Mail navigation action preparing an external draft; it does not send the email itself.")
         button.isEnabled = false
         
@@ -175,6 +176,7 @@ extension MailController {
             self?.dismiss(animated: true)
         })
         
+        closeButton.accessibilityIdentifier = "settings.mail.close"
         navigationItem.leftBarButtonItem = closeButton
         navigationItem.rightBarButtonItem = sendButton
     }

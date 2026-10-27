@@ -17,13 +17,13 @@ final class SettingsExampleUITests: XCTestCase {
         let introduction = app.buttons["Continue"].firstMatch
         if introduction.exists && introduction.isHittable { introduction.tap() }
         field.typeText("Please help with this message")
-        let send = app.navigationBars["Contact"].buttons["Send"]
+        let send = app.buttons["settings.mail.send"].firstMatch
         XCTAssertTrue(send.isEnabled)
         send.tap()
         XCTAssertTrue(app.staticTexts["Preparing message…"].waitForExistence(timeout: 5))
         XCTAssertFalse(send.isEnabled)
         attach(app, name: "mail-preparing")
-        app.navigationBars["Contact"].buttons["close"].tap()
+        app.buttons["settings.mail.close"].firstMatch.tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 5))
     }
 
@@ -119,7 +119,7 @@ final class SettingsExampleUITests: XCTestCase {
         field.typeText("Message & plus + 10% = #?\nhttps://example.com?a=1&b=2")
         XCTAssertTrue(app.buttons["Send"].firstMatch.isEnabled)
         attach(app, name: "standalone-mail-keyboard")
-        app.navigationBars["Contact"].buttons["close"].tap()
+        app.buttons["settings.mail.close"].firstMatch.tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 5))
     }
 

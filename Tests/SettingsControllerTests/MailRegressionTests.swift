@@ -103,6 +103,8 @@ final class MailRegressionTests: XCTestCase {
         await gate.waitUntilStarted()
         XCTAssertTrue(controller.navigationItem.rightBarButtonItem === send)
         XCTAssertNil(controller.navigationItem.rightBarButtonItem?.customView)
+        XCTAssertEqual(send.accessibilityIdentifier, "settings.mail.send")
+        XCTAssertEqual(controller.navigationItem.leftBarButtonItem?.accessibilityIdentifier, "settings.mail.close")
         XCTAssertFalse(send.isEnabled)
         controller.view.layoutIfNeeded()
         let header = try XCTUnwrap(controller.tableView.tableHeaderView)
