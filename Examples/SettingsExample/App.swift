@@ -87,6 +87,35 @@ final class DemoTheme: ThemeStorage {
 @MainActor
 final class DashboardController: UIViewController {
     private let store = DemoStore()
+    private var didOpenLaunchScenario = false
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Optional sample-only QA entry point. The device still supplies real
+        // geometry/reserved regions; this never simulates a fold or split state.
+        guard !didOpenLaunchScenario,
+              ProcessInfo.processInfo.arguments.contains("-demo-open-settings") else { return }
+        didOpenLaunchScenario = true
+        let configuration = store.configuration()
+        let root = SettingsController.getSplitPresentationSettingsController(configuration: configuration)
+        store.settings = findSettings(in: root)
+        root.modalPresentationStyle = .fullScreen
+        present(root, animated: false) { [weak self] in
+            guard ProcessInfo.processInfo.arguments.contains("-demo-select-appearance"),
+                  let settings = self?.store.settings else { return }
+            settings.loadViewIfNeeded()
+            for (sectionIndex, section) in configuration.sections.enumerated() {
+                guard case .rows(let rows) = section.kind else { continue }
+                for (rowIndex, item) in rows.enumerated() {
+                    if case .defaultRow(.appearance) = item {
+                        settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: rowIndex, section: sectionIndex))
+                        return
+                    }
+                }
+            }
+        }
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
