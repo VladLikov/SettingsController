@@ -158,22 +158,52 @@ actor FixtureServer {
     func lastRequest(_ url: URL) -> URLRequest? { entries[url]?.requests.last }
 }
 
-private final class FixtureURLProtocol: URLProtocol, @unchecked Sendable {
+// URLProtocol explicitly disallows Sendable conformance. Keep it outside the task;
+// the test-only delivery bridge serializes access and ignores stopped requests.
+private final class FixtureDelivery: @unchecked Sendable {
+    private let lock = NSRecursiveLock()
+    private weak var owner: URLProtocol?
+    private var stopped = false
+
+    init(_ owner: URLProtocol) { self.owner = owner }
+    func cancel() { lock.withLock { stopped = true } }
+    func deliver(_ result: FixtureServer.Response, url: URL) {
+        lock.withLock {
+            guard !stopped, let owner else { return }
+            let response = HTTPURLResponse(url: url, statusCode: result.status, httpVersion: nil, headerFields: nil)!
+            owner.client?.urlProtocol(owner, didReceive: response, cacheStoragePolicy: .notAllowed)
+            guard !stopped else { return }
+            owner.client?.urlProtocol(owner, didLoad: result.data)
+            guard !stopped else { return }
+            owner.client?.urlProtocolDidFinishLoading(owner)
+        }
+    }
+}
+
+private final class FixtureURLProtocol: URLProtocol {
     private let lock = NSLock()
     private var work: Task<Void, Never>?
+    private var delivery: FixtureDelivery?
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
         let request = request
-        let task = Task { [weak self] in
+        let delivery = FixtureDelivery(self)
+        let task = Task { @Sendable [request, delivery] in
             let result = await FixtureServer.shared.response(for: request)
-            guard !Task.isCancelled, let self, let url = request.url else { return }
-            let response = HTTPURLResponse(url: url, statusCode: result.status, httpVersion: nil, headerFields: nil)!
-            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-            client?.urlProtocol(self, didLoad: result.data)
-            client?.urlProtocolDidFinishLoading(self)
+            guard !Task.isCancelled, let url = request.url else { return }
+            delivery.deliver(result, url: url)
         }
-        lock.withLock { work = task }
+        lock.withLock { self.delivery = delivery; work = task }
     }
-    override func stopLoading() { lock.withLock { work?.cancel(); work = nil } }
+    override func stopLoading() {
+        let pending = lock.withLock {
+            let result = (work, delivery)
+            work = nil
+            delivery = nil
+            return result
+        }
+        pending.1?.cancel()
+        pending.0?.cancel()
+    }
 }

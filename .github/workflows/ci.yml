@@ -25,6 +25,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Validate localization and privacy resources
+        run: python3 scripts/validate-resources.py
       - name: Build and test the iOS 15 deployment target
         run: bash scripts/test-ios.sh
       - name: Source and warning evidence

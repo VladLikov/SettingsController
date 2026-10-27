@@ -50,7 +50,7 @@ def configurations(label, settings):
     ids = []
     for name in ['Debug', 'Release']:
         values = dict(settings)
-        values.update(SWIFT_OPTIMIZATION_LEVEL='-Onone' if name == 'Debug' else '-O', DEBUG_INFORMATION_FORMAT='dwarf' if name == 'Debug' else 'dwarf-with-dsym')
+        values.update(SWIFT_OPTIMIZATION_LEVEL='-Onone' if name == 'Debug' else '-O', DEBUG_INFORMATION_FORMAT='dwarf' if name == 'Debug' else 'dwarf-with-dsym', ONLY_ACTIVE_ARCH='YES' if name == 'Debug' else 'NO')
         if name == 'Debug':
             values.update(ENABLE_TESTABILITY='YES', SWIFT_ACTIVE_COMPILATION_CONDITIONS='DEBUG')
         ids.append(obj(label + name, 'XCBuildConfiguration', buildSettings=values, name=name))
