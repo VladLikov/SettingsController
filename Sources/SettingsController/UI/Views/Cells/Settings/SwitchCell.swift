@@ -1,8 +1,17 @@
 import UIKit
 
-public class SwitchCell: SettingsCell {
-    public let switchControl = UISwitch()
-    private var onChange: ((Bool) -> Void)?
+public class SwitchCell: UITableViewCell {
+    private enum Metrics {
+        static let verticalPadding: CGFloat = 6
+    }
+
+    private var valueChanged: ((Bool) -> Void)?
+
+    public lazy var switchControl: UISwitch = {
+        let control = UISwitch()
+        control.onTintColor = tintColor
+        return control
+    }()
 
     public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -16,22 +25,26 @@ public class SwitchCell: SettingsCell {
 
     public override func prepareForReuse() {
         super.prepareForReuse()
-        accessoryView = switchControl
-        selectionStyle = .none
-        onChange = nil
+        contentConfiguration = nil
+        valueChanged = nil
         switchControl.accessibilityLabel = nil
         switchControl.isOn = false
-        switchControl.onTintColor = nil
+        switchControl.onTintColor = tintColor
     }
 
-    public func configure(title: String?, icon: SettingsIcon? = nil, isOn: Bool,
-                          onTintColor: UIColor?, onChange: ((Bool) -> Void)?) {
-        super.configure(title: title, icon: icon, accessory: .none, selectionStyle: .none)
-        accessoryView = switchControl
+    public func configure(title: String?, isOn: Bool, onTintColor: UIColor?,
+                          valueChanged: @escaping (Bool) -> Void) {
+        var configuration = defaultContentConfiguration()
+        configuration.text = title
+        configuration.textProperties.numberOfLines = 0
+        configuration.textProperties.lineBreakMode = .byWordWrapping
+        configuration.directionalLayoutMargins.top = Metrics.verticalPadding
+        configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
+        contentConfiguration = configuration
         switchControl.accessibilityLabel = title
         switchControl.isOn = isOn
         switchControl.onTintColor = onTintColor
-        self.onChange = onChange
+        self.valueChanged = valueChanged
     }
 
     private func setupView() {
@@ -39,8 +52,8 @@ public class SwitchCell: SettingsCell {
         isAccessibilityElement = false
         accessibilityElements = [switchControl]
         accessoryView = switchControl
-        switchControl.addTarget(self, action: #selector(handleSwitchChanged), for: .valueChanged)
+        switchControl.addTarget(self, action: #selector(switchValueChanged(_:)), for: .valueChanged)
     }
 
-    @objc private func handleSwitchChanged() { onChange?(switchControl.isOn) }
+    @objc private func switchValueChanged(_ sender: UISwitch) { valueChanged?(sender.isOn) }
 }
