@@ -79,7 +79,7 @@ final class AboutAppController: UITableViewController {
     }
 
     private var data: [(section: AboutSection, items: [AboutItem])] = []
-    private var checkUpdateTask: Task<Void, Never>?
+    private(set) var checkUpdateTask: Task<Void, Never>?
     
     private(set) var isPremium: Bool
     private(set) var userID: String?
@@ -89,7 +89,7 @@ final class AboutAppController: UITableViewController {
     var currentVersion: @MainActor () -> String? = { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String }
     var currentOSVersion: @MainActor () -> String = { UIDevice.current.systemVersion }
     var onAccountUpdate: (@MainActor (SettingsMailInfo?, Bool) -> Void)?
-    private var accountTask: Task<Void, Never>?
+    private(set) var accountTask: Task<Void, Never>?
     private let accountLifetime = RequestLifetime()
     private let updateLifetime = RequestLifetime()
     private var accountResolved = false
@@ -137,11 +137,21 @@ final class AboutAppController: UITableViewController {
         if !accountResolved && accountTask == nil { loadAccountInfo() }
     }
 
-    func cancelRequests() {
+    func cancelAccountRequest() {
         accountLifetime.invalidate()
-        updateLifetime.invalidate()
         accountTask?.cancel()
         accountTask = nil
+    }
+
+    func acceptAccountInfo(_ info: SettingsMailInfo?, premium: Bool) {
+        cancelAccountRequest()
+        accountResolved = true
+        applyAccountInfo(info, premium: premium)
+    }
+
+    func cancelRequests() {
+        cancelAccountRequest()
+        updateLifetime.invalidate()
         checkUpdateTask?.cancel()
         checkUpdateTask = nil
         accountResolved = false

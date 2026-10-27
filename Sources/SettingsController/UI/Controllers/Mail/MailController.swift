@@ -76,7 +76,7 @@ public class MailController: UITableViewController {
     private let isPremium: Bool?
     private let productID: String?
     private weak var dataProvider: (any SettingsControllerDataProvider)?
-    private var mailTask: Task<Void, Never>?
+    private(set) var mailTask: Task<Void, Never>?
     private var isPreparingMail = false
     private let mailLifetime = RequestLifetime()
     var openURL: OpenURLOperation = SystemActions.openURL

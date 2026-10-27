@@ -198,15 +198,17 @@ private extension SettingsIcon {
         format.scale = max(traitCollection.displayScale, 1)
         format.opaque = false
 
-        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            let rect = CGRect(origin: .zero, size: size)
+        let rect = CGRect(origin: .zero, size: size)
+        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+        let tintedGlyph = renderer.image { context in
+            glyph.withRenderingMode(.alwaysOriginal).draw(in: target)
+            UIColor.white.setFill()
+            context.fill(rect, blendMode: .sourceIn)
+        }
+        return renderer.image { _ in
             resolvedColor.setFill()
             UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius).fill()
-
-            glyph
-                .withRenderingMode(.alwaysTemplate)
-                .withTintColor(.white, renderingMode: .alwaysOriginal)
-                .draw(in: target)
+            tintedGlyph.draw(in: rect)
         }
     }
 

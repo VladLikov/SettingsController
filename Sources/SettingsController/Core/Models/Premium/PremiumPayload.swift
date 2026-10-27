@@ -20,8 +20,8 @@ public struct PremiumPayload {
     public init(
         isPremium: Bool,
         color: UIColor,
-        destinationControllerType: UIViewController.Type?,
-        action: PremiumAction?
+        destinationControllerType: UIViewController.Type? = nil,
+        action: PremiumAction? = nil
     ) {
         self.isPremium = isPremium
         self.color = color

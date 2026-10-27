@@ -19,6 +19,7 @@ public final class SettingsController: UITableViewController {
     private static func makePresentation(for settings: SettingsController) -> SplitController {
         let root = SplitController.makeDefault(for: UINavigationController(rootViewController: settings))
         settings.presentationRoot = root
+        root.onWillPresent = { [weak settings] in settings?.beginPresentation() }
         root.onWillDismiss = { [weak settings] in settings?.cancelOperations() }
         root.onDidDismiss = { [weak settings] in settings?.reportDismissal() }
         return root
@@ -94,6 +95,13 @@ public final class SettingsController: UITableViewController {
         resumeCatalogLoads()
     }
 
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if presentationRoot == nil && (isBeingPresented || navigationController?.isBeingPresented == true) {
+            beginPresentation()
+        }
+    }
+
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         finishingModal = false
@@ -141,6 +149,12 @@ public final class SettingsController: UITableViewController {
         appLoadTasks.removeAll()
         needsStateRefresh = true
         activeAboutController?.cancelRequests()
+    }
+
+    func beginPresentation() {
+        didReportDismissal = false
+        needsStateRefresh = true
+        overlayAppViewDidShown = false
     }
 
     func reportDismissal() {

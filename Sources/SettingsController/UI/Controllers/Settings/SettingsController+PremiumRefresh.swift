@@ -7,7 +7,7 @@ extension SettingsController {
     /// Cancelling the caller also cancels its request. The latest refresh wins.
     @MainActor
     public func refreshState() async {
-        guard let task = startStateRefresh() else { return }
+        guard !Task.isCancelled, let task = startStateRefresh() else { return }
         await withTaskCancellationHandler {
             await task.value
         } onCancel: {
@@ -35,6 +35,7 @@ extension SettingsController {
             }
         }
         guard let provider = configuration.dataProvider, wantsUser || wantsAccount else { return nil }
+        if wantsAccount { activeAboutController?.cancelAccountRequest() }
         let lifetime = stateLifetime
         let request = lifetime.begin()
         stateRefreshTask?.cancel()
@@ -61,7 +62,7 @@ extension SettingsController {
         if includesAccount {
             currentMailInfo = info // nil must clear a previous account ID.
             if let premium, premium != isPremium { isPremium = premium; changed = true }
-            activeAboutController?.applyAccountInfo(info, premium: isPremium)
+            activeAboutController?.acceptAccountInfo(info, premium: isPremium)
         }
         // nil means "no new snapshot". A guest UserInfo explicitly represents logout.
         if let user, currentUser?.name != user.name || currentUser?.avatar !== user.avatar {
@@ -72,6 +73,12 @@ extension SettingsController {
     }
 
     func pushAboutController(appID: String, privacyURL: URL, termsURL: URL, navigationTitle: String?) {
+        // The destination starts the newer account request; an older root refresh
+        // must not overwrite it when it completes out of order.
+        stateLifetime.invalidate()
+        stateRefreshTask?.cancel()
+        stateRefreshTask = nil
+        needsStateRefresh = true
         let controller = AboutAppController(isPremium: isPremium, userID: currentMailInfo?.userID,
                                             appID: appID, privacyURL: privacyURL, termsURL: termsURL)
         controller.dataProvider = configuration.dataProvider

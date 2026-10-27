@@ -10,6 +10,7 @@ final class SplitPlaceholderController: UIViewController {
 }
 
 final class SplitController: UISplitViewController, UISplitViewControllerDelegate {
+    var onWillPresent: (@MainActor () -> Void)?
     var onWillDismiss: (@MainActor () -> Void)?
     var onDidDismiss: (@MainActor () -> Void)?
     private var dismissingModal = false
@@ -24,6 +25,11 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
         viewControllers.first?.preferredStatusBarStyle ?? .default
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if isBeingPresented { onWillPresent?() }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
