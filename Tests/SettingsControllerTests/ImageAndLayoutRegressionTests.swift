@@ -7,12 +7,16 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
     func testEmptyDetailScrollViewportExtendsBehindSafeArea() throws {
         let controller = UIViewController()
         controller.view = EmptyStateView(title: "Select", subtitle: "Detail")
-        controller.additionalSafeAreaInsets = UIEdgeInsets(top: 40, left: 0, bottom: 60, right: 0)
+        controller.additionalSafeAreaInsets = UIEdgeInsets(top: 40, left: 80, bottom: 60, right: 50)
         let window = mountedWindow(controller)
         defer { window.isHidden = true; window.rootViewController = nil }
         let scroll = try XCTUnwrap(controller.view.subviews.first as? UIScrollView)
         controller.view.layoutIfNeeded()
         XCTAssertEqual(scroll.frame, controller.view.bounds)
+        XCTAssertEqual(scroll.contentInsetAdjustmentBehavior, .always)
+        let content = try XCTUnwrap(scroll.subviews.first)
+        XCTAssertEqual(content.bounds.width, controller.view.safeAreaLayoutGuide.layoutFrame.width, accuracy: 0.5)
+        XCTAssertGreaterThan(content.bounds.width, 0)
     }
 
     func testNilAndZeroInsetDoNotCollide() throws {

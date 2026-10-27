@@ -41,6 +41,8 @@ final class SettingsExampleUITests: XCTestCase {
         XCTAssertTrue(destination.waitForExistence(timeout: 10))
         destination.tap()
         XCTAssertTrue(app.buttons["rename"].waitForExistence(timeout: 5))
+        app.buttons["rename"].tap()
+        XCTAssertTrue(app.cells["Updated User"].firstMatch.waitForExistence(timeout: 5))
         attach(app, name: "sheet-factory")
     }
 

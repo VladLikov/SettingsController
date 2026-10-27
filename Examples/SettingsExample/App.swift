@@ -142,7 +142,16 @@ final class DashboardController: UIViewController {
 
     private func findSettings(in controller: UIViewController) -> SettingsController? {
         if let settings = controller as? SettingsController { return settings }
-        for child in controller.children {
+        let children: [UIViewController]
+        if let split = controller as? UISplitViewController {
+            children = split.style == .unspecified ? split.viewControllers
+                : [split.viewController(for: .primary), split.viewController(for: .secondary)].compactMap { $0 }
+        } else if let navigation = controller as? UINavigationController {
+            children = navigation.viewControllers
+        } else {
+            children = controller.children
+        }
+        for child in children {
             if let settings = findSettings(in: child) { return settings }
         }
         return nil
