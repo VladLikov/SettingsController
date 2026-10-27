@@ -533,6 +533,46 @@ The language row is `.defaultRow(.language)`. It directly opens the host app’s
 
 `SettingsDestinationFactory` is `@MainActor () -> UIViewController`. Custom rows, user rows and premium payloads accept lazy destination factories. Existing type-based destinations remain supported. Factories should return a fresh controller and avoid owner/configuration retain cycles.
 
+
+### Passing destinations: type or factory
+
+Use the existing type-based API when a destination needs only its default initializer:
+
+```swift
+SettingsRow(
+    title: profileTitle,
+    icon: profileIcon,
+    destinationControllerType: SimpleProfileController.self
+)
+```
+
+Use a factory when the destination requires initializer arguments:
+
+```swift
+SettingsRow(
+    title: profileTitle,
+    icon: profileIcon,
+    destinationFactory: {
+        ProfileController(accountService: accountService)
+    }
+)
+```
+
+The same factory is supported by `.user(..., destinationFactory:)` and
+`PremiumPayload(..., destinationFactory:)`. A factory runs on the main actor,
+only when the destination is requested. Return a new controller each time.
+
+Both the type-based API and factories create destinations lazily. Factories do
+not inherently improve rendering speed; they let you inject services, models or
+test doubles without relying on global state or a default initializer. An action
+closure could already create a custom controller, but then the host had to handle
+its navigation. A destination factory keeps the library's normal navigation and
+split-detail routing, including iPad and Duo, while the host controls construction.
+
+The configuration retains the factory. If its owner also retains the settings
+controller/configuration, avoid capturing that owner strongly. Capture independent
+services, or use an appropriate weak capture when the destination contract allows it.
+
 Call `await settingsController.refreshState()` after purchases, restores, account changes and profile edits. This explicitly updates an always-visible iPad list or a screen behind a custom sheet. A nil user snapshot means no new profile data; return an explicit guest `UserInfo` for logout. Missing typed User ID always becomes `-`, never an older account’s ID.
 
 Catalog limits at or below zero and successful empty results hide the section. Errors show Retry without discarding the source configuration. Theme selection no longer requests a review automatically.
