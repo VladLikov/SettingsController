@@ -54,38 +54,44 @@ final class SettingsExampleUITests: XCTestCase {
         attach(app, name: "settings-accessibility-audit")
     }
 
-    func testLocalizedMailPreparationAndAbout() {
-        for (locale, preparing, preferred) in [
-            ("ru", "Подготовка сообщения…", "Предпочитаемый язык"),
-            ("de", "Nachricht wird vorbereitet…", "Bevorzugte Sprache"),
-            ("ar", "جارٍ تحضير الرسالة…", "اللغة المفضلة")
-        ] {
-            let direction = locale == "ar" ? ["-demo-rtl"] : []
-            let app = launch(["-demo-open-settings", "-qa-open-mail", "-demo-slow-provider"] + direction, language: locale)
-            let field = app.textViews.firstMatch
-            XCTAssertTrue(field.waitForExistence(timeout: 10))
-            field.tap()
-            let introduction = app.buttons["Continue"].firstMatch
-            if introduction.exists && introduction.isHittable { introduction.tap() }
-            field.typeText("Please help with this message")
-            let send = app.buttons["settings.mail.send"].firstMatch
-            XCTAssertTrue(send.isEnabled)
-            send.tap()
-            XCTAssertTrue(app.staticTexts[preparing].waitForExistence(timeout: 5))
-            XCTAssertFalse(send.isEnabled)
-            attach(app, name: "localized-mail-" + locale)
-            app.buttons["settings.mail.close"].firstMatch.tap()
-            app.terminate()
-            let about = launch(["-demo-open-settings", "-qa-open-about"] + direction, language: locale)
-            let label = about.staticTexts[preferred].firstMatch
-            for _ in 0..<4 {
-                if label.exists && label.isHittable { break }
-                about.tables.element(boundBy: about.tables.count - 1).swipeUp()
-            }
-            XCTAssertTrue(label.exists && label.isHittable)
-            attach(about, name: "localized-about-" + locale)
-            about.terminate()
+    func testLocalizedMailPreparationAndAboutRussian() {
+        assertLocalizedMailPreparationAndAbout(locale: "ru", preparing: "Подготовка сообщения…", preferred: "Предпочитаемый язык")
+    }
+
+    func testLocalizedMailPreparationAndAboutGerman() {
+        assertLocalizedMailPreparationAndAbout(locale: "de", preparing: "Nachricht wird vorbereitet…", preferred: "Bevorzugte Sprache")
+    }
+
+    func testLocalizedMailPreparationAndAboutArabic() {
+        assertLocalizedMailPreparationAndAbout(locale: "ar", preparing: "جارٍ تحضير الرسالة…", preferred: "اللغة المفضلة")
+    }
+
+    private func assertLocalizedMailPreparationAndAbout(locale: String, preparing: String, preferred: String) {
+        let direction = locale == "ar" ? ["-demo-rtl"] : []
+        let app = launch(["-demo-open-settings", "-qa-open-mail", "-demo-slow-provider"] + direction, language: locale)
+        let field = app.textViews.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+        field.tap()
+        let introduction = app.buttons["Continue"].firstMatch
+        if introduction.exists && introduction.isHittable { introduction.tap() }
+        field.typeText("Please help with this message")
+        let send = app.buttons["settings.mail.send"].firstMatch
+        XCTAssertTrue(send.isEnabled)
+        send.tap()
+        XCTAssertTrue(app.staticTexts[preparing].waitForExistence(timeout: 5))
+        XCTAssertFalse(send.isEnabled)
+        attach(app, name: "localized-mail-" + locale)
+        app.buttons["settings.mail.close"].firstMatch.tap()
+        app.terminate()
+        let about = launch(["-demo-open-settings", "-qa-open-about"] + direction, language: locale)
+        let label = about.staticTexts[preferred].firstMatch
+        for _ in 0..<4 {
+            if label.exists && label.isHittable { break }
+            about.tables.element(boundBy: about.tables.count - 1).swipeUp()
         }
+        XCTAssertTrue(label.exists && label.isHittable)
+        attach(about, name: "localized-about-" + locale)
+        about.terminate()
     }
 
     func testPhoneSheetInteractiveCancellation() throws {

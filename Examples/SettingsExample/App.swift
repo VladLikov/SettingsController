@@ -119,8 +119,11 @@ final class DashboardController: UIViewController {
         let root = SettingsController.getSplitPresentationSettingsController(configuration: configuration)
         store.settings = findSettings(in: root)
         root.modalPresentationStyle = .fullScreen
-        present(root, animated: false) { [weak self] in
-            if let settings = self?.store.settings {
+        present(root, animated: false) { [weak self, weak root] in
+            guard let self, let root else { return }
+            self.store.settings = self.findSettings(in: root)
+            if let settings = self.store.settings {
+                settings.loadViewIfNeeded()
                 if ProcessInfo.processInfo.arguments.contains("-qa-open-mail") {
                     settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: 0, section: 3))
                     return
@@ -131,7 +134,7 @@ final class DashboardController: UIViewController {
                 }
             }
             guard ProcessInfo.processInfo.arguments.contains("-demo-select-appearance"),
-                  let settings = self?.store.settings else { return }
+                  let settings = self.store.settings else { return }
             settings.loadViewIfNeeded()
             for (sectionIndex, section) in configuration.sections.enumerated() {
                 guard case .rows(let rows) = section.kind else { continue }
@@ -165,11 +168,11 @@ final class DashboardController: UIViewController {
             root.modalPresentationStyle = .pageSheet
             present(root, animated: true) { [weak self, weak root] in
                 guard let self, let root,
-                      ProcessInfo.processInfo.arguments.contains("-qa-track-dismissal"),
                       let settings = self.findSettings(in: root) else { return }
+                self.store.settings = settings
+                guard ProcessInfo.processInfo.arguments.contains("-qa-track-dismissal") else { return }
                 // Observe the final adaptive presentation controller and actual visible table.
                 // UIKit may materialize/adapt them only while presenting a cold native split.
-                self.store.settings = settings
                 settings.loadViewIfNeeded()
                 let probe = QADismissalProbe()
                 probe.settings = settings
