@@ -26,24 +26,20 @@ def encode(value, indent=0):
         return '(\n' + ''.join('\t' * (indent + 1) + encode(v, indent + 1) + ',\n' for v in value) + tab + ')'
     return json.dumps(str(value))
 
-app_source = obj('app-source', 'PBXFileReference', lastKnownFileType='sourcecode.swift', path='App.swift', sourceTree='<group>')
-test_source = obj('test-source', 'PBXFileReference', lastKnownFileType='sourcecode.swift', path='UITests.swift', sourceTree='<group>')
-info = obj('info', 'PBXFileReference', lastKnownFileType='text.plist.xml', path='Info.plist', sourceTree='<group>')
+sources = obj('sources-folder', 'PBXFileSystemSynchronizedRootGroup', path='.', name='Sources', sourceTree='<group>', explicitFileTypes={}, explicitFolders=[])
 app_product = obj('app-product', 'PBXFileReference', explicitFileType='wrapper.application', path='SettingsExample.app', sourceTree='BUILT_PRODUCTS_DIR')
 test_product = obj('test-product', 'PBXFileReference', explicitFileType='wrapper.cfbundle', path='SettingsExampleUITests.xctest', sourceTree='BUILT_PRODUCTS_DIR')
 products = obj('products', 'PBXGroup', children=[app_product, test_product], name='Products', sourceTree='<group>')
-main_group = obj('main-group', 'PBXGroup', children=[app_source, test_source, info, products], sourceTree='<group>')
+main_group = obj('main-group', 'PBXGroup', children=[sources, products], sourceTree='<group>')
 package = obj('local-package', 'XCLocalSwiftPackageReference', relativePath='../..')
 product = obj('package-product', 'XCSwiftPackageProductDependency', productName='SettingsController', package=package)
-app_build = obj('app-build', 'PBXBuildFile', fileRef=app_source)
-test_build = obj('test-build', 'PBXBuildFile', fileRef=test_source)
 package_build = obj('package-build', 'PBXBuildFile', productRef=product)
 
 def phase(label, isa, files):
     return obj(label, isa, buildActionMask='2147483647', files=files, runOnlyForDeploymentPostprocessing='0')
 
-app_phases = [phase('app-sources', 'PBXSourcesBuildPhase', [app_build]), phase('app-frameworks', 'PBXFrameworksBuildPhase', [package_build]), phase('app-resources', 'PBXResourcesBuildPhase', [])]
-test_phases = [phase('test-sources', 'PBXSourcesBuildPhase', [test_build]), phase('test-frameworks', 'PBXFrameworksBuildPhase', []), phase('test-resources', 'PBXResourcesBuildPhase', [])]
+app_phases = [phase('app-sources', 'PBXSourcesBuildPhase', []), phase('app-frameworks', 'PBXFrameworksBuildPhase', [package_build]), phase('app-resources', 'PBXResourcesBuildPhase', [])]
+test_phases = [phase('test-sources', 'PBXSourcesBuildPhase', []), phase('test-frameworks', 'PBXFrameworksBuildPhase', []), phase('test-resources', 'PBXResourcesBuildPhase', [])]
 base = dict(SWIFT_VERSION='6.0', IPHONEOS_DEPLOYMENT_TARGET='15.0', SDKROOT='iphoneos', CLANG_ENABLE_MODULES='YES', TARGETED_DEVICE_FAMILY='1,2', CODE_SIGN_STYLE='Automatic', ENABLE_USER_SCRIPT_SANDBOXING='YES')
 
 def configurations(label, settings):
@@ -59,13 +55,16 @@ def configurations(label, settings):
 project_configs = configurations('project-config', base)
 app_configs = configurations('app-config', dict(PRODUCT_NAME='$(TARGET_NAME)', PRODUCT_BUNDLE_IDENTIFIER='com.example.SettingsControllerExample', INFOPLIST_FILE='Info.plist', GENERATE_INFOPLIST_FILE='NO', INFOPLIST_KEY_AdaptyAppleSearchAdsAttributionCollectionEnabled='YES', INFOPLIST_KEY_ITSAppUsesNonExemptEncryption='NO', LD_RUNPATH_SEARCH_PATHS=['$(inherited)', '@executable_path/Frameworks'], ASSETCATALOG_COMPILER_APPICON_NAME='', CURRENT_PROJECT_VERSION='1', MARKETING_VERSION='1.0'))
 test_configs = configurations('test-config', dict(PRODUCT_NAME='$(TARGET_NAME)', PRODUCT_BUNDLE_IDENTIFIER='com.example.SettingsControllerExample.UITests', GENERATE_INFOPLIST_FILE='YES', TEST_TARGET_NAME='SettingsExample', LD_RUNPATH_SEARCH_PATHS=['$(inherited)', '@executable_path/Frameworks', '@loader_path/Frameworks']))
-app_target = obj('app-target', 'PBXNativeTarget', buildConfigurationList=app_configs, buildPhases=app_phases, buildRules=[], dependencies=[], name='SettingsExample', packageProductDependencies=[product], productName='SettingsExample', productReference=app_product, productType='com.apple.product-type.application')
+app_target = obj('app-target', 'PBXNativeTarget', buildConfigurationList=app_configs, buildPhases=app_phases, buildRules=[], dependencies=[], fileSystemSynchronizedGroups=[sources], name='SettingsExample', packageProductDependencies=[product], productName='SettingsExample', productReference=app_product, productType='com.apple.product-type.application')
 proxy = obj('proxy', 'PBXContainerItemProxy', containerPortal=uid('project'), proxyType='1', remoteGlobalIDString=app_target, remoteInfo='SettingsExample')
 dependency = obj('test-dependency', 'PBXTargetDependency', target=app_target, targetProxy=proxy)
-test_target = obj('test-target', 'PBXNativeTarget', buildConfigurationList=test_configs, buildPhases=test_phases, buildRules=[], dependencies=[dependency], name='SettingsExampleUITests', productName='SettingsExampleUITests', productReference=test_product, productType='com.apple.product-type.bundle.ui-testing')
-project = obj('project', 'PBXProject', attributes=dict(BuildIndependentTargetsInParallel='YES', LastUpgradeCheck='2600', TargetAttributes={app_target: dict(CreatedOnToolsVersion='26.0'), test_target: dict(CreatedOnToolsVersion='26.0', TestTargetID=app_target)}), buildConfigurationList=project_configs, compatibilityVersion='Xcode 14.0', developmentRegion='en', hasScannedForEncodings='0', knownRegions=['en', 'ru', 'ar', 'Base'], mainGroup=main_group, packageReferences=[package], productRefGroup=products, projectDirPath='', projectRoot='', targets=[app_target, test_target])
+test_target = obj('test-target', 'PBXNativeTarget', buildConfigurationList=test_configs, buildPhases=test_phases, buildRules=[], dependencies=[dependency], fileSystemSynchronizedGroups=[sources], name='SettingsExampleUITests', productName='SettingsExampleUITests', productReference=test_product, productType='com.apple.product-type.bundle.ui-testing')
+app_exceptions = obj('app-membership', 'PBXFileSystemSynchronizedBuildFileExceptionSet', target=app_target, membershipExceptions=['UITests.swift', 'Info.plist', 'README.md'])
+test_exceptions = obj('test-membership', 'PBXFileSystemSynchronizedBuildFileExceptionSet', target=test_target, membershipExceptions=['App.swift', 'Info.plist', 'README.md'])
+objects[sources]['exceptions'] = [app_exceptions, test_exceptions]
+project = obj('project', 'PBXProject', attributes=dict(BuildIndependentTargetsInParallel='YES', LastUpgradeCheck='2600', TargetAttributes={app_target: dict(CreatedOnToolsVersion='26.0'), test_target: dict(CreatedOnToolsVersion='26.0', TestTargetID=app_target)}), buildConfigurationList=project_configs, compatibilityVersion='Xcode 16.0', developmentRegion='en', hasScannedForEncodings='0', knownRegions=['en', 'ru', 'ar', 'Base'], mainGroup=main_group, packageReferences=[package], productRefGroup=products, projectDirPath='', projectRoot='', targets=[app_target, test_target])
 PROJECT.mkdir(parents=True, exist_ok=True)
-(PROJECT / 'project.pbxproj').write_text('// !$*UTF8*$!\n' + encode(dict(archiveVersion='1', classes={}, objectVersion='56', objects=objects, rootObject=project)) + '\n')
+(PROJECT / 'project.pbxproj').write_text('// !$*UTF8*$!\n' + encode(dict(archiveVersion='1', classes={}, objectVersion='77', objects=objects, rootObject=project)) + '\n')
 info_values = dict(CFBundleDevelopmentRegion='en', CFBundleLocalizations=['en', 'ru', 'ar'], CFBundleExecutable='$(EXECUTABLE_NAME)', CFBundleIdentifier='$(PRODUCT_BUNDLE_IDENTIFIER)', CFBundleInfoDictionaryVersion='6.0', CFBundleName='$(PRODUCT_NAME)', CFBundlePackageType='APPL', CFBundleShortVersionString='1.0', CFBundleVersion='1', LSRequiresIPhoneOS=True, AdaptyAppleSearchAdsAttributionCollectionEnabled=True, ITSAppUsesNonExemptEncryption=False, UILaunchScreen={}, UIApplicationSceneManifest={'UIApplicationSupportsMultipleScenes': False, 'UISceneConfigurations': {}}, UISupportedInterfaceOrientations=['UIInterfaceOrientationPortrait', 'UIInterfaceOrientationLandscapeLeft', 'UIInterfaceOrientationLandscapeRight'], UIRequiredDeviceCapabilities=['arm64'])
 with (EXAMPLE / 'Info.plist').open('wb') as handle:
     plistlib.dump(info_values, handle)
