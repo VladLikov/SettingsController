@@ -2,7 +2,7 @@
 
 ## Automated gates
 
-- Build the package in Swift 6 with iOS 15 deployment target.
+- Build the package using Swift 6.4+ / Xcode 27.1+ with iOS 15 deployment target. Swift 6.3 support is no longer a release gate.
 - Pass all original and added regression tests on the explicitly selected iPhone and iPad runtimes. Preserve summaries, destination and tested commit SHA.
 - Build the public example with ordinary `import SettingsController`, not `@testable`.
 - Pass public-example UI tests for profile edits, purchase, logout, sheets, factories and large-text/dark/RTL smoke scenarios.

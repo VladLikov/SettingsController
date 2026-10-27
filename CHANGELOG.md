@@ -5,7 +5,7 @@
 ### Added
 - Optional avatar content revisions to avoid false profile changes when hosts recreate UIImage snapshots. Existing initializers and reference comparison remain supported.
 - Synchronized source folders in the generated example and stable Mail action identifiers across horizontal and vertical native toolbars.
-- Native iPhone Duo split presentation: equal sidebar/detail columns for an active division, selected detail retention across fold transitions, and the existing empty state when nothing is selected. Tabletop keeps left/right columns. This path requires Xcode 27.1 / Swift 6.4 and iOS 27.1; earlier compilers and runtimes keep classic presentation.
+- Native iPhone Duo split presentation: equal sidebar/detail columns for an active division, selected detail retention across fold transitions, and the existing empty state when nothing is selected. Tabletop keeps left/right columns. This path requires Xcode 27.1 / Swift 6.4 and iOS 27.1; earlier runtimes keep classic presentation.
 - A visible, localized preparation status in the mail form while diagnostics load; Send remains a standard disabled navigation action during preparation.
 - Lazy main-actor destination factories, explicit async state refresh and public AppItem construction.
 - Deterministic regression coverage, public-import example host and iPhone/iPad CI with evidence artifacts.
@@ -21,6 +21,7 @@
 - Dynamic Type, legacy hosting containment and shared image-request cancellation/scale behavior.
 
 ### Changed
+- Require Swift tools/compiler 6.4+ (Xcode 27.1+); remove the Swift 6.3 compiler fallback. Minimum deployment remains iOS 15.
 - Language directly opens app Settings; the internal language controller is removed.
 - About opens before account loading and owns its cancellable request. CheckUpdate 1.0.1 provides data without automatic UI.
 - Removed unused SwiftBoost and the automatic review request on theme changes.

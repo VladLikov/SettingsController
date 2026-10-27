@@ -140,7 +140,6 @@ final class RoutingRegressionTests: XCTestCase {
     }
 
     func testDivisionMakesNativeColumnsEqualAndRestoresUnfoldedWidths() throws {
-#if compiler(>=6.4)
         guard #available(iOS 27.1, *) else { throw XCTSkip("Reserved-region column policy requires iOS 27.1; exercised on the Duo runtime.") }
         let split = SplitController.makeDefault(for: UINavigationController(rootViewController: UIViewController()))
         XCTAssertEqual(split.style, .doubleColumn)
@@ -163,13 +162,9 @@ final class RoutingRegressionTests: XCTestCase {
         XCTAssertEqual(split.preferredSecondaryColumnWidthFraction, 0.69)
         XCTAssertEqual(split.preferredSecondaryColumnWidth, 600)
         XCTAssertTrue(split.viewController(for: .secondary) === secondary)
-#else
-        throw XCTSkip("Duo reserved-region tests require the iOS 27.1 SDK / Swift 6.4 compiler.")
-#endif
     }
 
     func testModernSplitPreservesSelectedDetailAcrossColumnPolicyChanges() throws {
-#if compiler(>=6.4)
         guard #available(iOS 27.1, *) else { throw XCTSkip("Column-style Duo policy requires iOS 27.1; exercised on the Duo runtime.") }
         let primary = UINavigationController(rootViewController: UIViewController())
         let split = SplitController.makeDefault(for: primary)
@@ -184,9 +179,6 @@ final class RoutingRegressionTests: XCTestCase {
         split.applyDivisionLayout(hasActiveDivision: false)
         XCTAssertTrue((split.viewController(for: .secondary) as? UINavigationController)?.viewControllers.first === detail)
         XCTAssertEqual(split.splitViewController(split, displayModeForExpandingToProposedDisplayMode: .secondaryOnly), .oneBesideSecondary)
-#else
-        throw XCTSkip("Duo reserved-region tests require the iOS 27.1 SDK / Swift 6.4 compiler.")
-#endif
     }
 
     func testOverlayRestoresConfiguredBottomInset() {

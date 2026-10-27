@@ -23,7 +23,7 @@ The package is built with Swift Package Manager and is intended to be configured
 ## Requirements
 
 - iOS 15.0+
-- Swift 6.3+
+- Swift 6.4+ (Xcode 27.1+)
 - UIKit
 - Swift Package Manager
 
@@ -509,7 +509,7 @@ that app's supported localizations; the language row opens system app settings.
 
 ## Testing and Contributing
 
-Use Xcode 26.6 with its iOS Simulator runtime for the CI configuration:
+Use Xcode 27.1 or later (Swift 6.4+) with an installed iOS Simulator runtime:
 
 ```bash
 bash scripts/test-ios.sh
@@ -600,8 +600,8 @@ UIKit owns fold avoidance, safe areas and compact/expanded transitions. No model
 name, fixed device dimensions or hinge-angle thresholds determine the layout.
 When the division becomes inactive, the original column sizing is restored.
 The selected destination remains the same controller across these changes.
-Earlier OS versions and the existing Swift 6.3 compiler path retain the classic
-split presentation. The package minimum deployment target remains iOS 15.
+Earlier OS versions retain the classic split presentation. Swift 6.4 / Xcode 27.1
+is now required to build the package, including when deploying to an older OS. The package minimum deployment target remains iOS 15.
 
 
 ### Incremental updates and avatar snapshots

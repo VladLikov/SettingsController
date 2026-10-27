@@ -1,3 +1,5 @@
+> Current 4.0 requirement: Swift 6.4+ / Xcode 27.1+. Minimum deployment remains iOS 15. Older version notes below are historical.
+
 # Migrating from 3.1.5 to 4.0 (unreleased)
 
 4.0 is a source-breaking release. Do not change an existing 3.x tag or publish this branch as a patch. Keep the package revision and the host integration changes together when rolling back.
