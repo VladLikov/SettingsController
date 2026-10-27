@@ -4,6 +4,29 @@ import XCTest
 final class SettingsExampleUITests: XCTestCase {
     override func setUpWithError() throws { continueAfterFailure = false }
 
+    func testSlowMailShowsPreparationAndCanCloseWithoutOpeningExternalMail() {
+        let app = launch(["-demo-slow-provider"])
+        app.buttons["open-fullscreen"].tap()
+        let standalone = app.staticTexts["Standalone mail"].firstMatch
+        XCTAssertTrue(standalone.waitForExistence(timeout: 10))
+        if !standalone.isHittable { app.tables.firstMatch.swipeUp() }
+        standalone.tap()
+        let field = app.textViews.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        let introduction = app.buttons["Continue"].firstMatch
+        if introduction.exists && introduction.isHittable { introduction.tap() }
+        field.typeText("Please help with this message")
+        let send = app.navigationBars["Contact"].buttons["Send"]
+        XCTAssertTrue(send.isEnabled)
+        send.tap()
+        XCTAssertTrue(app.staticTexts["Preparing message…"].waitForExistence(timeout: 5))
+        XCTAssertFalse(send.isEnabled)
+        attach(app, name: "mail-preparing")
+        app.navigationBars["Contact"].buttons["close"].tap()
+        XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 5))
+    }
+
     private func launch(_ arguments: [String] = [], language: String = "en") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", language == "ar" ? "ar_SA" : "en_US"] + arguments

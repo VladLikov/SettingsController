@@ -37,7 +37,11 @@ final class DemoStore: SettingsControllerDelegate {
     func settingsCurrentUserInfo() async -> UserInfo? { UserInfo(name: name, avatar: nil) }
     func settingsIsPremiumActive() async -> Bool { premium }
     func settingsMailInfo() async -> SettingsMailInfo? {
-        SettingsMailInfo(userID: userID, productID: premium ? "demo.annual" : nil, isPremium: premium)
+        if ProcessInfo.processInfo.arguments.contains("-demo-slow-provider") {
+            do { try await Task.sleep(nanoseconds: 30_000_000_000) }
+            catch { return nil }
+        }
+        return SettingsMailInfo(userID: userID, productID: premium ? "demo.annual" : nil, isPremium: premium)
     }
     func settingsDidDismiss() { settings = nil }
     func settingsDidUpdateTheme(_ theme: ThemeStorage) { settings?.view.window?.tintColor = theme.appColor }
