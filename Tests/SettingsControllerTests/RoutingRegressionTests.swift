@@ -137,6 +137,48 @@ final class RoutingRegressionTests: XCTestCase {
         XCTAssertFalse(split.splitViewController(split, collapseSecondary: actual, onto: primary))
     }
 
+    func testDivisionMakesNativeColumnsEqualAndRestoresUnfoldedWidths() throws {
+        guard #available(iOS 27.1, *) else { throw XCTSkip("Reserved-region column policy requires iOS 27.1; exercised on the Duo runtime.") }
+        let split = SplitController.makeDefault(for: UINavigationController(rootViewController: UIViewController()))
+        XCTAssertEqual(split.style, .doubleColumn)
+        split.preferredPrimaryColumnWidthFraction = 0.31
+        split.preferredPrimaryColumnWidth = 300
+        split.maximumPrimaryColumnWidth = 350
+        split.preferredSecondaryColumnWidthFraction = 0.69
+        split.preferredSecondaryColumnWidth = 600
+        let secondary = split.viewController(for: .secondary)
+        split.applyDivisionLayout(hasActiveDivision: true)
+        XCTAssertEqual(split.preferredPrimaryColumnWidthFraction, 0.5)
+        XCTAssertEqual(split.preferredSecondaryColumnWidthFraction, 0.5)
+        XCTAssertEqual(split.preferredPrimaryColumnWidth, UISplitViewController.automaticDimension)
+        XCTAssertGreaterThan(split.maximumPrimaryColumnWidth, 475)
+        split.applyDivisionLayout(hasActiveDivision: true) // Repeated region updates must not overwrite the snapshot.
+        split.applyDivisionLayout(hasActiveDivision: false)
+        XCTAssertEqual(split.preferredPrimaryColumnWidthFraction, 0.31)
+        XCTAssertEqual(split.preferredPrimaryColumnWidth, 300)
+        XCTAssertEqual(split.maximumPrimaryColumnWidth, 350)
+        XCTAssertEqual(split.preferredSecondaryColumnWidthFraction, 0.69)
+        XCTAssertEqual(split.preferredSecondaryColumnWidth, 600)
+        XCTAssertTrue(split.viewController(for: .secondary) === secondary)
+    }
+
+    func testModernSplitPreservesSelectedDetailAcrossColumnPolicyChanges() throws {
+        guard #available(iOS 27.1, *) else { throw XCTSkip("Column-style Duo policy requires iOS 27.1; exercised on the Duo runtime.") }
+        let primary = UINavigationController(rootViewController: UIViewController())
+        let split = SplitController.makeDefault(for: primary)
+        XCTAssertEqual(split.splitViewController(split, topColumnForCollapsingToProposedTopColumn: .secondary), .primary)
+        let detail = UIViewController()
+        split.showSettingsDetail(detail)
+        let navigation = split.viewController(for: .secondary) as? UINavigationController
+        XCTAssertTrue(navigation?.viewControllers.first === detail)
+        XCTAssertEqual(navigation?.viewControllers.count, 1)
+        XCTAssertEqual(split.splitViewController(split, topColumnForCollapsingToProposedTopColumn: .primary), .secondary)
+        split.applyDivisionLayout(hasActiveDivision: true)
+        split.applyDivisionLayout(hasActiveDivision: false)
+        XCTAssertTrue((split.viewController(for: .secondary) as? UINavigationController)?.viewControllers.first === detail)
+        XCTAssertEqual(split.splitViewController(split, displayModeForExpandingToProposedDisplayMode: .secondaryOnly), .oneBesideSecondary)
+    }
+
     func testOverlayRestoresConfiguredBottomInset() {
         let settings = SettingsController(configuration: SettingsConfiguration(insets: SettingsInsets(bottom: 37), sections: []))
         settings.loadViewIfNeeded()

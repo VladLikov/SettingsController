@@ -57,7 +57,7 @@ extension SettingsController {
         case .rows(let rows):
             let item = rows[row]
 
-            if UIDevice.current.userInterfaceIdiom == .phone {
+            if splitViewController?.isCollapsed != false {
                 tableView.deselectRow(at: indexPath, animated: true)
             } else if case .defaultRow(let row) = item, case .premium = row {
                 tableView.deselectRow(at: indexPath, animated: true)

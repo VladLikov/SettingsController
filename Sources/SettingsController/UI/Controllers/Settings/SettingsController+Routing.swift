@@ -24,7 +24,9 @@ extension SettingsController {
         viewController.navigationItem.title = navigationTitle
         viewController.navigationItem.largeTitleDisplayMode = .never
 
-        if let split = splitViewController, !split.isCollapsed {
+        if let split = splitViewController as? SplitController, split.style != .unspecified {
+            split.showSettingsDetail(viewController)
+        } else if let split = splitViewController, !split.isCollapsed {
             let destination = (viewController as? UINavigationController)
                 ?? UINavigationController(rootViewController: viewController)
             split.showDetailViewController(destination, sender: self)

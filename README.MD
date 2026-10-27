@@ -547,3 +547,16 @@ bash scripts/test-example.sh
 ```
 
 CI logs record the exact simulator, toolchain and commit. An iOS 15 deployment target and forced legacy-hosting regression tests do not substitute for execution on iOS 15 itself.
+
+
+### iPhone Duo split presentation
+
+On iOS 27.1 and later, library-created presentations use the native two-column
+`UISplitViewController`. An active division reserved region requests equal
+primary/secondary columns (50/50), with Settings in the primary pane and the
+selected destination or the existing empty state in the secondary pane.
+UIKit owns fold avoidance, safe areas and compact/expanded transitions. No model
+name, fixed device dimensions or hinge-angle thresholds determine the layout.
+When the division becomes inactive, the original column sizing is restored.
+The selected destination remains the same controller across these changes.
+Earlier OS versions retain the existing classic split presentation.

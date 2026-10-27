@@ -1245,7 +1245,7 @@
           }
         }
       },
-      "comment": "Explanation in the empty iPad detail column before a settings item is selected."
+      "comment": "Explanation in the empty split detail column on iPad or an expanded phone before a settings item is selected."
     },
     "Adds taptic feedback to various actions in the app.": {
       "localizations": {
@@ -16507,7 +16507,7 @@
           }
         }
       },
-      "comment": "Empty iPad detail column prompt."
+      "comment": "Prompt in an empty split detail column before a settings item is selected."
     },
     "Send": {
       "extractionState": "manual",
