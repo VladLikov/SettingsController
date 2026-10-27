@@ -1,0 +1,85 @@
+name: Finalize resources and validate integration
+on:
+  push:
+    branches: [codex/settingscontroller-4.0-hardening]
+    paths: [.github/workflows/finalize-resources.yml]
+jobs:
+  resources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/settingscontroller-4.0-hardening
+      - name: Apply verified resource migration
+        run: |
+          set -euo pipefail
+          python3 scripts/implementation/localization4.py
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('Sources/SettingsController/Resources/Localizable.xcstrings')
+          c=json.loads(p.read_text())
+          c['strings']['Additional information will appear here.']['localizations']['th']['stringUnit']['value']='ข้อมูลเพิ่มเติมจะแสดงที่นี่'
+          p.write_text(json.dumps(c,ensure_ascii=False,indent=2)+'\n')
+          PY
+          python3 scripts/validate-resources.py
+      - name: Commit generated resources and remove one-time helpers
+        id: commit
+        run: |
+          set -euo pipefail
+          git config user.name 'SettingsController CI'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm scripts/implementation/localization4.py .github/workflows/finalize-resources.yml
+          git add Sources/SettingsController/Resources/Localizable.xcstrings README.MD CHANGELOG.md
+          git commit -m 'Complete localized recovery flows and document 4.0 migration'
+          git push origin HEAD:codex/settingscontroller-4.0-hardening
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  verify:
+    needs: resources
+    runs-on: macos-26
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resources.outputs.sha }}
+          persist-credentials: false
+      - run: python3 scripts/validate-resources.py
+      - name: iPhone regressions
+        run: bash scripts/test-ios.sh
+      - name: iPad regressions
+        if: success() || failure()
+        env:
+          DEVICE_FAMILY: iPad
+        run: bash scripts/test-ios.sh
+      - name: Public example and UI tests
+        if: success() || failure()
+        run: bash scripts/test-example.sh
+      - name: Collect source and logs
+        if: always()
+        run: |
+          mkdir -p .build/verification
+          git archive --format=tar.gz --output=.build/verification/source.tar.gz HEAD
+          grep -n 'error:\|warning:\|Executed .* tests' .build/verification/*/test.log .build/example-results/*/test.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: finalized-integration
+          path: |
+            .build/verification/**/*.json
+            .build/verification/**/*.txt
+            .build/verification/**/*.log
+            .build/verification/source.tar.gz
+            .build/example-results/**/*.json
+            .build/example-results/**/*.txt
+            .build/example-results/**/*.log
+            .build/example-results/**/attachments
+          retention-days: 7
