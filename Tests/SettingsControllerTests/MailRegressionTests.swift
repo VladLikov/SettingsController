@@ -45,7 +45,7 @@ final class MailRegressionTests: XCTestCase {
         provider.mailOperation = { try? await gate.value() }
         var opened: [URL] = []
         var controller: MailController? = MailController(type: .supportRequest, email: "support@example.com", dataProvider: provider)
-        weak var weakController = controller
+        let weakController = MailWeakReference(controller)
         controller?.loadViewIfNeeded()
         controller?.openURL = { opened.append($0); return true }
         controller?.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Please help with this", needsHeightUpdate: false)
@@ -54,7 +54,7 @@ final class MailRegressionTests: XCTestCase {
         await gate.waitUntilStarted()
         controller?.cancelMailPreparation()
         controller = nil
-        XCTAssertNil(weakController)
+        XCTAssertNil(weakController.value)
         gate.complete(.success(SettingsMailInfo(userID: "123", isPremium: true)))
         await task.value
         XCTAssertTrue(opened.isEmpty)
@@ -90,10 +90,16 @@ final class MailRegressionTests: XCTestCase {
 
     func testStandaloneMailProviderIsWeak() {
         var provider: RegressionProvider? = RegressionProvider()
-        weak var weakProvider = provider
+        let weakProvider = MailWeakReference(provider)
         let controller = MailController(type: .languageRequest, email: "support@example.com", dataProvider: provider)
         provider = nil
-        XCTAssertNil(weakProvider)
+        XCTAssertNil(weakProvider.value)
         withExtendedLifetime(controller) {}
     }
+}
+
+@MainActor
+private final class MailWeakReference<Value: AnyObject> {
+    weak var value: Value?
+    init(_ value: Value?) { self.value = value }
 }
