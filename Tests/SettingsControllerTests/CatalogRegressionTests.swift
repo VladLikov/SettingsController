@@ -5,6 +5,30 @@ import UIKit
 
 @MainActor
 final class CatalogRegressionTests: XCTestCase {
+    func testSupersededCatalogResponseCannotReplaceRetryResult() async throws {
+        let old = ControlledValue<[AppItem]>()
+        let fresh = ControlledValue<[AppItem]>()
+        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
+            SettingsSection(kind: .ourApps(developerID: "dev", limit: 1, excludeAppID: nil))
+        ]))
+        settings.fetchApps = { _, _, _ in try await old.value() }
+        settings.loadViewIfNeeded()
+        let oldTask = try XCTUnwrap(settings.appLoadTasks[0])
+        await old.waitUntilStarted()
+        settings.fetchApps = { _, _, _ in try await fresh.value() }
+        settings.loadOurApps(for: 0)
+        let freshTask = try XCTUnwrap(settings.appLoadTasks[0])
+        await fresh.waitUntilStarted()
+        let item = AppItem(id: 42, name: "Fresh", iconURL: URL(string: "https://example.com/icon.png")!, storeURL: URL(string: "https://apps.apple.com/app/id42")!)
+        fresh.complete(.success([item]))
+        await freshTask.value
+        old.complete(.success([]))
+        await oldTask.value
+        XCTAssertEqual(settings.catalogStates[0], .loaded([item]))
+        XCTAssertEqual(settings.visibleSectionIDs, [0])
+        XCTAssertNil(settings.appLoadTasks[0])
+    }
+
     func testNonpositiveLimitsHideSectionAndNeverFetch() async {
         let settings = SettingsController(configuration: SettingsConfiguration(sections: [
             SettingsSection(kind: .ourApps(developerID: "dev", limit: -1, excludeAppID: "1")),

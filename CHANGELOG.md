@@ -3,6 +3,8 @@
 ## 4.0.0 — Unreleased
 
 ### Added
+- Native iPhone Duo split presentation: equal sidebar/detail columns for an active division, selected detail retention across fold transitions, and the existing empty state when nothing is selected. Tabletop keeps left/right columns. This path requires Xcode 27.1 / Swift 6.4 and iOS 27.1; earlier compilers and runtimes keep classic presentation.
+- A visible, localized preparation status in the mail form while diagnostics load; Send remains a standard disabled navigation action during preparation.
 - Lazy main-actor destination factories, explicit async state refresh and public AppItem construction.
 - Deterministic regression coverage, public-import example host and iPhone/iPad CI with evidence artifacts.
 - Retriable catalog state and recoverable external-mail opening failures.

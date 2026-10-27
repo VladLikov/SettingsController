@@ -4,6 +4,29 @@ import UIKit
 
 @MainActor
 final class AboutRegressionTests: XCTestCase {
+    func testUpdateResultsDistinguishCurrentVersionIncompatibleOSAndAvailableVersion() async throws {
+        for (installed, os, expectedTitle, expectedActions) in [
+            ("2.0", "27.0", "Latest version is installed", 1),
+            ("1.0", "15.0", "Update requires a newer iOS version", 1),
+            ("1.0", "27.0", "Update available", 2)
+        ] {
+            let about = makeAbout()
+            let window = mountedWindow(about)
+            about.currentVersion = { installed }
+            about.currentOSVersion = { os }
+            about.loadUpdate = { _ in AppUpdate(version: "2.0", minimumOSVersion: "16.0", url: URL(string: "https://apps.apple.com/app/id1")!) }
+            about.checkForUpdate()
+            await about.checkUpdateTask?.value
+            let alert = try XCTUnwrap(about.presentedViewController as? UIAlertController)
+            XCTAssertEqual(alert.title, expectedTitle)
+            XCTAssertEqual(alert.actions.count, expectedActions)
+            XCTAssertNil(about.checkUpdateTask)
+            about.dismiss(animated: false)
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+    }
+
     func testVersionComparisonPadsZeroComponents() {
         XCTAssertEqual(AppUpdateLookup.compare("2.0", "2.0.0"), .orderedSame)
         XCTAssertEqual(AppUpdateLookup.compare("1.9", "1.10"), .orderedAscending)
