@@ -4,6 +4,17 @@ import UIKit
 
 @MainActor
 final class ImageAndLayoutRegressionTests: XCTestCase {
+    func testEmptyDetailScrollViewportExtendsBehindSafeArea() throws {
+        let controller = UIViewController()
+        controller.view = EmptyStateView(title: "Select", subtitle: "Detail")
+        controller.additionalSafeAreaInsets = UIEdgeInsets(top: 40, left: 0, bottom: 60, right: 0)
+        let window = mountedWindow(controller)
+        defer { window.isHidden = true; window.rootViewController = nil }
+        let scroll = try XCTUnwrap(controller.view.subviews.first as? UIScrollView)
+        controller.view.layoutIfNeeded()
+        XCTAssertEqual(scroll.frame, controller.view.bounds)
+    }
+
     func testNilAndZeroInsetDoNotCollide() throws {
         SettingsIconGenerator.removeAllCachedImages()
         let image = UIImage(systemName: "square.fill")!

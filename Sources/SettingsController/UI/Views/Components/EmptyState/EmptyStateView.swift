@@ -29,10 +29,10 @@ final class EmptyStateView: UIView {
         let preferredHeight = content.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor)
         preferredHeight.priority = .defaultLow
         NSLayoutConstraint.activate([
-            scroll.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
-            scroll.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor),
-            scroll.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
-            scroll.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor),
+            scroll.leadingAnchor.constraint(equalTo: leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: trailingAnchor),
+            scroll.topAnchor.constraint(equalTo: topAnchor),
+            scroll.bottomAnchor.constraint(equalTo: bottomAnchor),
             content.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
             content.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
             content.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
