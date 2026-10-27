@@ -9,7 +9,7 @@ final class CatalogRegressionTests: XCTestCase {
         let old = ControlledValue<[AppItem]>()
         let fresh = ControlledValue<[AppItem]>()
         let settings = SettingsController(configuration: SettingsConfiguration(sections: [
-            SettingsSection(kind: .ourApps(developerID: "dev", limit: 1, excludeAppID: nil))
+            SettingsSection(kind: .ourApps(developerID: "dev", limit: 1, excludeAppID: "0"))
         ]))
         settings.fetchApps = { _, _, _ in try await old.value() }
         settings.loadViewIfNeeded()
