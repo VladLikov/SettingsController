@@ -1,3 +1,5 @@
+> **4.0.0.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [final verification and its limits](Documentation/FINAL-RELEASE-VERIFICATION.md).
+
 # SettingsController
 
 SettingsController is a modular UIKit settings screen for iOS apps. It gives you a ready-to-present `UITableViewController` with common settings flows: appearance, haptics, language, premium, support, App Store actions, social links, app metadata, and an App Store "more apps" section.
@@ -21,7 +23,7 @@ The package is built with Swift Package Manager and is intended to be configured
 ## Requirements
 
 - iOS 15.0+
-- Swift 6.3+
+- Swift 6.4+ (Xcode 27.1+)
 - UIKit
 - Swift Package Manager
 
@@ -37,7 +39,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.5")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.0")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -125,7 +127,7 @@ struct SettingsControllerHelper {
                 )),
                 .defaultRow(.appearance(theme: settings)),
                 .defaultRow(.tapticEngine(taptic: settings)),
-                .defaultRow(.language(email: "support@example.com"))
+                .defaultRow(.language)
             ])),
 
             SettingsSection(title: "Feedback", kind: .rows([
@@ -198,7 +200,7 @@ func settingsMailInfo() async -> SettingsMailInfo? {
 
 `User ID` for support emails and the built-in About screen now comes only from `SettingsMailInfo.userID`. For apps using Adapty, return `profile.profileId` in that field. There is no `adaptyProfileID` property, deprecated initializer, or separate `userID` argument in the email controllers or the `.about` row. If the provider returns `nil`, the User ID is shown as `-`.
 
-The SDK itself has **no Adapty dependency**. The callback is invoked once when the user taps Send in the email form. This also works with a custom `MailController` when you pass its optional `dataProvider:` parameter. A default implementation returns `nil`, so old data providers remain compatible. Existing `productID` and `isPremium` initializer parameters remain fallbacks, but a provided typed value wins. Device, app, and environment diagnostics are unchanged.
+The SDK itself has **no Adapty dependency**. The callback is invoked when preparing a mail draft, opening About, or refreshing relevant premium/account state. Typed premium values avoid a duplicate premium lookup. This also works with a custom `MailController` when you pass its optional `dataProvider:` parameter. A default implementation returns `nil`, so old data providers remain compatible. Existing `productID` and `isPremium` initializer parameters remain fallbacks, but a provided typed value wins. Device, app, and environment diagnostics are unchanged.
 
 ## Events and Dynamic Data
 
@@ -378,7 +380,7 @@ SettingsIconGenerator.removeAllCachedImages()
 - `.premium(_:)`
 - `.appearance(theme:colors:)`
 - `.tapticEngine(taptic:)`
-- `.language(email:)`
+- `.language`
 - `.contactDeveloper(email:)`
 - `.shareApp(appID:)`
 - `.rateApp(appID:)`
@@ -496,8 +498,7 @@ The package currently uses:
 
 - AlertKit
 - SafeSFSymbols
-- CheckUpdate (1.0.0+)
-- SwiftBoost
+- CheckUpdate (1.0.1+)
 
 ## Localization
 
@@ -508,14 +509,15 @@ that app's supported localizations; the language row opens system app settings.
 
 ## Testing and Contributing
 
-Use Xcode 26.6 with its iOS Simulator runtime for the CI configuration:
+Use Xcode 27.1 or later (Swift 6.4+) with an installed iOS Simulator runtime:
 
 ```bash
 bash scripts/test-ios.sh
 ```
 
 The script resolves dependencies and builds and tests the package on an available
-iPhone simulator. Override `SIMULATOR_ID` to choose a specific device.
+iPhone simulator. Set `DEVICE_FAMILY=iPad` for iPad or `IOS_RUNTIME=27.0` to select an installed runtime.
+The script selects the first available device of that family by name.
 Tests run without App Store access or credentials. UIKit requires an iOS
 Simulator; plain macOS `swift test` is not supported.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
@@ -524,3 +526,99 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and
 ## License
 
 [MIT](LICENSE). Dependencies retain their own licenses.
+
+## 4.0 integration contracts
+
+The language row is `.defaultRow(.language)`. It directly opens the host app’s Settings page using the public API; iOS controls the nested language choice. There is no in-app language controller.
+
+`SettingsDestinationFactory` is `@MainActor () -> UIViewController`. Custom rows, user rows and premium payloads accept lazy destination factories. Existing type-based destinations remain supported. Factories should return a fresh controller and avoid owner/configuration retain cycles.
+
+
+### Passing destinations: type or factory
+
+Use the existing type-based API when a destination needs only its default initializer:
+
+```swift
+SettingsRow(
+    title: profileTitle,
+    icon: profileIcon,
+    destinationControllerType: SimpleProfileController.self
+)
+```
+
+Use a factory when the destination requires initializer arguments:
+
+```swift
+SettingsRow(
+    title: profileTitle,
+    icon: profileIcon,
+    destinationFactory: {
+        ProfileController(accountService: accountService)
+    }
+)
+```
+
+The same factory is supported by `.user(..., destinationFactory:)` and
+`PremiumPayload(..., destinationFactory:)`. A factory runs on the main actor,
+only when the destination is requested. Return a new controller each time.
+
+Both the type-based API and factories create destinations lazily. Factories do
+not inherently improve rendering speed; they let you inject services, models or
+test doubles without relying on global state or a default initializer. An action
+closure could already create a custom controller, but then the host had to handle
+its navigation. A destination factory keeps the library's normal navigation and
+split-detail routing, including iPad and Duo, while the host controls construction.
+
+The configuration retains the factory. If its owner also retains the settings
+controller/configuration, avoid capturing that owner strongly. Capture independent
+services, or use an appropriate weak capture when the destination contract allows it.
+
+Call `await settingsController.refreshState()` after purchases, restores, account changes and profile edits. This explicitly updates an always-visible iPad list or a screen behind a custom sheet. A nil user snapshot means no new profile data; return an explicit guest `UserInfo` for logout. Missing typed User ID always becomes `-`, never an older account’s ID.
+
+Catalog limits at or below zero and successful empty results hide the section. Errors show Retry without discarding the source configuration. Theme selection no longer requests a review automatically.
+
+The [public example](Examples/SettingsExample/README.md) demonstrates factories, provider ownership, profile/premium refresh, full-screen and sheet presentation without Adapty or real purchases.
+
+```sh
+bash scripts/test-ios.sh
+DEVICE_FAMILY=iPad bash scripts/test-ios.sh
+python3 scripts/validate-resources.py
+bash scripts/test-example.sh
+```
+
+CI logs record the exact simulator, toolchain and commit. An iOS 15 deployment target and forced legacy-hosting regression tests do not substitute for execution on iOS 15 itself.
+
+
+### iPhone Duo split presentation
+
+When built with the iOS 27.1 SDK (Xcode 27.1 / Swift 6.4 or later), on iOS 27.1
+and later library-created presentations use the native two-column
+`UISplitViewController`. An active division reserved region requests equal
+primary/secondary columns (50/50), with Settings in the primary pane and the
+selected destination or the existing empty state in the secondary pane.
+UIKit owns fold avoidance, safe areas and compact/expanded transitions. No model
+name, fixed device dimensions or hinge-angle thresholds determine the layout.
+When the division becomes inactive, the original column sizing is restored.
+The selected destination remains the same controller across these changes.
+iOS 27.0 also uses column-style split presentation so the native accessibility divider can safely read column widths. iOS 15–26 retain the classic split presentation. Swift 6.4 / Xcode 27.1
+is now required to build the package, including when deploying to an older OS. The package minimum deployment target remains iOS 15.
+
+
+### Incremental updates and avatar snapshots
+
+Visible settings update the affected rows or catalog sections. A premium card changing
+into an Active row replaces its section because its cell type changes. Offscreen tables
+may still use `reloadData()` to synchronize before their next display; there is no reload
+from the root layout callback.
+
+If your provider recreates the same avatar UIImage on every refresh, pass an optional
+`UserInfo(name:avatar:avatarRevision:)` key. Include account identity and content revision
+(for example, `"account-42:avatar-3"`) and change it whenever the avatar pixels change.
+Without the key, the existing UIImage reference comparison remains in effect. Never
+reuse a revision for different image content. A nil avatar still explicitly removes it.
+
+Icon requests share work while consumers remain. Cancelling the last consumer cancels
+the request; cancelling one consumer leaves other consumers running. Catalog requests
+share only concurrent work for the same URL and URLSession; limit and exclusion are
+applied independently. No new persistent/TTL cache or stale-data fallback is introduced.
+Bitmap caches use both count and byte-cost budgets; NSCache budgets are advisory.

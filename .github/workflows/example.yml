@@ -1,0 +1,58 @@
+name: Public example and UI smoke
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: example-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  example:
+    runs-on: xcode-27
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: iPhone
+            family: iPhone
+            runtime: '27.0'
+            device: iPhone 18 Pro
+          - name: iPad
+            family: iPad
+            runtime: '27.0'
+            device: iPad Pro 11-inch (M5)
+          - name: Duo
+            family: iPhone
+            runtime: '27.1'
+            device: iPhone Duo
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      DEVICE_FAMILY: ${{ matrix.family }}
+      DEVICE_NAME: ${{ matrix.device }}
+      IOS_RUNTIME: ${{ matrix.runtime }}
+      RESULT_LABEL: ${{ matrix.name }}
+    steps:
+      - name: Toolchain evidence
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          xcrun swift --version
+          xcrun simctl list runtimes
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: bash scripts/test-example.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: example-${{ matrix.name }}
+          path: |
+            .build/example-results/**/*.json
+            .build/example-results/**/*.txt
+            .build/example-results/**/*.log
+            .build/example-results/**/attachments
+          retention-days: 7

@@ -41,7 +41,7 @@ final class MailBuilderTests: XCTestCase {
             XCTAssertFalse(body.contains("Device Name:"))
             XCTAssertTrue(body.contains("Device Model: "))
             XCTAssertTrue(body.contains("Device Type: "))
-            XCTAssertTrue(body.contains("System Language: "))
+            XCTAssertTrue(body.contains("Preferred Language: "))
             XCTAssertTrue(body.contains("App Language: "))
             XCTAssertTrue(body.contains("App Region: "))
         }
@@ -98,8 +98,8 @@ final class MailBuilderTests: XCTestCase {
         XCTAssertTrue(body.contains("Pro Status: -"))
     }
 
-    private func mailBody(from url: String) throws -> String {
-        let components = try XCTUnwrap(URLComponents(string: url))
+    private func mailBody(from url: URL?) throws -> String {
+        let components = try XCTUnwrap(URLComponents(url: try XCTUnwrap(url), resolvingAgainstBaseURL: false))
         return try XCTUnwrap(components.queryItems?.first { $0.name == "body" }?.value)
     }
 }

@@ -1,7 +1,7 @@
 # Contributing
 
-Use macOS, Xcode with Swift 6.3 or newer, and an installed iOS Simulator runtime.
-CI uses Xcode 26.6. The library supports iOS 15 and newer.
+Use macOS, Xcode with Swift 6.4 or newer, and an installed iOS Simulator runtime.
+CI requires Xcode 27.1. The library supports iOS 15 and newer.
 
 ```bash
 git clone https://github.com/VladLikov/SettingsController.git

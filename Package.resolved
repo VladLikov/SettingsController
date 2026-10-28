@@ -1,5 +1,5 @@
 {
-  "originHash" : "4ba096eeb83c78d66a62ff4a47b52ea4a36a8ab30293bce8aa975d5d94f0d5e8",
+  "originHash" : "6edfbf49a6c6367f3f2aee5915203dda4161cc910af56cb67988b4c5692ee139",
   "pins" : [
     {
       "identity" : "alertkit",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/VladLikov/CheckUpdate.git",
       "state" : {
-        "revision" : "4376a70ef421134704bd389f11523f2dc9b5aea0",
-        "version" : "1.0.0"
+        "revision" : "47553afef0a8b59aceee814b3e2804e1ebfdc9cc",
+        "version" : "1.0.1"
       }
     },
     {
@@ -26,15 +26,6 @@
       "state" : {
         "revision" : "07f11f923b53f26cf9214800f8a397a87865f3ef",
         "version" : "2.0.1"
-      }
-    },
-    {
-      "identity" : "swiftboost",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sparrowcode/SwiftBoost",
-      "state" : {
-        "revision" : "5f268344d9f4489a8a04025732d43d35d210d0ab",
-        "version" : "5.0.1"
       }
     }
   ],

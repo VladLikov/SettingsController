@@ -7,7 +7,6 @@
 
 import UIKit
 import AlertKit
-import MessageUI
 import SafeSFSymbols
 
 // MARK: - Routing
@@ -16,25 +15,32 @@ extension SettingsController {
 
     @objc
     func closeAction(_ sender: UIBarButtonItem) {
-        navigationController?.dismiss(animated: true) { [weak self] in
-            guard let self else { return }
-            configuration.eventHandler?.settingsDidDismiss()
-        }
+        cancelOperations()
+        let root = presentationRoot ?? navigationController ?? self
+        root.dismiss(animated: true) { [weak self] in self?.reportDismissal() }
     }
 
     func pushViewController(_ viewController: UIViewController, navigationTitle: String?) {
         viewController.navigationItem.title = navigationTitle
         viewController.navigationItem.largeTitleDisplayMode = .never
 
-        if UIDevice.current.userInterfaceIdiom != .phone {
-            showDetailViewController(UINavigationController(rootViewController: viewController), sender: nil)
+        if let split = splitViewController as? SplitController, split.style != .unspecified {
+            split.showSettingsDetail(viewController)
+        } else if let split = splitViewController, !split.isCollapsed {
+            let destination = (viewController as? UINavigationController)
+                ?? UINavigationController(rootViewController: viewController)
+            split.showDetailViewController(destination, sender: self)
+        } else if viewController is UINavigationController {
+            present(viewController, animated: true)
+        } else if let navigationController {
+            navigationController.pushViewController(viewController, animated: true)
         } else {
-            showDetailViewController(viewController, sender: nil)
+            present(UINavigationController(rootViewController: viewController), animated: true)
         }
     }
 
     func presentPremium(_ payload: PremiumPayload) {
-        if payload.isPremium {
+        if isPremium {
             let style: AlertViewStyle
 
 #if os(visionOS)
@@ -44,27 +50,48 @@ extension SettingsController {
 #endif
 
             AlertKitAPI.present(
-                title: NSLocalizedString("Premium is active", bundle: .module, comment: ""),
+                title: NSLocalizedString("Premium is active", bundle: .module, comment: "Confirmation shown when an already-premium user taps the premium action."),
                 icon: .custom(UIImage(.star.fill)),
                 style: style,
                 haptic: .success
             )
 
-        } else if let premiumControllerType = payload.destinationControllerType {
-            let viewController = premiumControllerType.init()
-            if UIDevice.current.userInterfaceIdiom == .phone {
+        } else if payload.destinationFactory != nil || payload.destinationControllerType != nil {
+            guard presentedViewController == nil else { return }
+            let destination = payload.destinationFactory?() ?? payload.destinationControllerType?.init()
+            guard let viewController = destination else { return }
+            if traitCollection.horizontalSizeClass == .compact {
                 viewController.modalPresentationStyle = .fullScreen
             }
             present(viewController, animated: true)
+            if viewController.presentationController?.delegate == nil {
+                viewController.presentationController?.delegate = self
+            }
 
         } else if let action = payload.action {
             action(self)
         }
     }
 
-    func sendMail(_ email: String) {
-        guard MailAvailability.canSendEmail() else { return }
+    func openLanguageSettings() {
+        guard languageSettingsTask == nil,
+              let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        let open = openURL
+        languageSettingsTask = Task { @MainActor [weak self] in
+            let success = await open(url)
+            guard !Task.isCancelled else { return }
+            self?.languageSettingsTask = nil
+            guard !success, let self, settingsCanPresent else { return }
+            let alert = UIAlertController(
+                title: NSLocalizedString("Unable to open Settings", bundle: .module, comment: "Alert title when opening the host app page in system Settings fails."),
+                message: nil, preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."), style: .default))
+            present(alert, animated: true)
+        }
+    }
 
+    func sendMail(_ email: String) {
         let mailController = MailController(
             type: .supportRequest,
             email: email,
@@ -72,6 +99,7 @@ extension SettingsController {
             productID: configuration.productID,
             dataProvider: configuration.dataProvider
         )
+        mailController.openURL = openURL
         present(UINavigationController(rootViewController: mailController), animated: true)
     }
 
@@ -120,6 +148,17 @@ extension SettingsController {
             UIApplication.shared.open(appURL)
         } else {
             UIApplication.shared.open(webURL)
+        }
+    }
+}
+
+extension SettingsController: UIAdaptivePresentationControllerDelegate {
+    public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        if presentationController.presentedViewController === presentationRoot {
+            reportDismissal()
+        } else {
+            needsStateRefresh = false
+            _ = startStateRefresh()
         }
     }
 }

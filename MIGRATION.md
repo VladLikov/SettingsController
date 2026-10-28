@@ -1,3 +1,5 @@
+> Current 4.0 requirement: Swift 6.4+ / Xcode 27.1+. Minimum deployment remains iOS 15. Older version notes below are historical.
+
 # Migrating from 2.8.8 to 3.0.0
 
 Version 3.0.0 requires iOS 15+ and Swift 6.3+. Update the consuming app's

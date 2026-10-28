@@ -20,7 +20,7 @@ extension SettingsController {
         case .rows(let rows):
             return rows.count
         case .ourApps(_, let limit, _):
-            return limit
+            return max(0, limit)
         case .premiumCard:
             return 1
         }
@@ -42,10 +42,12 @@ extension SettingsController {
                 return cell
 
             case .defaultRow(let defaultRow):
-                if case .user(let name, let image, _) = defaultRow {
+                switch defaultRow {
+                case .user(let name, let image, _), .userFactory(let name, let image, _):
                     let cell = tableView.dequeueReusableCell(withClass: UserCell.self, for: indexPath)
                     cell.configure(title: name, avatar: image)
                     return cell
+                default: break
                 }
 
                 let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
@@ -62,9 +64,9 @@ extension SettingsController {
 
         case .premiumCard(let payload):
             let cell = tableView.dequeueReusableCell(withClass: PremiumCell.self, for: indexPath)
-            cell.configure(payload: payload) { [weak self] in
+            cell.configure(payload: payload, parent: self) { [weak self] in
                 guard let self else { return }
-                pendingRefresh = .premium(indexPath)
+                needsStateRefresh = true
                 presentPremium(payload.premium)
             }
             return cell
@@ -88,7 +90,7 @@ private extension SettingsRowItem.DefaultRow {
         guard case .premium(let payload) = self else { return nil }
 
         return payload.isPremium
-            ? NSLocalizedString("Active", bundle: .module, comment: "")
-            : NSLocalizedString("Not active", bundle: .module, comment: "")
+            ? NSLocalizedString("Active", bundle: .module, comment: "Status displayed for an active premium entitlement.")
+            : NSLocalizedString("Not active", bundle: .module, comment: "Status displayed when premium is inactive.")
     }
 }

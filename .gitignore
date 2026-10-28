@@ -9,3 +9,7 @@ DerivedData/
 
 # Local application preparation (not part of the public package)
 .local-oss/
+
+# Recreated deterministically by scripts/generate-example.py
+/Examples/SettingsExample/SettingsExample.xcodeproj/
+/Examples/SettingsExample/Info.plist

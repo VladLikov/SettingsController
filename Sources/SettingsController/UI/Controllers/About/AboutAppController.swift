@@ -9,7 +9,6 @@ import UIKit
 import SafariServices
 import AlertKit
 import SafeSFSymbols
-import CheckUpdate
 
 // MARK: - AboutAppController
 
@@ -25,22 +24,22 @@ final class AboutAppController: UITableViewController {
         var title: String? {
             switch self {
             case .build:
-                return NSLocalizedString("Build", bundle: .module, comment: "")
+                return NSLocalizedString("Build", bundle: .module, comment: "About section heading for bundle identifier, version and update check.")
             case .links:
                 return nil
             case .device:
-                return NSLocalizedString("Device", bundle: .module, comment: "")
+                return NSLocalizedString("Device", bundle: .module, comment: "About section heading for operating system and device model.")
             case .account:
-                return NSLocalizedString("Account", bundle: .module, comment: "")
+                return NSLocalizedString("Account", bundle: .module, comment: "Section heading for the current User ID and premium status.")
             case .locale:
-                return NSLocalizedString("Locale", bundle: .module, comment: "")
+                return NSLocalizedString("Locale", bundle: .module, comment: "About section heading for language and region diagnostics.")
             }
         }
 
         var footer: String? {
             switch self {
             case .account:
-                return NSLocalizedString("Tap User ID to copy. Support may request it.", bundle: .module, comment: "")
+                return NSLocalizedString("Tap User ID to copy. Support may request it.", bundle: .module, comment: "Account section footer explaining the explicit copy action.")
             case .build, .links, .device, .locale:
                 return nil
             }
@@ -80,10 +79,20 @@ final class AboutAppController: UITableViewController {
     }
 
     private var data: [(section: AboutSection, items: [AboutItem])] = []
-    private var checkUpdateTask: Task<Void, Never>?
+    private(set) var checkUpdateTask: Task<Void, Never>?
     
-    private let isPremium: Bool
-    private let userID: String?
+    private(set) var isPremium: Bool
+    private(set) var userID: String?
+    weak var dataProvider: (any SettingsControllerDataProvider)?
+    var openURL: OpenURLOperation = SystemActions.openURL
+    var loadUpdate: @Sendable (String) async throws -> AppUpdate? = AppUpdateLookup.fetch
+    var currentVersion: @MainActor () -> String? = { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String }
+    var currentOSVersion: @MainActor () -> String = { UIDevice.current.systemVersion }
+    var onAccountUpdate: (@MainActor (SettingsMailInfo?, Bool) -> Void)?
+    private(set) var accountTask: Task<Void, Never>?
+    private let accountLifetime = RequestLifetime()
+    private let updateLifetime = RequestLifetime()
+    private var accountResolved = false
     private let appID: String
     private let privacyURL: URL
     private let termsURL: URL
@@ -103,6 +112,7 @@ final class AboutAppController: UITableViewController {
 
     deinit {
         checkUpdateTask?.cancel()
+        accountTask?.cancel()
     }
     
     override func viewDidLoad() {
@@ -113,6 +123,84 @@ final class AboutAppController: UITableViewController {
         tableView.estimatedRowHeight = 58
 
         setupData()
+        observeAppearance()
+        loadAccountInfo()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if settingsIsLeavingHierarchy { cancelRequests() }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if !accountResolved && accountTask == nil { loadAccountInfo() }
+    }
+
+    func cancelAccountRequest() {
+        accountLifetime.invalidate()
+        accountTask?.cancel()
+        accountTask = nil
+    }
+
+    func acceptAccountInfo(_ info: SettingsMailInfo?, premium: Bool) {
+        cancelAccountRequest()
+        accountResolved = true
+        applyAccountInfo(info, premium: premium)
+    }
+
+    func cancelRequests() {
+        cancelAccountRequest()
+        updateLifetime.invalidate()
+        checkUpdateTask?.cancel()
+        checkUpdateTask = nil
+        accountResolved = false
+    }
+
+    func applyAccountInfo(_ info: SettingsMailInfo?, premium: Bool) {
+        let changed = userID != info?.userID || isPremium != premium
+        userID = info?.userID
+        isPremium = premium
+        if changed, isViewLoaded, let section = data.firstIndex(where: { $0.section == .account }) {
+            data[section].items = accountItems()
+            guard tableView.window != nil else { tableView.reloadData(); return }
+            UIView.performWithoutAnimation {
+                tableView.reconfigureRows(at: data[section].items.indices.map { IndexPath(row: $0, section: section) })
+            }
+        }
+    }
+
+    func loadAccountInfo() {
+        guard let provider = dataProvider else { return }
+        let lifetime = accountLifetime
+        let request = lifetime.begin()
+        accountTask?.cancel()
+        let fallback = isPremium
+        accountTask = Task { @MainActor [weak self] in
+            defer { if lifetime.finish(request) { self?.accountTask = nil } }
+            let result = await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback)
+            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
+            self?.accountResolved = true
+            self?.applyAccountInfo(result.info, premium: result.isPremium ?? fallback)
+            self?.onAccountUpdate?(result.info, result.isPremium ?? fallback)
+        }
+    }
+
+    private func observeAppearance() {
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (controller: AboutAppController, _: UITraitCollection) in
+                controller.refreshVisibleRows()
+            }
+        }
+    }
+
+    @available(iOS, introduced: 8, deprecated: 17)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17), isViewLoaded,
+           previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle ||
+           previousTraitCollection?.accessibilityContrast != traitCollection.accessibilityContrast ||
+           previousTraitCollection?.displayScale != traitCollection.displayScale { refreshVisibleRows() }
     }
 }
 
@@ -129,6 +217,43 @@ private extension AboutAppController {
         )
     }
     
+    func refreshVisibleRows() {
+        guard isViewLoaded else { return }
+        guard tableView.window != nil else { tableView.reloadData(); return }
+        guard let paths = tableView.indexPathsForVisibleRows, !paths.isEmpty else { return }
+        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
+    }
+
+    func refreshUpdateRow() {
+        guard isViewLoaded else { return }
+        guard tableView.window != nil else { tableView.reloadData(); return }
+        let paths = data.enumerated().flatMap { section, group in
+            group.items.enumerated().compactMap { row, item in
+                item.action == .checkForUpdate ? IndexPath(row: row, section: section) : nil
+            }
+        }
+        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
+    }
+
+    private func accountItems() -> [AboutItem] {
+        [
+            .init(
+                title: NSLocalizedString("User ID", bundle: .module, comment: "Diagnostic label for the current account identifier supplied by the host app."),
+                subtitle: userID ?? "-",
+                value: nil,
+                icon: Self.icon("person.fill"),
+                action: userID == nil ? .none : .copyUserID
+            ),
+            .init(
+                title: NSLocalizedString("Premium", bundle: .module, comment: "Title of the premium settings row."),
+                subtitle: nil,
+                value: isPremium ? "true" : "false",
+                icon: Self.icon("star.fill"),
+                action: .none
+            )
+        ]
+    }
+
     func setupData() {
         
         let bundle = Bundle.main
@@ -140,7 +265,7 @@ private extension AboutAppController {
         let bundleID = bundle.bundleIdentifier ?? "-"
         let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
         let deviceModel = DeviceModel.supportDescription
-        let systemLanguage = Locale.current.languageCode ?? "-"
+        let systemLanguage = Locale.preferredLanguages.first ?? "-"
         let appLanguage = Bundle.main.preferredLocalizations.first ?? "-"
         
         let region = Locale.current.regionCode ?? "-"
@@ -157,14 +282,14 @@ private extension AboutAppController {
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("App Version", bundle: .module, comment: ""),
+                        title: NSLocalizedString("App Version", bundle: .module, comment: "Diagnostic label for the installed app version and build."),
                         subtitle: nil,
                         value: fullVersion,
                         icon: Self.icon("doc.fill"),
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("Check for Update", bundle: .module, comment: ""),
+                        title: NSLocalizedString("Check for Update", bundle: .module, comment: "Action that checks the App Store for a newer app version."),
                         subtitle: nil,
                         value: nil,
                         icon: nil,
@@ -195,14 +320,14 @@ private extension AboutAppController {
                 .device,
                 [
                     .init(
-                        title: NSLocalizedString("OS Version", bundle: .module, comment: ""),
+                        title: NSLocalizedString("OS Version", bundle: .module, comment: "Diagnostic label for the operating system version."),
                         subtitle: osVersion,
                         value: nil,
                         icon: Self.icon("gearshape.fill"),
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("Device Model", bundle: .module, comment: ""),
+                        title: NSLocalizedString("Device Model", bundle: .module, comment: "Diagnostic label for the hardware model, without a user-assigned device name."),
                         subtitle: deviceModel,
                         value: nil,
                         icon: Self.icon("iphone"),
@@ -210,44 +335,26 @@ private extension AboutAppController {
                     )
                 ]
             ),
-            (
-                .account,
-                [
-                    .init(
-                        title: NSLocalizedString("User ID", bundle: .module, comment: ""),
-                        subtitle: userID ?? "-",
-                        value: nil,
-                        icon: Self.icon("person.fill"),
-                        action: .copyUserID
-                    ),
-                    .init(
-                        title: NSLocalizedString("Premium", bundle: .module, comment: ""),
-                        subtitle: nil,
-                        value: isPremium ? "true" : "false",
-                        icon: Self.icon("star.fill"),
-                        action: .none
-                    )
-                ]
-            ),
+            (.account, accountItems()),
             (
                 .locale,
                 [
                     .init(
-                        title: NSLocalizedString("System Language", bundle: .module, comment: ""),
+                        title: NSLocalizedString("Preferred Language", bundle: .module, comment: "About diagnostic label for the first public Locale.preferredLanguages value; not an independently read global system language."),
                         subtitle: nil,
                         value: systemLanguage,
                         icon: Self.icon("keyboard.fill"),
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("App Language", bundle: .module, comment: ""),
+                        title: NSLocalizedString("App Language", bundle: .module, comment: "Diagnostic label for the language selected by the app bundle."),
                         subtitle: nil,
                         value: appLanguage,
                         icon: Self.icon("at"),
                         action: .none
                     ),
                     .init(
-                        title: NSLocalizedString("App Region", bundle: .module, comment: ""),
+                        title: NSLocalizedString("App Region", bundle: .module, comment: "Diagnostic label for the current locale region."),
                         subtitle: nil,
                         value: region.lowercased(),
                         icon: Self.icon("globe"),
@@ -320,7 +427,9 @@ extension AboutAppController {
         config.textProperties.numberOfLines = 0
         config.textProperties.lineBreakMode = .byWordWrapping
 
-        config.secondaryText = item.subtitle ?? item.value
+        config.secondaryText = item.action == .checkForUpdate && checkUpdateTask != nil
+            ? NSLocalizedString("Checking…", bundle: .module, comment: "About row status while the App Store update check is running.")
+            : item.subtitle ?? item.value
         config.secondaryTextProperties.color = .secondaryLabel
         config.secondaryTextProperties.numberOfLines = 0
         config.secondaryTextProperties.lineBreakMode = .byWordWrapping
@@ -354,7 +463,7 @@ extension AboutAppController {
             if let userID {
                 UIPasteboard.general.string = userID
                 AlertKitAPI.present(
-                    title: NSLocalizedString("Copied", bundle: .module, comment: ""),
+                    title: NSLocalizedString("Copied", bundle: .module, comment: "Confirmation after the user explicitly copies an identifier."),
                     icon: .custom(UIImage(.doc.onClipboard)),
                     style: .iOS17AppleMusic,
                     haptic: .success
@@ -362,29 +471,8 @@ extension AboutAppController {
             }
             
         case .checkForUpdate:
-            checkUpdateTask?.cancel()
-            checkUpdateTask = Task { @MainActor [weak self] in
-                guard let self else { return }
-                defer { checkUpdateTask = nil }
+            checkForUpdate()
 
-                do {
-                    try await CheckUpdate().showUpdate(for: appID, withConfirmation: true, fromVC: self)
-                } catch let error as CheckUpdateError {
-                    if error == .noUpdateAvailable {
-                        AlertKitAPI.present(
-                            title: NSLocalizedString("Latest version is installed", bundle: .module, comment: ""),
-                            icon: .custom(UIImage(.checkmark.sealFill)),
-                            style: .iOS17AppleMusic,
-                            haptic: .success
-                        )
-                    }
-                } catch is CancellationError {
-                    return
-                } catch {
-                    return
-                }
-            }
-            
         case .none:
             break
         }
@@ -404,5 +492,63 @@ extension AboutAppController {
         
         let safari = SFSafariViewController(url: url)
         present(safari, animated: true)
+    }
+}
+
+extension AboutAppController {
+    func checkForUpdate() {
+        guard checkUpdateTask == nil else { return }
+        let lifetime = updateLifetime
+        let request = lifetime.begin()
+        let lookup = loadUpdate
+        let appID = appID
+        let version = currentVersion()
+        let osVersion = currentOSVersion()
+        checkUpdateTask = Task { @MainActor [weak self] in
+            defer {
+                if lifetime.finish(request) {
+                    self?.checkUpdateTask = nil
+                    self?.refreshUpdateRow()
+                }
+            }
+            do {
+                guard let version, let update = try await lookup(appID) else { throw URLError(.cannotParseResponse) }
+                guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else { return }
+                if AppUpdateLookup.compare(version, update.version) != .orderedAscending {
+                    self?.showUpdateMessage(NSLocalizedString("Latest version is installed", bundle: .module, comment: "Update check result when no newer version is available."))
+                } else if AppUpdateLookup.compare(osVersion, update.minimumOSVersion) == .orderedAscending {
+                    self?.showUpdateMessage(NSLocalizedString("Update requires a newer iOS version", bundle: .module, comment: "About alert explaining that the available version cannot run on the current operating system."))
+                } else {
+                    self?.showAvailableUpdate(update)
+                }
+            } catch {
+                guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled,
+                      lifetime.isCurrent(request), self?.settingsCanPresent == true else { return }
+                self?.showUpdateMessage(NSLocalizedString("Unable to check for updates", bundle: .module, comment: "About alert title when retrieving App Store update information fails."))
+            }
+        }
+        refreshUpdateRow()
+    }
+
+    private func showUpdateMessage(_ title: String) {
+        let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."), style: .default))
+        present(alert, animated: true)
+    }
+
+    private func showAvailableUpdate(_ update: AppUpdate) {
+        let alert = UIAlertController(
+            title: NSLocalizedString("Update available", bundle: .module, comment: "About alert title when the App Store version is newer than the installed version."),
+            message: String(format: NSLocalizedString("Version %@ is available.", bundle: .module, comment: "Available-update alert message. %@ is the App Store version number, for example 4.0.1."), update.version),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Not Now", bundle: .module, comment: "Dismiss the optional available-update alert without opening the App Store."), style: .cancel))
+        let open = openURL
+        let action = UIAlertAction(title: NSLocalizedString("Update", bundle: .module, comment: "Action opening the App Store page from the available-update alert."), style: .default) { _ in
+            Task { @MainActor in _ = await open(update.url) }
+        }
+        alert.addAction(action)
+        alert.preferredAction = action
+        present(alert, animated: true)
     }
 }

@@ -22,10 +22,21 @@ class ColorCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         selectionStyle = .none
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (cell: ColorCell, _: UITraitCollection) in
+                cell.updateContentConfiguration()
+            }
+        }
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+
+    @available(iOS, introduced: 8, deprecated: 17)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17) { updateContentConfiguration() }
     }
 
     override func prepareForReuse() {
@@ -51,15 +62,17 @@ class ColorCell: UITableViewCell {
         configuration.textProperties.lineBreakMode = .byWordWrapping
         configuration.directionalLayoutMargins.top = Metrics.verticalPadding
         configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
-        configuration.image = currentColor.map(Self.makeSwatchImage)
+        configuration.image = currentColor.map { Self.makeSwatchImage(color: $0.resolvedColor(with: traitCollection), scale: traitCollection.displayScale) }
         configuration.imageProperties.maximumSize = Metrics.swatchSize
         configuration.imageProperties.reservedLayoutSize = Metrics.swatchSize
         configuration.imageToTextPadding = Metrics.imageToTextPadding
         contentConfiguration = configuration
     }
 
-    private static func makeSwatchImage(color: UIColor) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: Metrics.swatchSize)
+    private static func makeSwatchImage(color: UIColor, scale: CGFloat) -> UIImage {
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = max(1, scale)
+        let renderer = UIGraphicsImageRenderer(size: Metrics.swatchSize, format: format)
         return renderer.image { _ in
             color.setFill()
             UIBezierPath(ovalIn: CGRect(origin: .zero, size: Metrics.swatchSize)).fill()

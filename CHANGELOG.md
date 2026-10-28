@@ -1,6 +1,43 @@
 # Changelog
 
-## Unreleased
+## 4.0.0 — 2026-10-28
+
+### Added
+- Optional avatar content revisions to avoid false profile changes when hosts recreate UIImage snapshots. Existing initializers and reference comparison remain supported.
+- Synchronized source folders in the generated example and stable Mail action identifiers across horizontal and vertical native toolbars.
+- Native iPhone Duo split presentation: equal sidebar/detail columns for an active division, selected detail retention across fold transitions, and the existing empty state when nothing is selected. Tabletop keeps left/right columns. This path requires Xcode 27.1 / Swift 6.4 and iOS 27.1; iOS 27.0 uses column-style presentation for native accessibility safety, while iOS 15–26 keep classic presentation.
+- A visible, localized preparation status in the mail form while diagnostics load; Send remains a standard disabled navigation action during preparation.
+- Lazy main-actor destination factories, explicit async state refresh and public AppItem construction.
+- Deterministic regression coverage, public-import example host and iPhone/iPad CI with evidence artifacts.
+- Retriable catalog state and recoverable external-mail opening failures.
+
+### Fixed
+- Compact empty-detail typography using Dynamic Type headline/subheadline styles, distinct text colours and tighter spacing.
+- Avoid the native iPadOS 27.0 accessibility separator crash by using supported column-style split presentation.
+- Reliable native Duo tabletop tracking, deferred column updates and restoration of minimum widths; cold empty detail remains visible.
+- Readable premium-card subtitle contrast verified by the complete native accessibility audit.
+- Incremental visible-table updates for account/premium/catalog changes, without rebuilding unrelated cells; safe offscreen synchronization is retained.
+- Reused app placeholders, stable icon tasks, reduced cell configuration work, cached Mail status sizing and bounded Send-length checks.
+- Shared catalog requests and consumer-aware image cancellation; bitmap caches now account for byte cost as well as object count.
+- Percent encoding in mail drafts, cancelled/obsolete StoreKit fallbacks, late account/update results and task-handle races.
+- Premium card restoration, profile updates behind sheets/on iPad, and missing typed User ID clearing.
+- Removed-color selection, nil/zero inset cache collision, dynamic trait refresh, overlay inset restoration and bounded tile rendering.
+- Dynamic Type, legacy hosting containment and shared image-request cancellation/scale behavior.
+
+### Changed
+- Require Swift tools/compiler 6.4+ (Xcode 27.1+); remove the Swift 6.3 compiler fallback. Minimum deployment remains iOS 15.
+- Language directly opens app Settings; the internal language controller is removed.
+- About opens before account loading and owns its cancellable request. CheckUpdate 1.0.1 provides data without automatic UI.
+- Removed unused SwiftBoost and the automatic review request on theme changes.
+- Mail diagnostics use public locale APIs and the accurate Preferred Language label. Added package privacy metadata.
+- Reviewed new UI strings in context, corrected Finnish Cancel and four update messages, and verified ru/de/ar Mail/About rendering; this is not native-speaker certification of all locales.
+
+### Breaking changes
+- `.language(email:)` becomes `.language`.
+- `SettingsMailInfo.userID` is the only User ID source; remove the old Adapty-specific ID and separate About/Mail userID arguments.
+- See Documentation/MIGRATION-4.0.md for provider invocation, nil semantics, ownership and refresh requirements.
+
+## Earlier unreleased User ID changes
 
 ### Changed
 

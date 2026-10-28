@@ -15,46 +15,74 @@ actor RemoteImageLoader {
 
     private let cache = NSCache<NSString, UIImage>()
     private let session: URLSession
-    private var inFlightTasks: [NSString: Task<UIImage, Error>] = [:]
+    private struct Flight {
+        let id: UUID
+        let task: Task<UIImage, Error>
+        var consumers: Set<UUID>
+    }
+    private var inFlightTasks: [String: Flight] = [:]
+    var activeRequestCount: Int { inFlightTasks.count }
+    var activeConsumerCount: Int { inFlightTasks.values.reduce(0) { $0 + $1.consumers.count } }
 
     init(session: URLSession = .shared) {
         self.session = session
         cache.countLimit = 200
+        cache.totalCostLimit = 16 * 1024 * 1024
     }
 
     func image(from url: URL, maxPixelSize: CGFloat, scale: CGFloat) async throws -> UIImage {
+        try Task.checkCancellation()
+        let scale = scale.isFinite && scale > 0 ? scale : 1
         let pixelSize = Self.pixelSize(maxPixelSize: maxPixelSize, scale: scale)
-        let cacheKey = "\(url.absoluteString)#\(pixelSize)" as NSString
+        let cacheKey = "\(url.absoluteString)#\(pixelSize)@\(scale)" as NSString
 
         if let cached = cache.object(forKey: cacheKey) {
             return cached
         }
 
-        if let task = inFlightTasks[cacheKey] {
-            return try await task.value
+        let key = cacheKey as String
+        let consumer = UUID()
+        let flight: Flight
+        if var existing = inFlightTasks[key] {
+            existing.consumers.insert(consumer)
+            inFlightTasks[key] = existing
+            flight = existing
+        } else {
+            let task = Task<UIImage, Error> { [session] in
+                try await Self.loadImage(from: url, session: session, pixelSize: pixelSize, scale: scale)
+            }
+            flight = Flight(id: UUID(), task: task, consumers: [consumer])
+            inFlightTasks[key] = flight
         }
-
-        let task = Task<UIImage, Error> { [session] in
-            let image = try await Self.loadImage(
-                from: url,
-                session: session,
-                pixelSize: pixelSize,
-                scale: scale
-            )
-            try Task.checkCancellation()
-            return image
+        return try await withTaskCancellationHandler {
+            do {
+                let image = try await flight.task.value
+                // A cancelled old flight must never remove/cache over a newer one.
+                if inFlightTasks[key]?.id == flight.id {
+                    cache.setObject(image, forKey: cacheKey,
+                                    cost: (image.cgImage?.bytesPerRow ?? 0) * (image.cgImage?.height ?? 0))
+                    inFlightTasks[key] = nil
+                }
+                try Task.checkCancellation()
+                return image
+            } catch {
+                if inFlightTasks[key]?.id == flight.id { inFlightTasks[key] = nil }
+                if Task.isCancelled { throw CancellationError() }
+                throw error
+            }
+        } onCancel: {
+            Task { await self.release(key: key, flightID: flight.id, consumer: consumer) }
         }
+    }
 
-        inFlightTasks[cacheKey] = task
-
-        do {
-            let image = try await task.value
-            cache.setObject(image, forKey: cacheKey)
-            inFlightTasks[cacheKey] = nil
-            return image
-        } catch {
-            inFlightTasks[cacheKey] = nil
-            throw error
+    private func release(key: String, flightID: UUID, consumer: UUID) {
+        guard var flight = inFlightTasks[key], flight.id == flightID else { return }
+        flight.consumers.remove(consumer)
+        if flight.consumers.isEmpty {
+            inFlightTasks[key] = nil
+            flight.task.cancel()
+        } else {
+            inFlightTasks[key] = flight
         }
     }
 
@@ -105,6 +133,8 @@ actor RemoteImageLoader {
 
     private static func pixelSize(maxPixelSize: CGFloat, scale: CGFloat) -> Int {
         guard maxPixelSize.isFinite, scale.isFinite else { return 1 }
-        return max(1, Int((maxPixelSize * scale).rounded(.up)))
+        let product = maxPixelSize * scale
+        guard product.isFinite else { return 1 }
+        return Int(min(8192, max(1, product.rounded(.up))))
     }
 }

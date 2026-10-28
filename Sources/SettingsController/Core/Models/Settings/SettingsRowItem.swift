@@ -18,6 +18,12 @@ public enum SettingsRowItem {
     public enum DefaultRow {
                 
         case user(String, UIImage?, UIViewController.Type)
+        case userFactory(String, UIImage?, SettingsDestinationFactory)
+
+        public static func user(_ name: String, _ avatar: UIImage? = nil,
+                                destinationFactory: @escaping SettingsDestinationFactory) -> Self {
+            .userFactory(name, avatar, destinationFactory)
+        }
 
         case premium(PremiumPayload)
 
@@ -28,7 +34,7 @@ public enum SettingsRowItem {
         case redeemCode
         
         case contactDeveloper(email: String)
-        case language(email: String)
+        case language
 
         case telegram(id: String)
         case vkGroup(id: String)
@@ -41,29 +47,29 @@ public enum SettingsRowItem {
         var title: String? {
             switch self {
             case .appearance:
-                NSLocalizedString("Appearance", bundle: .module, comment: "")
+                NSLocalizedString("Appearance", bundle: .module, comment: "Settings row and destination title for color and interface appearance.")
             case .tapticEngine:
-                NSLocalizedString("Taptic Engine", bundle: .module, comment: "")
+                NSLocalizedString("Taptic Engine", bundle: .module, comment: "Settings row and switch label for haptic feedback.")
             case .shareApp:
-                NSLocalizedString("Share App", bundle: .module, comment: "")
+                NSLocalizedString("Share App", bundle: .module, comment: "Settings action opening the app sharing sheet.")
             case .rateApp:
-                NSLocalizedString("Write a Review", bundle: .module, comment: "")
+                NSLocalizedString("Write a Review", bundle: .module, comment: "Settings action opening the App Store review page.")
             case .moreApps:
-                NSLocalizedString("More Apps", bundle: .module, comment: "")
+                NSLocalizedString("More Apps", bundle: .module, comment: "Settings action opening other apps from the same developer.")
             case .premium:
-                NSLocalizedString("Premium", bundle: .module, comment: "")
+                NSLocalizedString("Premium", bundle: .module, comment: "Title of the premium settings row.")
             case .contactDeveloper:
-                NSLocalizedString("Contact Developer", bundle: .module, comment: "")
+                NSLocalizedString("Contact Developer", bundle: .module, comment: "Settings row that opens the support message form.")
             case .language:
-                NSLocalizedString("Language", bundle: .module, comment: "")
+                NSLocalizedString("Language", bundle: .module, comment: "Settings row opening the app page in system Settings.")
             case .telegram:
-                NSLocalizedString("Telegram Channel", bundle: .module, comment: "")
+                NSLocalizedString("Telegram Channel", bundle: .module, comment: "Settings action opening the configured Telegram channel.")
             case .vkGroup:
-                NSLocalizedString("VK Group", bundle: .module, comment: "")
+                NSLocalizedString("VK Group", bundle: .module, comment: "Settings action opening the configured VK group.")
             case .redeemCode:
-                NSLocalizedString("Redeem Code", bundle: .module, comment: "")
+                NSLocalizedString("Redeem Code", bundle: .module, comment: "Action opening the system App Store code redemption sheet.")
             case .about:
-                NSLocalizedString("About App", bundle: .module, comment: "")
+                NSLocalizedString("About App", bundle: .module, comment: "Title of the screen showing app, device and account diagnostics.")
             default: nil
             }
         }
@@ -105,7 +111,7 @@ public enum SettingsRowItem {
                              color: .systemBlue,
                              inset: .init())
 
-            case .language(_):
+            case .language:
                 SettingsIcon(symbol: .globe,
                              color: .gray,
                              inset: .init())

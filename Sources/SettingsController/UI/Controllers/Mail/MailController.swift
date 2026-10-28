@@ -7,7 +7,6 @@
 
 import UIKit
 import SafeSFSymbols
-import MessageUI
 
 public enum MailType: Equatable {
     case supportRequest,
@@ -17,10 +16,10 @@ public enum MailType: Equatable {
     public var navigationTitle: String {
         switch self {
         case .supportRequest:
-            return NSLocalizedString("Ask Support a Question", bundle: .module, comment: "")
+            return NSLocalizedString("Ask Support a Question", bundle: .module, comment: "Navigation title of the support message form.")
             
         case .languageRequest:
-            return NSLocalizedString("Request a Language", bundle: .module, comment: "")
+            return NSLocalizedString("Request a Language", bundle: .module, comment: "Navigation title of the standalone language request form.")
             
         case .custom(_, _, let navigationTitle, _):
             return navigationTitle
@@ -30,10 +29,10 @@ public enum MailType: Equatable {
     public var placeholder: String {
         switch self {
         case .supportRequest:
-            return NSLocalizedString("What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module, comment: "")
+            return NSLocalizedString("What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module, comment: "Placeholder in the support form; a message needs at least ten characters.")
             
         case .languageRequest:
-            return NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "")
+            return NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "Placeholder asking for a desired language in the standalone language request form.")
             
         case .custom(let placeholder, _, _, _):
             return placeholder
@@ -77,8 +76,11 @@ public class MailController: UITableViewController {
     private let isPremium: Bool?
     private let productID: String?
     private weak var dataProvider: (any SettingsControllerDataProvider)?
-    private var mailTask: Task<Void, Never>?
+    private(set) var mailTask: Task<Void, Never>?
     private var isPreparingMail = false
+    private lazy var preparationView = MailPreparationView()
+    private let mailLifetime = RequestLifetime()
+    var openURL: OpenURLOperation = SystemActions.openURL
 
     private var currentText: String = ""
         
@@ -96,6 +98,8 @@ public class MailController: UITableViewController {
             button.style = .prominent
         }
         
+        button.accessibilityIdentifier = "settings.mail.send"
+        button.accessibilityLabel = NSLocalizedString("Send", bundle: .module, comment: "Mail navigation action preparing an external draft; it does not send the email itself.")
         button.isEnabled = false
         
         return button
@@ -126,6 +130,11 @@ public class MailController: UITableViewController {
         setupView()
     }
     
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if settingsIsLeavingHierarchy { cancelMailPreparation() }
+    }
+
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
@@ -134,6 +143,13 @@ public class MailController: UITableViewController {
         }
         cell.textViewBecomeFirstResponder()
     } 
+
+    private var preparationMeasurement: (width: CGFloat, category: UIContentSizeCategory, safeArea: UIEdgeInsets, direction: UIUserInterfaceLayoutDirection, height: CGFloat)?
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        if isPreparingMail { sizePreparationView() }
+    }
 }
 
 // MARK: - Setup View
@@ -158,10 +174,11 @@ extension MailController {
         
         let closeButton = UIBarButtonItem(systemItem: .close,
                                           primaryAction: .init { [weak self] _ in
-            self?.mailTask?.cancel()
+            self?.cancelMailPreparation()
             self?.dismiss(animated: true)
         })
         
+        closeButton.accessibilityIdentifier = "settings.mail.close"
         navigationItem.leftBarButtonItem = closeButton
         navigationItem.rightBarButtonItem = sendButton
     }
@@ -176,11 +193,11 @@ extension MailController {
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 1 }
     
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        NSLocalizedString("Message", bundle: .module, comment: "")
+        NSLocalizedString("Message", bundle: .module, comment: "Section heading for the editable support message.")
     }
     
     public override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        NSLocalizedString("After tapping Send, you'll be redirected to the Mail app and the message will be sent from your mailbox.", bundle: .module, comment: "")
+        NSLocalizedString("After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module, comment: "Mail form footer explaining that the external mail app opens a draft and the user sends it there.")
     }
     
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -188,7 +205,7 @@ extension MailController {
         let cell = tableView.dequeueReusableCell(withClass: MailCell.self, for: indexPath)
         
         cell.delegate = self
-        cell.configure(type: type)
+        cell.configure(type: type, text: currentText)
         
         return cell
     }
@@ -202,7 +219,7 @@ extension MailController: MailCellDelegate {
 
         currentText = text
 
-        sendButton.isEnabled = !isPreparingMail && text.count >= type.minCharactersCount
+        sendButton.isEnabled = !isPreparingMail && text.prefix(type.minCharactersCount).count >= type.minCharactersCount
 
         if needsHeightUpdate {
             UIView.performWithoutAnimation {
@@ -214,35 +231,127 @@ extension MailController: MailCellDelegate {
 }
 
 extension MailController {
-    private func prepareMail() {
-        guard !isPreparingMail, currentText.count >= type.minCharactersCount,
-              MailAvailability.canSendEmail() else { return }
-        isPreparingMail = true
-        sendButton.isEnabled = false
-        let text = currentText
+    func cancelMailPreparation() {
+        mailLifetime.invalidate()
+        mailTask?.cancel()
+        mailTask = nil
+        setPreparingMail(false)
+    }
 
-        mailTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            defer {
-                isPreparingMail = false
-                sendButton.isEnabled = currentText.count >= type.minCharactersCount
-                mailTask = nil
-            }
-
-            let diagnostics = await MailInfoResolver.resolve(
-                provider: dataProvider,
-                fallbackPremium: isPremium
-            )
-            guard !Task.isCancelled else { return }
-
-            let urlString = MailBuilder.buildMail(
-                with: text, recipient: email, type: type,
-                isPremium: diagnostics.isPremium,
-                productID: productID, mailInfo: diagnostics.info
-            )
-            if let url = URL(string: urlString) {
-                await UIApplication.shared.open(url)
-            }
+    private func setPreparingMail(_ preparing: Bool) {
+        isPreparingMail = preparing
+        sendButton.isEnabled = !preparing && currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount
+        navigationItem.rightBarButtonItem = sendButton
+        guard isViewLoaded else { return }
+        if preparing {
+            preparationView.indicator.startAnimating()
+            sizePreparationView()
+        } else {
+            preparationView.indicator.stopAnimating()
+            tableView.tableHeaderView = nil
         }
     }
+
+    private func sizePreparationView() {
+        let width = tableView.bounds.width
+        guard width > 0 else { return }
+        let category = traitCollection.preferredContentSizeCategory
+        if let measured = preparationMeasurement, measured.width == width, measured.category == category,
+           measured.safeArea == preparationView.safeAreaInsets, measured.direction == preparationView.effectiveUserInterfaceLayoutDirection,
+           tableView.tableHeaderView === preparationView, preparationView.frame.height == measured.height { return }
+        let size = preparationView.systemLayoutSizeFitting(
+            CGSize(width: width, height: 0),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        preparationMeasurement = (width, category, preparationView.safeAreaInsets, preparationView.effectiveUserInterfaceLayoutDirection, ceil(size.height))
+        let frame = CGRect(x: 0, y: 0, width: width, height: ceil(size.height))
+        if tableView.tableHeaderView !== preparationView || preparationView.frame != frame {
+            preparationView.frame = frame
+            tableView.tableHeaderView = preparationView
+        }
+    }
+
+    func prepareMail() {
+        guard !isPreparingMail, currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount else { return }
+        setPreparingMail(true)
+        let request = mailLifetime.begin()
+        let lifetime = mailLifetime
+        let text = currentText
+        let provider = dataProvider
+        let fallback = isPremium
+        let recipient = email
+        let type = type
+        let product = productID
+        let open = openURL
+
+        mailTask = Task { @MainActor [weak self] in
+            let diagnostics = await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback)
+            guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else {
+                self?.finishMailPreparation(request)
+                return
+            }
+            let draft = MailBuilder.makeDraft(
+                with: text, recipient: recipient, type: type,
+                isPremium: diagnostics.isPremium, productID: product,
+                mailInfo: diagnostics.info, environment: .current()
+            )
+            let opened: Bool
+            if let url = draft.url { opened = await open(url) } else { opened = false }
+            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
+            self?.finishMailPreparation(request)
+            if !opened, self?.settingsCanPresent == true { self?.showMailFallback(draft) }
+        }
+    }
+
+    private func finishMailPreparation(_ request: UUID) {
+        guard mailLifetime.finish(request) else { return }
+        mailTask = nil
+        setPreparingMail(false)
+    }
+
+    private func showMailFallback(_ draft: MailDraft) {
+        let alert = UIAlertController(
+            title: NSLocalizedString("Unable to open a mail app", bundle: .module, comment: "Recovery alert title when the external mailto handler cannot be opened."),
+            message: NSLocalizedString("Your message is still here. You can copy the support address or message.", bundle: .module, comment: "Mail recovery explanation: the editable message is preserved and the user can explicitly copy the address or full draft."),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Address", bundle: .module, comment: "Mail recovery action copying only the support email address to the clipboard."), style: .default) { _ in
+            UIPasteboard.general.string = draft.recipient
+        })
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Message", bundle: .module, comment: "Mail recovery action copying the draft subject and full body to the clipboard."), style: .default) { _ in
+            UIPasteboard.general.string = draft.subject + "\n\n" + draft.body
+        })
+        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", bundle: .module, comment: "Cancel action dismissing the mail recovery alert without changing the message."), style: .cancel))
+        present(alert, animated: true)
+    }
+}
+
+private final class MailPreparationView: UIView {
+    let indicator = UIActivityIndicatorView(style: .medium)
+
+    init() {
+        super.init(frame: .zero)
+        let label = UILabel()
+        label.text = NSLocalizedString("Preparing message…", bundle: .module, comment: "Visible loading status above the mail editor while host diagnostic data is prepared; no email has been sent.")
+        label.font = .preferredFont(forTextStyle: .body)
+        label.adjustsFontForContentSizeCategory = true
+        label.numberOfLines = 0
+        label.textColor = .secondaryLabel
+        indicator.isAccessibilityElement = false
+        let stack = UIStackView(arrangedSubviews: [indicator, label])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 12
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            stack.topAnchor.constraint(equalTo: topAnchor, constant: 12),
+            stack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12)
+        ])
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }

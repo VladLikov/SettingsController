@@ -16,9 +16,9 @@ public enum AppColor: String, CaseIterable, AppColorType {
         case .green:  NSLocalizedString("Green",  bundle: .module, comment: "")
         case .blue:   NSLocalizedString("Blue",   bundle: .module, comment: "")
         case .pink:   NSLocalizedString("Pink",   bundle: .module, comment: "")
-        case .purple: NSLocalizedString("Purple", bundle: .module, comment: "")
-        case .orange: NSLocalizedString("Orange", bundle: .module, comment: "")
-        case .yellow: NSLocalizedString("Yellow", bundle: .module, comment: "")
+        case .purple: NSLocalizedString("Purple", bundle: .module, comment: "Name of the purple accent color in the appearance palette.")
+        case .orange: NSLocalizedString("Orange", bundle: .module, comment: "Name of the orange accent color in the appearance palette.")
+        case .yellow: NSLocalizedString("Yellow", bundle: .module, comment: "Name of the yellow accent color in the appearance palette.")
         case .gray:   NSLocalizedString("Gray",   bundle: .module, comment: "")
         }
     }

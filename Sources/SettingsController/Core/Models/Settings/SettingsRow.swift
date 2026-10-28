@@ -19,6 +19,7 @@ public struct SettingsRow {
     public let icon: SettingsIcon
     public let destinationControllerType: UIViewController.Type?
     public let action: SettingsAction?
+    public let destinationFactory: SettingsDestinationFactory?
 
     public init(title: String,
                 detail: String? = nil,
@@ -31,5 +32,16 @@ public struct SettingsRow {
         self.icon = icon
         self.destinationControllerType = destinationControllerType
         self.action = action
+        self.destinationFactory = nil
+    }
+
+    public init(title: String, detail: String? = nil, icon: SettingsIcon,
+                destinationFactory: @escaping SettingsDestinationFactory) {
+        self.title = title
+        self.detail = detail
+        self.icon = icon
+        self.destinationControllerType = nil
+        self.action = nil
+        self.destinationFactory = destinationFactory
     }
 }

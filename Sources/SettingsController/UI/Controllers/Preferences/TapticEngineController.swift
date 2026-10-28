@@ -75,7 +75,7 @@ extension TapticEngineController {
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         
         if section == 1 {
-            return NSLocalizedString("Taptic Force", bundle: .module, comment: "")
+            return NSLocalizedString("Taptic Force", bundle: .module, comment: "Section heading for haptic feedback intensity.")
         }
         
         return nil
@@ -85,7 +85,7 @@ extension TapticEngineController {
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         
         if section == 0 {
-            return NSLocalizedString("Adds taptic feedback to various actions in the app.", bundle: .module, comment: "")
+            return NSLocalizedString("Adds taptic feedback to various actions in the app.", bundle: .module, comment: "Footer explaining the haptic feedback switch.")
         }
         
         return nil
@@ -101,7 +101,7 @@ extension TapticEngineController {
             let cell = tableView.dequeueReusableCell(withClass: SwitchCell.self, for: indexPath)
 
             cell.configure(
-                title: NSLocalizedString("Taptic Engine", bundle: .module, comment: ""),
+                title: NSLocalizedString("Taptic Engine", bundle: .module, comment: "Settings row and switch label for haptic feedback."),
                 isOn: taptic.tapticEngine,
                 onTintColor: view.tintColor
             ) { [weak self] isOn in

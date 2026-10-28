@@ -30,10 +30,11 @@ class UserCell: UITableViewCell {
     private lazy var userLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.numberOfLines = 1
-        label.font = .boldSystemFont(ofSize: 18)
+        label.numberOfLines = 0
+        label.font = .preferredFont(forTextStyle: .headline)
+        label.adjustsFontForContentSizeCategory = true
         label.textColor = .label
-        label.textAlignment = .left
+        label.textAlignment = .natural
         return label
     }()
     
@@ -53,6 +54,7 @@ class UserCell: UITableViewCell {
     // MARK: Configure
 
     public func configure(title: String, avatar: UIImage?) {
+        accessibilityLabel = title
         userLabel.text = title
         userImageView.image = avatar
     }
@@ -64,6 +66,9 @@ class UserCell: UITableViewCell {
         accessoryType  = .disclosureIndicator
         selectionStyle = .default
         
+        isAccessibilityElement = true
+        accessibilityTraits = .button
+        userImageView.isAccessibilityElement = false
         contentView.addSubview(userImageView)
         contentView.addSubview(userLabel)
 
@@ -79,10 +84,12 @@ class UserCell: UITableViewCell {
             userImageView.widthAnchor.constraint(equalToConstant:  Self.userImageViewSize),
             userImageView.heightAnchor.constraint(equalToConstant: Self.userImageViewSize),
             
-            userLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
-            userLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            userImageView.topAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor, constant: 10),
+            userImageView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -10),
+            userLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            userLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
             userLabel.leadingAnchor.constraint(equalTo: userImageView.trailingAnchor, constant: 15),
-            userLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4),
+            userLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
         ])
         
     }

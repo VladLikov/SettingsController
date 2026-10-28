@@ -1,122 +1,80 @@
-//
-//  MailBuilder.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 11.04.2026.
-//
-
 import Foundation
-import UIKit
+
+struct MailDraft: Sendable {
+    let recipient: String
+    let subject: String
+    let body: String
+
+    var url: URL? {
+        guard !recipient.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !recipient.contains("\r"), !recipient.contains("\n") else { return nil }
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = recipient
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
+        ]
+        // Some mail handlers interpret + as a form-encoded space.
+        components.percentEncodedQuery = components.percentEncodedQuery?
+            .replacingOccurrences(of: "+", with: "%2B")
+        return components.url
+    }
+}
 
 @MainActor
 enum MailBuilder {
-    
     static func buildMail(
-        with text: String,
-        recipient: String,
-        type: MailType,
-        isPremium: Bool?,
-        productID: String? = nil,
+        with text: String, recipient: String, type: MailType,
+        isPremium: Bool?, productID: String? = nil,
         mailInfo: SettingsMailInfo? = nil
-    ) -> String {
-        
-        // MARK: Device
-        
-        let device = UIDevice.current
-        
-        let modelIdentifier = DeviceModel.supportDescription
-        
-        let wasBatteryMonitoringEnabled = device.isBatteryMonitoringEnabled
-        device.isBatteryMonitoringEnabled = true
-        defer {
-            device.isBatteryMonitoringEnabled = wasBatteryMonitoringEnabled
-        }
+    ) -> URL? {
+        makeDraft(with: text, recipient: recipient, type: type, isPremium: isPremium,
+                  productID: productID, mailInfo: mailInfo, environment: .current()).url
+    }
 
-        let batteryLevel = device.batteryLevel >= 0
-            ? "\(Int(device.batteryLevel * 100))%"
-            : "Unknown"
-        
-        // MARK: App
-        
-        let bundle = Bundle.main
-        let version = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-        let build = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
-        let appName = bundle.infoDictionary?["CFBundleDisplayName"] as? String ?? "App"
-        let proStatus = (mailInfo?.isPremium ?? isPremium).map { $0 ? "true" : "false" } ?? "-"
-        let effectiveProductID = mailInfo?.productID ?? productID
-        
-        // MARK: System
-        
-        let systemVersion = device.systemVersion
-        let systemName = device.systemName
-        
-        let currentLocale = Locale.current
-        let locale = currentLocale.identifier
-
-        // Read the system language without the per-app language override.
-        let globalPreferredLanguages = UserDefaults.standard
-            .persistentDomain(forName: UserDefaults.globalDomain)?["AppleLanguages"] as? [String]
-        let systemLanguageIdentifier = globalPreferredLanguages?.first
-            ?? Locale.preferredLanguages.first
-            ?? "Unknown"
-        let systemLanguage = Locale(identifier: systemLanguageIdentifier).languageCode
-            ?? systemLanguageIdentifier
-
-        let appLanguage = bundle.preferredLocalizations.first
-            ?? bundle.developmentLocalization
-            ?? "Unknown"
-
-        let appRegion: String
-        if #available(iOS 16.0, *) {
-            appRegion = currentLocale.region?.identifier.lowercased() ?? "Unknown"
-        } else {
-            appRegion = currentLocale.regionCode?.lowercased() ?? "Unknown"
-        }
-
-        let timeZone = TimeZone.current.identifier
-        
-        
-        let message = """
+    static func makeDraft(
+        with text: String, recipient: String, type: MailType,
+        isPremium: Bool?, productID: String? = nil,
+        mailInfo: SettingsMailInfo? = nil, environment e: MailEnvironment
+    ) -> MailDraft {
+        let premium = (mailInfo?.isPremium ?? isPremium).map { $0 ? "true" : "false" } ?? "-"
+        let body = """
         \(type == .languageRequest ? "Language needed: " : "")\(text)
-        
-        
-        
+
+
         ===== DEVICE INFO =====
-        
-        Device Model: \(modelIdentifier)
-        Device Type: \(device.model)
-        
-        OS: \(systemName) \(systemVersion)
-        
-        Battery: \(batteryLevel)
-        
+
+        Device Model: \(e.deviceModel)
+        Device Type: \(e.deviceType)
+
+        OS: \(e.systemName) \(e.systemVersion)
+
+        Battery: \(e.battery)
+
         ===== APP INFO =====
-        
-        App: \(appName)
-        Version: \(version)
-        Build: \(build)
+
+        App: \(e.appName)
+        Version: \(e.version)
+        Build: \(e.build)
 
         ===== USER INFO =====
 
         User ID: \(mailInfo?.userID ?? "-")
-        Product ID: \(effectiveProductID ?? "-")
-        Pro Status: \(proStatus)
-        
+        Product ID: \(mailInfo?.productID ?? productID ?? "-")
+        Pro Status: \(premium)
+
         ===== ENVIRONMENT =====
-        
-        Locale: \(locale)
-        System Language: \(systemLanguage)
-        App Language: \(appLanguage)
-        App Region: \(appRegion)
-        Time Zone: \(timeZone)
-        
-        Timestamp: \(Date())
-        
+
+        Locale: \(e.locale)
+        Preferred Language: \(e.preferredLanguage)
+        App Language: \(e.appLanguage)
+        App Region: \(e.region)
+        Time Zone: \(e.timeZone)
+
+        Timestamp: \(e.timestamp)
+
         """
-        
-        let subject = "\(appName) \(type.subject)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let body = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        
-        return "mailto:\(recipient)?subject=\(subject)&body=\(body)"
+        return MailDraft(recipient: recipient, subject: "\(e.appName) \(type.subject)", body: body)
     }
 }

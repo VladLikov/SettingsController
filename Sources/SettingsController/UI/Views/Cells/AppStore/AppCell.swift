@@ -21,27 +21,53 @@ final class AppCell: UITableViewCell {
     private var currentTitle: String?
     private var currentIcon: UIImage?
 
-    private static let placeholderIcon: UIImage = {
-        let renderer = UIGraphicsImageRenderer(size: Metrics.iconSize)
-        return renderer.image { _ in
-            UIColor.secondarySystemBackground.setFill()
-            UIBezierPath(
-                roundedRect: CGRect(origin: .zero, size: Metrics.iconSize),
-                cornerRadius: Metrics.iconCornerRadius
-            ).fill()
+    private var isShowingPlaceholder = true
+    private var representedScale: CGFloat?
+    private var iconRequest = UUID()
+    private static let placeholders = NSCache<NSString, UIImage>()
+    private func makePlaceholder() -> UIImage {
+        let key = "\(traitCollection.userInterfaceStyle.rawValue):\(traitCollection.accessibilityContrast.rawValue):\(traitCollection.displayScale)" as NSString
+        if let image = Self.placeholders.object(forKey: key) { return image }
+        Self.placeholders.countLimit = 12
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = max(traitCollection.displayScale, 1)
+        let image = UIGraphicsImageRenderer(size: Metrics.iconSize, format: format).image { _ in
+            UIColor.secondarySystemBackground.resolvedColor(with: traitCollection).setFill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: Metrics.iconSize), cornerRadius: Metrics.iconCornerRadius).fill()
         }
-    }()
-    
+        Self.placeholders.setObject(image, forKey: key)
+        return image
+    }
+
     // MARK: Life Cycle
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         accessoryType = .disclosureIndicator
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (cell: AppCell, previous: UITraitCollection) in
+                cell.refreshAppearance(previous)
+            }
+        }
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+
+    @available(iOS, introduced: 8, deprecated: 17)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17) { refreshAppearance(previousTraitCollection) }
+    }
+
+    private func refreshAppearance(_ previous: UITraitCollection?) {
+        if isShowingPlaceholder { currentIcon = makePlaceholder(); updateContentConfiguration() }
+        if previous?.displayScale != traitCollection.displayScale, let url = representedIconURL {
+            iconTask?.cancel()
+            load(icon: url)
+        }
     }
 
     override func prepareForReuse() {
@@ -50,6 +76,7 @@ final class AppCell: UITableViewCell {
         iconTask?.cancel()
         iconTask = nil
         representedIconURL = nil
+        iconRequest = UUID()
         currentTitle = nil
         currentIcon = nil
         accessoryType = .disclosureIndicator
@@ -67,18 +94,27 @@ extension AppCell {
     
     public func configure(with row: AppStoreAppRowState) {
 
+        if case .loaded(let item) = row, representedIconURL == item.iconURL,
+           representedScale == max(traitCollection.displayScale, 1), !isShowingPlaceholder || iconTask != nil {
+            currentTitle = item.name
+            accessoryType = .disclosureIndicator
+            updateContentConfiguration()
+            return
+        }
         iconTask?.cancel()
         iconTask = nil
         representedIconURL = nil
-        currentIcon = Self.placeholderIcon
+        iconRequest = UUID()
+        isShowingPlaceholder = true
+        currentIcon = makePlaceholder()
 
         switch row {
         case .placeholder:
-            currentTitle = NSLocalizedString("Loading…", bundle: .module, comment: "")
+            currentTitle = NSLocalizedString("Loading…", bundle: .module, comment: "Placeholder while the developer app catalog loads.")
             accessoryType = .none
 
         case .failed:
-            currentTitle = NSLocalizedString("Failed to load", bundle: .module, comment: "")
+            currentTitle = NSLocalizedString("Failed to load. Tap to retry.", bundle: .module, comment: "Developer app catalog error row; tapping retries the same catalog request.")
             accessoryType = .none
 
         case .loaded(let item):
@@ -93,19 +129,25 @@ extension AppCell {
     private func load(icon url: URL) {
 
         representedIconURL = url
+        let request = UUID()
+        iconRequest = request
+        let scale = max(traitCollection.displayScale, 1)
+        representedScale = scale
 
         iconTask = Task { [weak self] in
             do {
                 let image = try await RemoteImageLoader.shared.image(
                     from: url,
                     maxPixelSize: Metrics.iconSize.width,
-                    scale: await MainActor.run { UIScreen.main.scale }
+                    scale: scale
                 )
 
                 guard !Task.isCancelled else { return }
 
                 await MainActor.run { [weak self] in
-                    guard let self, representedIconURL == url else { return }
+                    guard let self, iconRequest == request, representedIconURL == url else { return }
+                    iconTask = nil
+                    isShowingPlaceholder = false
                     currentIcon = image
                     updateContentConfiguration()
                 }
@@ -113,8 +155,10 @@ extension AppCell {
                 return
             } catch {
                 await MainActor.run { [weak self] in
-                    guard let self, representedIconURL == url else { return }
-                    currentIcon = Self.placeholderIcon
+                    guard !Task.isCancelled, let self, iconRequest == request, representedIconURL == url else { return }
+                    iconTask = nil
+                    isShowingPlaceholder = true
+                    currentIcon = makePlaceholder()
                     updateContentConfiguration()
                 }
             }
