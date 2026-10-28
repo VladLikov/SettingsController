@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.0.4 — 2026-10-28
 
 ### Fixed
 - Redesign PremiumCard as a compact single-line pill with a stronger three-tone gradient and native glass-prominent CTA; adapt narrow/large-text layouts without whole-card press animation.
