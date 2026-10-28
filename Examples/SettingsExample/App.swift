@@ -64,9 +64,11 @@ final class DemoStore: SettingsControllerDelegate {
         })
         return SettingsConfiguration(title: "Settings", sections: [
             SettingsSection(kind: .rows([.defaultRow(.user(name, destinationFactory: { [self] in ProfileController(store: self) }))])),
-            SettingsSection(kind: .premiumCard(PremiumCardPayload(image: Image(systemName: "star.fill"), title: appLockReference ? "App Lock PRO" : "Premium",
+            SettingsSection(kind: .premiumCard(PremiumCardPayload(image: Image(systemName: "sparkle"),
+                title: purpleReference ? "Ripples" : (appLockReference ? "App Lock" : "Premium"),
+                tierTitle: purpleReference ? "Plus" : (appLockReference ? "PRO" : nil),
                 subtitle: appLockReference ? "Unlock all features" : "All example features",
-                buttonTitle: appLockReference ? "Get PRO" : "Continue", premium: premium))),
+                buttonTitle: purpleReference ? "Upgrade" : (appLockReference ? "Get PRO" : "Continue"), premium: premium))),
             SettingsSection(title: "Preferences", kind: .rows([
                 .defaultRow(.language),
                 .defaultRow(.appearance(theme: theme)),
