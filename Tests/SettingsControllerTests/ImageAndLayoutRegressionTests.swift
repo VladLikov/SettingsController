@@ -19,7 +19,7 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertGreaterThan(content.bounds.width, 0)
     }
 
-    func testPremiumPaletteKeepsWhiteTextAndContrastAcrossHostTints() {
+    func testPremiumPalettePreservesLegacyBackgroundAndReadableDistinctCTA() {
         func contrast(_ color: UIColor) -> Double {
             var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
             color.getRed(&r, green: &g, blue: &b, alpha: &a)
@@ -33,12 +33,22 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             for color in [UIColor.systemBlue, .systemIndigo, .white, .yellow, .black] {
                 let palette = PremiumCardPalette(color: color, traits: traits)
                 XCTAssertTrue(palette.text.isEqual(UIColor.white))
-                XCTAssertFalse(palette.base.isEqual(palette.end), "The gradient must not collapse to a solid fill")
-                XCTAssertGreaterThanOrEqual(contrast(palette.base), 5.99)
-                XCTAssertGreaterThanOrEqual(contrast(palette.end), 5.99)
+                // Restoring the owner's 3.1.5 appearance intentionally preserves bright host colors.
+                XCTAssertTrue(palette.base.isEqual(color.resolvedColor(with: traits)))
                 XCTAssertGreaterThanOrEqual(contrast(palette.controlTint), 4.79)
                 XCTAssertFalse(palette.controlTint.isEqual(palette.end), "Prominent CTA must have a separate tone")
             }
+        }
+    }
+
+    func testPremiumGradientMatches315ReferenceStops() {
+        let palette = PremiumCardPalette(color: UIColor(red: 0.1, green: 0.3, blue: 0.6, alpha: 1),
+                                         traits: UITraitCollection(userInterfaceStyle: .light))
+        for (color, expected) in [(palette.base, [0.1, 0.3, 0.6]), (palette.end, [0.17, 0.42, 0.78])] {
+            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            XCTAssertTrue(color.getRed(&r, green: &g, blue: &b, alpha: &a))
+            for (actual, target) in zip([r, g, b], expected) { XCTAssertEqual(Double(actual), target, accuracy: 0.0001) }
+            XCTAssertEqual(a, 1)
         }
     }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Restore the original 3.1.5 premium gradient stops without dimming; use a compact glass-prominent CTA in a distinct related shade, without a manually drawn outline or whole-card press animation.
+
 ## 4.0.3 — 2026-10-28
 
 ### Fixed

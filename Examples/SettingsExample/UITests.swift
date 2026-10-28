@@ -180,7 +180,7 @@ final class SettingsExampleUITests: XCTestCase {
     }
 
     func testDarkLargeTextAndRTLLayout() {
-        let app = launch(["-demo-dark", "-demo-rtl", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"], language: "ar")
+        let app = launch(["-demo-applock-premium", "-demo-dark", "-demo-rtl", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"], language: "ar")
         app.buttons["open-fullscreen"].tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 10))
         attach(app, name: "dark-rtl-large-text")
@@ -201,11 +201,11 @@ final class SettingsExampleUITests: XCTestCase {
     }
 
     func testProminentPremiumCTAAndCardBothOpenPaywall() {
-        let app = launch()
+        let app = launch(["-demo-applock-premium"])
         app.buttons["open-fullscreen"].tap()
-        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "All example features")).firstMatch
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unlock all features")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
-        attach(app, name: "premium-glass-prominent")
+        attach(app, name: "applock-compact-glass-prominent")
         card.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: 0.5)).tap()
         XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
         app.buttons["demo.paywall.close"].tap()

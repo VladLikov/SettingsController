@@ -75,90 +75,68 @@ public struct PremiumCard: View {
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
 
-        if #available(iOS 26.0, *) {
-            Button(action: onTap) {
-                label.padding(.horizontal, 4).frame(minHeight: 28)
+        let button = Button(action: onTap) { label.padding(.horizontal, 4) }
+        Group {
+            if #available(iOS 26.0, *) {
+                button.buttonStyle(.glassProminent)
+            } else {
+                button.buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.glassProminent)
-            .buttonBorderShape(.capsule)
-            .controlSize(.large)
-            .tint(Color(palette.controlTint))
-            .overlay(Capsule().strokeBorder(Color.white.opacity(0.6), lineWidth: 1).allowsHitTesting(false))
-        } else {
-            Button(action: onTap) {
-                label
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .frame(minHeight: 44)
-                    .background(Capsule().fill(Color(palette.controlFill)))
-                    .overlay(Capsule().stroke(Color.white, lineWidth: 1))
-            }
-            .buttonStyle(PremiumCardButtonStyle())
         }
+        .buttonBorderShape(.capsule)
+        .controlSize(.regular)
+        .tint(Color(palette.controlTint))
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(minHeight: 44)
     }
 
 }
 
-/// Keeps the supplied hue, lowering luminance only where white text needs contrast.
+/// Preserves the 3.1.5 gradient; the native CTA gets its own related shade.
 struct PremiumCardPalette {
     let base: UIColor
     let end: UIColor
     let text = UIColor.white
-    let controlFill = UIColor.black.withAlphaComponent(0.14)
     let controlTint: UIColor
 
     init(color: UIColor, traits: UITraitCollection) {
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
         let resolved = color.resolvedColor(with: traits)
+        base = resolved
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
         guard resolved.getRed(&r, green: &g, blue: &b, alpha: &a) else {
-            base = .black; end = .black; controlTint = .darkGray
+            end = resolved
+            controlTint = .darkGray
             return
         }
-        var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 1
-        UIColor.systemGroupedBackground.resolvedColor(with: traits).getRed(&br, green: &bg, blue: &bb, alpha: &ba)
-        var start = [r * a + br * (1 - a), g * a + bg * (1 - a), b * a + bb * (1 - a)]
-        func contrast(_ rgb: [CGFloat]) -> Double {
-            let v = rgb.map { channel -> Double in
-                let c = Double(channel)
-                return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
-            }
-            return 1.05 / (0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2] + 0.05)
+        // These are the original 3.1.5 stops, without contrast-based dimming.
+        end = UIColor(red: min(r + 0.07, 1), green: min(g + 0.12, 1), blue: min(b + 0.18, 1), alpha: 1)
+
+        var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0
+        resolved.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &a)
+        let shade: UIColor
+        if saturation < 0.05 {
+            shade = UIColor(white: brightness > 0.5 ? 0.42 : 0.28, alpha: 1)
+        } else {
+            shade = UIColor(hue: (hue + 0.035).truncatingRemainder(dividingBy: 1),
+                            saturation: max(saturation, 0.65), brightness: max(brightness * 0.85, 0.35), alpha: 1)
         }
-        let target = 6.0
-        if contrast(start) < target {
+        shade.getRed(&r, green: &g, blue: &b, alpha: &a)
+        func contrast(_ factor: CGFloat) -> Double {
+            let channels = [r, g, b].map { value -> Double in
+                let v = Double(value * factor)
+                return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
+            }
+            return 1.05 / (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2] + 0.05)
+        }
+        var factor: CGFloat = 1
+        if contrast(factor) < 4.8 {
             var low: CGFloat = 0, high: CGFloat = 1
             for _ in 0..<12 {
                 let middle = (low + high) / 2
-                if contrast(start.map { $0 * (1 - middle) }) < target { low = middle } else { high = middle }
+                if contrast(middle) >= 4.8 { low = middle } else { high = middle }
             }
-            start = start.map { $0 * (1 - high) }
+            factor = low
         }
-        let light = [min(start[0] + 0.07, 1), min(start[1] + 0.12, 1), min(start[2] + 0.18, 1)]
-        var low: CGFloat = 0, high: CGFloat = 1
-        for _ in 0..<12 {
-            let middle = (low + high) / 2
-            let candidate = zip(start, light).map { $0 + ($1 - $0) * middle }
-            if contrast(candidate) >= target { low = middle } else { high = middle }
-        }
-        let finish = zip(start, light).map { $0 + ($1 - $0) * low }
-        // Keep distinct stops even when the lighter stop reaches the contrast boundary.
-        base = UIColor(red: start[0] * 0.75, green: start[1] * 0.75, blue: start[2] * 0.75, alpha: 1)
-        end = UIColor(red: finish[0], green: finish[1], blue: finish[2], alpha: 1)
-        // A lighter tone in the gradient's color family separates the prominent CTA.
-        low = 0; high = 1
-        for _ in 0..<12 {
-            let middle = (low + high) / 2
-            let candidate = finish.map { $0 + (1 - $0) * middle }
-            if contrast(candidate) >= 4.8 { low = middle } else { high = middle }
-        }
-        let control = finish.map { $0 + (1 - $0) * low }
-        controlTint = UIColor(red: control[0], green: control[1], blue: control[2], alpha: 1)
-    }
-}
-
-private struct PremiumCardButtonStyle: ButtonStyle {
-    // Keep the card stationary; native glass supplies the CTA's local interaction.
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
+        controlTint = UIColor(red: r * factor, green: g * factor, blue: b * factor, alpha: 1)
     }
 }
