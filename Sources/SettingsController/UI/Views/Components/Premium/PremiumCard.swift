@@ -21,32 +21,36 @@ public struct PremiumCard: View {
 
     public var body: some View {
         let palette = PremiumCardPalette(color: color, traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light))
-        Button(action: onTap) {
-            Group {
-                if dynamicTypeSize.isAccessibilitySize {
-                    VStack(alignment: .leading, spacing: 16) {
-                        heading
-                        callToAction(palette)
-                    }
-                } else {
-                    HStack(spacing: 12) {
-                        heading
-                        Spacer(minLength: 0)
-                        callToAction(palette)
-                    }
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 16) {
+                    heading.allowsHitTesting(false)
+                    callToAction(palette)
+                }
+            } else {
+                HStack(spacing: 12) {
+                    heading.allowsHitTesting(false)
+                    Spacer(minLength: 0)
+                    callToAction(palette)
                 }
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
-            .foregroundColor(Color(palette.text))
-            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(
-                LinearGradient(colors: [Color(palette.base), Color(palette.end)], startPoint: .top, endPoint: .bottom)
-            ))
-            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
-        .buttonStyle(PremiumCardButtonStyle())
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
+        .foregroundColor(Color(palette.text))
+        .background {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(LinearGradient(colors: [Color(palette.base), Color(palette.end)], startPoint: .top, endPoint: .bottom))
+                .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .onTapGesture(perform: onTap)
+                .accessibilityHidden(true)
+        }
+        // Keep the card's existing single VoiceOver action, without nesting buttons.
+        .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
         // The host supplies these already-localized strings; do not extract a placeholder-only key.
         .accessibilityLabel(Text(verbatim: [title, subtitle, buttonTitle].joined(separator: ". ")))
+        .accessibilityAction(.default) { onTap() }
     }
 
     private var heading: some View {
@@ -70,16 +74,26 @@ public struct PremiumCard: View {
             .foregroundColor(.white)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .frame(minHeight: 44)
 
         if #available(iOS 26.0, *) {
-            label.glassEffect(.regular.interactive(), in: Capsule())
+            Button(action: onTap) {
+                label.padding(.horizontal, 4).frame(minHeight: 28)
+            }
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.capsule)
+            .controlSize(.large)
+            .tint(Color(palette.controlTint))
+            .overlay(Capsule().strokeBorder(Color.white.opacity(0.6), lineWidth: 1).allowsHitTesting(false))
         } else {
-            label
-                .background(Capsule().fill(Color(palette.controlFill)))
-                .overlay(Capsule().stroke(Color.white, lineWidth: 1))
+            Button(action: onTap) {
+                label
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .frame(minHeight: 44)
+                    .background(Capsule().fill(Color(palette.controlFill)))
+                    .overlay(Capsule().stroke(Color.white, lineWidth: 1))
+            }
+            .buttonStyle(PremiumCardButtonStyle())
         }
     }
 
@@ -91,12 +105,13 @@ struct PremiumCardPalette {
     let end: UIColor
     let text = UIColor.white
     let controlFill = UIColor.black.withAlphaComponent(0.14)
+    let controlTint: UIColor
 
     init(color: UIColor, traits: UITraitCollection) {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
         let resolved = color.resolvedColor(with: traits)
         guard resolved.getRed(&r, green: &g, blue: &b, alpha: &a) else {
-            base = .black; end = .black
+            base = .black; end = .black; controlTint = .darkGray
             return
         }
         var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 1
@@ -129,6 +144,15 @@ struct PremiumCardPalette {
         // Keep distinct stops even when the lighter stop reaches the contrast boundary.
         base = UIColor(red: start[0] * 0.75, green: start[1] * 0.75, blue: start[2] * 0.75, alpha: 1)
         end = UIColor(red: finish[0], green: finish[1], blue: finish[2], alpha: 1)
+        // A lighter tone in the gradient's color family separates the prominent CTA.
+        low = 0; high = 1
+        for _ in 0..<12 {
+            let middle = (low + high) / 2
+            let candidate = finish.map { $0 + (1 - $0) * middle }
+            if contrast(candidate) >= 4.8 { low = middle } else { high = middle }
+        }
+        let control = finish.map { $0 + (1 - $0) * low }
+        controlTint = UIColor(red: control[0], green: control[1], blue: control[2], alpha: 1)
     }
 }
 

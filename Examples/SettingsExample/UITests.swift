@@ -200,6 +200,20 @@ final class SettingsExampleUITests: XCTestCase {
         attach(app, name: "appearance-automatic-footer")
     }
 
+    func testProminentPremiumCTAAndCardBothOpenPaywall() {
+        let app = launch()
+        app.buttons["open-fullscreen"].tap()
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "All example features")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        attach(app, name: "premium-glass-prominent")
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
+        app.buttons["demo.paywall.close"].tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
+    }
+
     func testSimulatedRestoreActivatesPremium() {
         let app = launch()
         app.buttons["open-fullscreen"].tap()

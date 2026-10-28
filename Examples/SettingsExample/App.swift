@@ -250,6 +250,7 @@ final class PaywallController: UIViewController {
         title = "Demo purchase"
         view.backgroundColor = .systemBackground
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(close))
+        navigationItem.rightBarButtonItem?.accessibilityIdentifier = "demo.paywall.close"
         let stack = makeStack(in: view)
         stack.addArrangedSubview(makeButton("Simulate purchase", id: "buy") { [weak self] in self?.activate() })
         stack.addArrangedSubview(makeButton("Simulate restore", id: "restore") { [weak self] in self?.activate() })

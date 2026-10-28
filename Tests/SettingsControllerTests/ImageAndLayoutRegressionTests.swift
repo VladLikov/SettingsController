@@ -36,6 +36,8 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
                 XCTAssertFalse(palette.base.isEqual(palette.end), "The gradient must not collapse to a solid fill")
                 XCTAssertGreaterThanOrEqual(contrast(palette.base), 5.99)
                 XCTAssertGreaterThanOrEqual(contrast(palette.end), 5.99)
+                XCTAssertGreaterThanOrEqual(contrast(palette.controlTint), 4.79)
+                XCTAssertFalse(palette.controlTint.isEqual(palette.end), "Prominent CTA must have a separate tone")
             }
         }
     }
