@@ -14,6 +14,7 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
     var onWillDismiss: (@MainActor () -> Void)?
     var onDidDismiss: (@MainActor () -> Void)?
     private var dismissingModal = false
+    private var accessibilityColumnWidths: ColumnWidths?
     private var unfoldedColumnWidths: ColumnWidths?
     private var divisionUpdateTask: Task<Void, Never>?
     private var divisionUpdateGeneration = 0
@@ -75,6 +76,63 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
                 tracker.bottomAnchor.constraint(equalTo: view.bottomAnchor)
             ])
         }
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitPreferredContentSizeCategory.self, UITraitHorizontalSizeClass.self]) {
+                (controller: SplitController, _: UITraitCollection) in controller.updateAccessibilityColumnWidth()
+            }
+        }
+        updateAccessibilityColumnWidth()
+    }
+
+    @available(iOS, introduced: 8.0, deprecated: 17.0)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17.0) { updateAccessibilityColumnWidth() }
+    }
+
+    private func captureWidths() -> ColumnWidths {
+        var secondaryMinimum: CGFloat = 0, secondaryFraction: CGFloat = 0, secondaryWidth: CGFloat = 0
+        if #available(iOS 26.0, *), style != .unspecified {
+            secondaryMinimum = minimumSecondaryColumnWidth
+            secondaryFraction = preferredSecondaryColumnWidthFraction
+            secondaryWidth = preferredSecondaryColumnWidth
+        }
+        return ColumnWidths(primaryFraction: preferredPrimaryColumnWidthFraction,
+                            primaryWidth: preferredPrimaryColumnWidth, primaryMaximum: maximumPrimaryColumnWidth,
+                            primaryMinimum: minimumPrimaryColumnWidth, secondaryMinimum: secondaryMinimum,
+                            secondaryFraction: secondaryFraction, secondaryWidth: secondaryWidth)
+    }
+
+    private func restoreWidths(_ widths: ColumnWidths) {
+        preferredPrimaryColumnWidthFraction = widths.primaryFraction
+        preferredPrimaryColumnWidth = widths.primaryWidth
+        maximumPrimaryColumnWidth = widths.primaryMaximum
+        minimumPrimaryColumnWidth = widths.primaryMinimum
+        if #available(iOS 26.0, *), style != .unspecified {
+            minimumSecondaryColumnWidth = widths.secondaryMinimum
+            preferredSecondaryColumnWidthFraction = widths.secondaryFraction
+            preferredSecondaryColumnWidth = widths.secondaryWidth
+        }
+    }
+
+    func updateAccessibilityColumnWidth() {
+        guard unfoldedColumnWidths == nil else { return }
+        let expandedText = traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+            && traitCollection.horizontalSizeClass == .regular
+        if expandedText {
+            guard accessibilityColumnWidths == nil else { return }
+            accessibilityColumnWidths = captureWidths()
+            maximumPrimaryColumnWidth = .greatestFiniteMagnitude
+            preferredPrimaryColumnWidth = UISplitViewController.automaticDimension
+            preferredPrimaryColumnWidthFraction = 0.45
+            if #available(iOS 26.0, *), style != .unspecified {
+                preferredSecondaryColumnWidth = UISplitViewController.automaticDimension
+                preferredSecondaryColumnWidthFraction = 0.55
+            }
+        } else if let widths = accessibilityColumnWidths {
+            accessibilityColumnWidths = nil
+            restoreWidths(widths)
+        }
     }
 
     @available(iOS 27.1, *)
@@ -82,15 +140,11 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
         guard style != .unspecified else { return }
         if hasActiveDivision {
             guard unfoldedColumnWidths == nil else { return }
-            unfoldedColumnWidths = ColumnWidths(
-                primaryFraction: preferredPrimaryColumnWidthFraction,
-                primaryWidth: preferredPrimaryColumnWidth,
-                primaryMaximum: maximumPrimaryColumnWidth,
-                primaryMinimum: minimumPrimaryColumnWidth,
-                secondaryMinimum: minimumSecondaryColumnWidth,
-                secondaryFraction: preferredSecondaryColumnWidthFraction,
-                secondaryWidth: preferredSecondaryColumnWidth
-            )
+            if let widths = accessibilityColumnWidths {
+                accessibilityColumnWidths = nil
+                restoreWidths(widths)
+            }
+            unfoldedColumnWidths = captureWidths()
             preferredPrimaryColumnWidth = UISplitViewController.automaticDimension
             preferredSecondaryColumnWidth = UISplitViewController.automaticDimension
             maximumPrimaryColumnWidth = .greatestFiniteMagnitude
@@ -99,15 +153,12 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
             preferredPrimaryColumnWidthFraction = 0.5
             preferredSecondaryColumnWidthFraction = 0.5
             preferredDisplayMode = .oneBesideSecondary
-        } else if let widths = unfoldedColumnWidths {
-            unfoldedColumnWidths = nil
-            preferredPrimaryColumnWidthFraction = widths.primaryFraction
-            preferredPrimaryColumnWidth = widths.primaryWidth
-            maximumPrimaryColumnWidth = widths.primaryMaximum
-            minimumPrimaryColumnWidth = widths.primaryMinimum
-            minimumSecondaryColumnWidth = widths.secondaryMinimum
-            preferredSecondaryColumnWidthFraction = widths.secondaryFraction
-            preferredSecondaryColumnWidth = widths.secondaryWidth
+        } else {
+            if let widths = unfoldedColumnWidths {
+                unfoldedColumnWidths = nil
+                restoreWidths(widths)
+            }
+            updateAccessibilityColumnWidth()
         }
     }
 

@@ -63,78 +63,71 @@ public struct PremiumCard: View {
         }
     }
 
+    @ViewBuilder
     private func callToAction(_ palette: PremiumCardPalette) -> some View {
-        Text(buttonTitle)
+        let label = Text(buttonTitle)
             .font(.headline)
+            .foregroundColor(.white)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .frame(minHeight: 44)
-            .background(RoundedRectangle(cornerRadius: 22).fill(Color(palette.controlFill)))
-            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color(palette.text).opacity(0.42), lineWidth: 1))
+
+        if #available(iOS 26.0, *) {
+            label.glassEffect(.regular.tint(.black.opacity(0.75)).interactive(), in: Capsule())
+        } else {
+            label
+                .background(Capsule().fill(Color(palette.controlFill)))
+                .overlay(Capsule().stroke(Color.white, lineWidth: 1))
+        }
     }
 
 }
 
-/// Preserves the supplied hue while keeping readable text across the whole gradient.
+/// Keeps the supplied hue, lowering luminance only where white text needs contrast.
 struct PremiumCardPalette {
     let base: UIColor
     let end: UIColor
-    let text: UIColor
-    let controlFill: UIColor
+    let text = UIColor.white
+    let controlFill = UIColor.black.withAlphaComponent(0.14)
 
     init(color: UIColor, traits: UITraitCollection) {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
         let resolved = color.resolvedColor(with: traits)
         guard resolved.getRed(&r, green: &g, blue: &b, alpha: &a) else {
-            base = .black; end = .black; text = .white; controlFill = UIColor.white.withAlphaComponent(0.14)
+            base = .black; end = .black
             return
         }
         var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 1
         UIColor.systemGroupedBackground.resolvedColor(with: traits).getRed(&br, green: &bg, blue: &bb, alpha: &ba)
         var start = [r * a + br * (1 - a), g * a + bg * (1 - a), b * a + bb * (1 - a)]
-        let white = Self.luminance(start) < 0.179
         func contrast(_ rgb: [CGFloat]) -> Double {
-            let value = Self.luminance(rgb)
-            return white ? 1.05 / (value + 0.05) : (value + 0.05) / 0.05
+            let v = rgb.map { channel -> Double in
+                let c = Double(channel)
+                return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
+            }
+            return 1.05 / (0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2] + 0.05)
         }
-        // Leave room for platform colour conversion and narrow-column text rendering.
         let target = 6.0
         if contrast(start) < target {
-            let endpoint: CGFloat = white ? 0 : 1
             var low: CGFloat = 0, high: CGFloat = 1
             for _ in 0..<12 {
                 let middle = (low + high) / 2
-                let rgb = start.map { $0 + (endpoint - $0) * middle }
-                if contrast(rgb) < target { low = middle } else { high = middle }
+                if contrast(start.map { $0 * (1 - middle) }) < target { low = middle } else { high = middle }
             }
-            start = start.map { $0 + (endpoint - $0) * high }
+            start = start.map { $0 * (1 - high) }
         }
-        let candidate = [min(start[0] + 0.07, 1), min(start[1] + 0.12, 1), min(start[2] + 0.18, 1)]
-        var amount: CGFloat = 1
-        if contrast(candidate) < target {
-            var low: CGFloat = 0, high: CGFloat = 1
-            for _ in 0..<12 {
-                let middle = (low + high) / 2
-                let rgb = zip(start, candidate).map { $0 + ($1 - $0) * middle }
-                if contrast(rgb) >= target { low = middle } else { high = middle }
-            }
-            amount = low
+        let light = [min(start[0] + 0.07, 1), min(start[1] + 0.12, 1), min(start[2] + 0.18, 1)]
+        var low: CGFloat = 0, high: CGFloat = 1
+        for _ in 0..<12 {
+            let middle = (low + high) / 2
+            let candidate = zip(start, light).map { $0 + ($1 - $0) * middle }
+            if contrast(candidate) >= target { low = middle } else { high = middle }
         }
-        let finish = zip(start, candidate).map { $0 + ($1 - $0) * amount }
+        let finish = zip(start, light).map { $0 + ($1 - $0) * low }
         base = UIColor(red: start[0], green: start[1], blue: start[2], alpha: 1)
         end = UIColor(red: finish[0], green: finish[1], blue: finish[2], alpha: 1)
-        text = white ? .white : .black
-        controlFill = (white ? UIColor.black : UIColor.white).withAlphaComponent(0.14)
-    }
-
-    private static func luminance(_ rgb: [CGFloat]) -> Double {
-        let linear = rgb.map { channel -> Double in
-            let value = Double(channel)
-            return value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
-        }
-        return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722
     }
 }
 

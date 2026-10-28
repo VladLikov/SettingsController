@@ -1,4 +1,4 @@
-> **4.0.0.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [final verification and its limits](Documentation/FINAL-RELEASE-VERIFICATION.md).
+> **4.0.1.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [4.0.1 verification and its limits](Documentation/VERIFICATION-4.0.1.md).
 
 # SettingsController
 
@@ -39,7 +39,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.0")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.1")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -182,7 +182,7 @@ final class ViewController: UIViewController {
 }
 ```
 
-## Typed email diagnostics (unreleased)
+## Typed email diagnostics
 
 Implement `settingsMailInfo()` on your existing `SettingsControllerDataProvider` (or `SettingsControllerDelegate`) to supply the User ID, product ID, and premium status for support and language-request emails:
 
@@ -622,3 +622,14 @@ the request; cancelling one consumer leaves other consumers running. Catalog req
 share only concurrent work for the same URL and URLSession; limit and exclusion are
 applied independently. No new persistent/TTL cache or stale-data fallback is introduced.
 Bitmap caches use both count and byte-cost budgets; NSCache budgets are advisory.
+
+
+### 4.0.1 validation and refresh details
+
+Custom mail minimums are clamped to zero. A zero minimum enables Send for an empty message immediately; pending diagnostics still disable Send. Editing during preparation cancels that snapshot, so press Send again to open a draft containing the new text. No preparation banner is shown.
+
+Privacy/Terms require absolute HTTP or HTTPS URLs with a nonempty host. Unsupported links show a localized error without opening Safari or an external scheme.
+
+Anonymous custom SettingsIcon definitions receive a unique cache identity at initialization; copying a definition preserves its cache hits without retaining its source in the cache. For independently rebuilt definitions, supply a cacheIdentifier containing the content revision. Never reuse one explicit ID for different pixels.
+
+Premium foregrounds remain white. The background keeps the supplied hue and lowers luminance where white text needs contrast. The CTA uses native Liquid Glass on iOS 26+ and an outlined fallback earlier. Accessibility text sizes may widen a regular split primary; an active Duo division always keeps 50/50 left/right panes.

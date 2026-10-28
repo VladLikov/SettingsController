@@ -137,12 +137,10 @@ public final class SettingsController: UITableViewController {
 
     func cancelOperations() {
         stateLifetime.invalidate()
-        storeLifetime.invalidate()
+        cancelPendingStoreProduct()
         catalogLifetimes.values.forEach { $0.invalidate() }
         stateRefreshTask?.cancel()
         stateRefreshTask = nil
-        storeProductTask?.cancel()
-        storeProductTask = nil
         languageSettingsTask?.cancel()
         languageSettingsTask = nil
         appLoadTasks.values.forEach { $0.cancel() }

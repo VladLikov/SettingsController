@@ -67,12 +67,14 @@ public struct SettingsIcon {
         return rendered
     }
 
+    /// Without an explicit ID, copies of this definition share a unique cache identity.
+    /// Reuse an explicit ID only for identical pixels; change its revision when pixels change.
     public init(image: UIImage?, color: UIColor, inset: Inset? = nil, cacheIdentifier: String? = nil) {
         self.image = image
         self.color = color
         self.inset = inset
         self.symbol = nil
-        self.cacheIdentifier = cacheIdentifier
+        self.cacheIdentifier = cacheIdentifier ?? "image:\(UUID().uuidString)"
     }
 
     public init(symbol: SafeSFSymbol, color: UIColor, inset: Inset? = Inset()) {
@@ -233,9 +235,7 @@ private extension SettingsIcon {
         cornerRadius: CGFloat,
         traitCollection: UITraitCollection
     ) -> NSString? {
-        guard let image else { return nil }
-
-        let glyphKey = cacheIdentifier ?? "image:\(ObjectIdentifier(image))"
+        guard image != nil, let glyphKey = cacheIdentifier else { return nil }
         let colorKey = color.resolvedColor(with: traitCollection).rgbaCacheKey
         let scale = max(traitCollection.displayScale, 1)
         let insetValue = inset?.value ?? 0
