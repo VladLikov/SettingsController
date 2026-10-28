@@ -33,6 +33,7 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             for color in [UIColor.systemBlue, .systemIndigo, .white, .yellow, .black] {
                 let palette = PremiumCardPalette(color: color, traits: traits)
                 XCTAssertTrue(palette.text.isEqual(UIColor.white))
+                XCTAssertFalse(palette.base.isEqual(palette.end), "The gradient must not collapse to a solid fill")
                 XCTAssertGreaterThanOrEqual(contrast(palette.base), 5.99)
                 XCTAssertGreaterThanOrEqual(contrast(palette.end), 5.99)
             }

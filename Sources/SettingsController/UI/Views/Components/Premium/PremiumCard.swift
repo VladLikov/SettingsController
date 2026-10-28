@@ -75,7 +75,7 @@ public struct PremiumCard: View {
             .frame(minHeight: 44)
 
         if #available(iOS 26.0, *) {
-            label.glassEffect(.regular.tint(.black.opacity(0.75)).interactive(), in: Capsule())
+            label.glassEffect(.regular.interactive(), in: Capsule())
         } else {
             label
                 .background(Capsule().fill(Color(palette.controlFill)))
@@ -126,16 +126,15 @@ struct PremiumCardPalette {
             if contrast(candidate) >= target { low = middle } else { high = middle }
         }
         let finish = zip(start, light).map { $0 + ($1 - $0) * low }
-        base = UIColor(red: start[0], green: start[1], blue: start[2], alpha: 1)
+        // Keep distinct stops even when the lighter stop reaches the contrast boundary.
+        base = UIColor(red: start[0] * 0.75, green: start[1] * 0.75, blue: start[2] * 0.75, alpha: 1)
         end = UIColor(red: finish[0], green: finish[1], blue: finish[2], alpha: 1)
     }
 }
 
 private struct PremiumCardButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    // Keep the card stationary; native glass supplies the CTA's local interaction.
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
-            .animation(reduceMotion ? nil : .interactiveSpring(), value: configuration.isPressed)
     }
 }

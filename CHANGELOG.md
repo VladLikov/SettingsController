@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Restore a visible premium-card gradient, remove black Liquid Glass CTA tint, and remove whole-card press scaling/animation while preserving white foregrounds.
+
 ## 4.0.2 — 2026-10-28
 
 ### Fixed
