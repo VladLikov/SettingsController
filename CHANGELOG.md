@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.5 — 2026-10-28
+
+### Added
+- Add a separate optional tierTitle to premium card payload/view: regular brand name plus bold PRO/Plus, with a default native sparkle icon. Existing initializers remain available.
+
 ## 4.0.4 — 2026-10-28
 
 ### Fixed

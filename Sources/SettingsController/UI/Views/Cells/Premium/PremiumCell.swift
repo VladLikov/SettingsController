@@ -32,7 +32,7 @@ final class PremiumCell: UITableViewCell {
 
     func configure(payload: PremiumCardPayload, parent: UIViewController,
                    forceLegacyHosting: Bool = false, onTap: @escaping () -> Void) {
-        let card = PremiumCard(image: payload.image, title: payload.title, subtitle: payload.subtitle,
+        let card = PremiumCard(image: payload.image, title: payload.title, tierTitle: payload.tierTitle, subtitle: payload.subtitle,
                                buttonTitle: payload.buttonTitle, color: payload.premium.color, onTap: onTap)
         if #available(iOS 16, *), !forceLegacyHosting {
             detachHost(discard: true)

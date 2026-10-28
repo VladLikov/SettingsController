@@ -1,4 +1,4 @@
-> **4.0.4.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [4.0.4 verification and its limits](Documentation/VERIFICATION-4.0.4.md).
+> **4.0.5.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [4.0.5 verification and its limits](Documentation/VERIFICATION-4.0.5.md).
 
 # SettingsController
 
@@ -39,7 +39,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.4")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.5")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -405,15 +405,18 @@ let premium = PremiumPayload(
 )
 
 let card = PremiumCardPayload(
-    image: Image(systemName: "star.fill"),
-    title: "Go Premium",
-    subtitle: "Unlock all features",
+    image: Image(systemName: "sparkle"),
+    title: "App Lock",
+    tierTitle: "PRO",
     buttonTitle: "Upgrade",
     premium: premium
 )
 
 SettingsSection(kind: .premiumCard(card))
 ```
+
+The header has three independent inputs: `image`, regular-weight `title`, and bold `tierTitle` (for example `PRO` or `Plus`). The tier is caller-provided/localized text, not a fixed enum. The new initializer defaults the image to the native `sparkle` symbol and subtitle to empty. Existing initializers keep their exact signatures; pass the brand without a suffix to the new initializer. An absent/blank tier adds no extra space.
+
 
 ## Presentation Options
 

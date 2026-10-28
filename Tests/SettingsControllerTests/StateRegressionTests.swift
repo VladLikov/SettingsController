@@ -30,6 +30,7 @@ final class StateRegressionTests: XCTestCase {
         XCTAssertFalse(settings.isPremium)
         guard case .premiumCard(let restored) = settings.sections[0].kind else { return XCTFail("Expected restored card") }
         XCTAssertEqual(restored.title, card.title)
+        XCTAssertEqual(restored.tierTitle, card.tierTitle)
         XCTAssertEqual(restored.subtitle, card.subtitle)
         XCTAssertEqual(restored.buttonTitle, card.buttonTitle)
         XCTAssertEqual(provider.premiumRequests, 0)

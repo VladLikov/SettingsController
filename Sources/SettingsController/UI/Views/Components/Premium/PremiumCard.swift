@@ -3,6 +3,7 @@ import SwiftUI
 public struct PremiumCard: View {
     public let image: Image
     public let title: String
+    public let tierTitle: String?
     public let subtitle: String
     public let buttonTitle: String
     public let color: UIColor
@@ -11,12 +12,36 @@ public struct PremiumCard: View {
     @Environment(\.colorScheme) private var colorScheme
 
     public init(image: Image, title: String, subtitle: String, buttonTitle: String, color: UIColor, onTap: @escaping () -> Void) {
+        self.init(image: image, title: title, tierTitle: nil, subtitle: subtitle,
+                  buttonTitle: buttonTitle, color: color, onTap: onTap)
+    }
+
+    public init(image: Image = Image(systemName: "sparkle"), title: String, tierTitle: String?,
+                subtitle: String = "", buttonTitle: String, color: UIColor, onTap: @escaping () -> Void) {
         self.image = image
         self.title = title
+        let tier = tierTitle?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.tierTitle = tier?.isEmpty == false ? tier : nil
         self.subtitle = subtitle
         self.buttonTitle = buttonTitle
         self.color = color
         self.onTap = onTap
+    }
+
+    var displayTitle: String {
+        [title, tierTitle].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+    }
+
+    var headingText: AttributedString {
+        // Both fragments are already localized by the host; this is brand composition, not a library localization key.
+        var text = AttributedString(title)
+        text.font = Font.title3.weight(.regular)
+        if let tierTitle {
+            var tier = AttributedString((title.isEmpty ? "" : " ") + tierTitle)
+            tier.font = Font.title3.weight(.bold)
+            text.append(tier)
+        }
+        return text
     }
 
     public var body: some View {
@@ -38,7 +63,7 @@ public struct PremiumCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityAddTraits(.isButton)
         // The host supplies these already-localized strings; do not extract a placeholder-only key.
-        .accessibilityLabel(Text(verbatim: [title, subtitle, buttonTitle].joined(separator: ". ")))
+        .accessibilityLabel(Text(verbatim: [displayTitle, subtitle, buttonTitle].filter { !$0.isEmpty }.joined(separator: ". ")))
         .accessibilityAction(.default) { onTap() }
     }
 
@@ -74,10 +99,9 @@ public struct PremiumCard: View {
     private var heading: some View {
         HStack(spacing: 16) {
             if !dynamicTypeSize.isAccessibilitySize {
-                image.renderingMode(.template).font(.title3).accessibilityHidden(true)
+                image.renderingMode(.template).font(.title3.weight(.regular)).accessibilityHidden(true)
             }
-            Text(title)
-                .font(.title3.weight(.medium))
+            Text(headingText)
                 .fixedSize(horizontal: false, vertical: true)
                 .layoutPriority(1)
         }

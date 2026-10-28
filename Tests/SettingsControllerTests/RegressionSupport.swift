@@ -69,7 +69,7 @@ func mountedWindow(_ controller: UIViewController) -> UIWindow {
 
 @MainActor
 func premiumCard() -> PremiumCardPayload {
-    PremiumCardPayload(image: Image(systemName: "star.fill"), title: "Premium", subtitle: "All features",
+    PremiumCardPayload(image: Image(systemName: "star.fill"), title: "Premium", tierTitle: "Plus", subtitle: "All features",
                        buttonTitle: "Continue", premium: PremiumPayload(isPremium: false, color: .systemBlue))
 }
 

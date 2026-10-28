@@ -205,6 +205,7 @@ final class SettingsExampleUITests: XCTestCase {
         app.buttons["open-fullscreen"].tap()
         let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unlock all features")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
+        XCTAssertTrue(card.label.contains("App Lock PRO"))
         attach(app, name: "applock-compact-glass-prominent")
         card.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: 0.5)).tap()
         XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
@@ -219,6 +220,7 @@ final class SettingsExampleUITests: XCTestCase {
         app.buttons["open-fullscreen"].tap()
         let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unlock all features")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
+        XCTAssertTrue(card.label.contains("Ripples Plus"))
         XCTAssertEqual(card.frame.height, 72, accuracy: 2)
         XCTAssertFalse(app.staticTexts["Unlock all features"].exists)
         attach(app, name: "premium-pill-purple-reference")
