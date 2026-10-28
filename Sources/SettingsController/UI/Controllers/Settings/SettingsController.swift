@@ -236,7 +236,9 @@ public final class SettingsController: UITableViewController {
         }
     }
 
-    func updatePremiumColor(_ color: UIColor) {
+    /// Updates premium gradients and CTA tint after a host-owned appearance change.
+    /// Reconfigures visible cards only and keeps the color for later state refreshes.
+    public func updatePremiumColor(_ color: UIColor) {
         guard premiumColorOverride?.isEqual(color) != true else { return }
         premiumColorOverride = color
         rebuildSections(reload: false)
