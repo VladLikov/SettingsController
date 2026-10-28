@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.3 — 2026-10-28
+
+### Fixed
+- Restore a visible premium gradient and use a native glass-prominent CTA with a distinct matching hue, white text and no whole-card press animation.
+- Keep failed mail-opening recovery pending until the form reappears or the app becomes active; preserve editable text and re-enable Send after failure.
+
 ## 4.0.2 — 2026-10-28
 
 ### Fixed

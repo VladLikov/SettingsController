@@ -200,6 +200,20 @@ final class SettingsExampleUITests: XCTestCase {
         attach(app, name: "appearance-automatic-footer")
     }
 
+    func testProminentPremiumCTAAndCardBothOpenPaywall() {
+        let app = launch()
+        app.buttons["open-fullscreen"].tap()
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "All example features")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        attach(app, name: "premium-glass-prominent")
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
+        app.buttons["demo.paywall.close"].tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
+    }
+
     func testSimulatedRestoreActivatesPremium() {
         let app = launch()
         app.buttons["open-fullscreen"].tap()
@@ -210,6 +224,28 @@ final class SettingsExampleUITests: XCTestCase {
         app.buttons["restore"].tap()
         XCTAssertTrue(app.staticTexts["Active"].firstMatch.waitForExistence(timeout: 5))
         attach(app, name: "simulated-restore")
+    }
+
+    func testUnavailableMailAppShowsRecoveryAndKeepsText() {
+        let app = launch()
+        app.buttons["open-fullscreen"].tap()
+        app.staticTexts["Contact Developer"].firstMatch.tap()
+        let field = app.textViews.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        let keyboardIntroduction = app.buttons["Continue"].firstMatch
+        if keyboardIntroduction.exists && keyboardIntroduction.isHittable { keyboardIntroduction.tap() }
+        let message = "Please help: preserve this message after opening fails"
+        field.typeText(message)
+        app.buttons["settings.mail.send"].firstMatch.tap()
+        let alert = app.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 10), "Run on the QA simulator without a mailto handler")
+        XCTAssertTrue(alert.buttons["Copy Address"].exists)
+        XCTAssertTrue(alert.buttons["Copy Message"].exists)
+        attach(app, name: "mail-open-error")
+        alert.buttons["Cancel"].tap()
+        XCTAssertEqual(field.value as? String, message)
+        XCTAssertTrue(app.buttons["settings.mail.send"].firstMatch.isEnabled)
     }
 
     func testStandaloneMailCanTypeAndCloseWithoutSending() {

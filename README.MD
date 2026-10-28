@@ -1,4 +1,4 @@
-> **4.0.2.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [4.0.2 verification and its limits](Documentation/VERIFICATION-4.0.2.md).
+> **4.0.3.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [4.0.3 verification and its limits](Documentation/VERIFICATION-4.0.3.md).
 
 # SettingsController
 
@@ -39,7 +39,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.2")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.3")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -624,12 +624,12 @@ applied independently. No new persistent/TTL cache or stale-data fallback is int
 Bitmap caches use both count and byte-cost budgets; NSCache budgets are advisory.
 
 
-### 4.0.1 validation and refresh details
+### 4.0.x validation and refresh details
 
-Custom mail minimums are clamped to zero. A zero minimum enables Send for an empty message immediately; pending diagnostics still disable Send. Editing during preparation cancels that snapshot, so press Send again to open a draft containing the new text. No preparation banner is shown.
+Custom mail minimums are clamped to zero. A zero minimum enables Send for an empty message immediately; pending diagnostics still disable Send. Editing during preparation cancels that snapshot, so press Send again to open a draft containing the new text. No preparation banner is shown. Failed external-mail opening preserves the message and re-enables Send; recovery waits for form appearance/app activation when an alert cannot yet be presented. Editing, closing or a new Send revokes the deferred old error.
 
 Privacy/Terms require absolute HTTP or HTTPS URLs with a nonempty host. Unsupported links show a localized error without opening Safari or an external scheme.
 
 Anonymous custom SettingsIcon definitions receive a unique cache identity at initialization; copying a definition preserves its cache hits without retaining its source in the cache. For independently rebuilt definitions, supply a cacheIdentifier containing the content revision. Never reuse one explicit ID for different pixels.
 
-Premium foregrounds remain white. The background keeps the supplied hue and lowers luminance where white text needs contrast. The CTA uses native Liquid Glass on iOS 26+ and an outlined fallback earlier. Accessibility text sizes may widen a regular split primary; an active Duo division always keeps 50/50 left/right panes.
+Premium foregrounds remain white. The background keeps the supplied hue and lowers luminance where white text needs contrast. The CTA uses native glass-prominent styling on iOS 26+, with a distinct tint in the gradient color family and an outlined fallback earlier. The CTA and card background open the same destination; the whole card has no press scaling or spring animation. Accessibility text sizes may widen a regular split primary; an active Duo division always keeps 50/50 left/right panes.
