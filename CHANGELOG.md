@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.6 — 2026-10-28
+
+### Fixed
+- Refresh premium-card gradient and CTA immediately after selecting an app color in Appearance, without reopening settings or reloading unrelated rows.
+
 ## 4.0.5 — 2026-10-28
 
 ### Added
