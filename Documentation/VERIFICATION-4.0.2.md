@@ -1,6 +1,6 @@
-# Post-4.0.1: custom action and Liquid Glass verification
+# SettingsController 4.0.2 verification
 
-2026-10-28. Local follow-up to published 4.0.1 (`3341c6f4dd9d85e4ff4be3037c019e598074b4d5`). No release/tag/remote modification in this follow-up.
+2026-10-28. Patch to published 4.0.1 (`3341c6f4dd9d85e4ff4be3037c019e598074b4d5`). The owner subsequently authorized publication as 4.0.2. Existing tags remain unchanged.
 
 ## Custom actions — fixed
 
