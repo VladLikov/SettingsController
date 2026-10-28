@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.0.7 — 2026-10-29
 
 ### Fixed
 - Use appearance-aware native glass-prominent CTA tints, including Increased Contrast, to avoid the pale dark-mode fill. Keep the approved normal-light tint; let native glass style the label and retain the older-system fallback.
