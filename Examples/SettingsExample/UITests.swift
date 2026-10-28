@@ -212,6 +212,28 @@ final class SettingsExampleUITests: XCTestCase {
         attach(app, name: "simulated-restore")
     }
 
+    func testUnavailableMailAppShowsRecoveryAndKeepsText() {
+        let app = launch()
+        app.buttons["open-fullscreen"].tap()
+        app.staticTexts["Contact Developer"].firstMatch.tap()
+        let field = app.textViews.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap()
+        let keyboardIntroduction = app.buttons["Continue"].firstMatch
+        if keyboardIntroduction.exists && keyboardIntroduction.isHittable { keyboardIntroduction.tap() }
+        let message = "Please help: preserve this message after opening fails"
+        field.typeText(message)
+        app.buttons["settings.mail.send"].firstMatch.tap()
+        let alert = app.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 10), "Run on the QA simulator without a mailto handler")
+        XCTAssertTrue(alert.buttons["Copy Address"].exists)
+        XCTAssertTrue(alert.buttons["Copy Message"].exists)
+        attach(app, name: "mail-open-error")
+        alert.buttons["Cancel"].tap()
+        XCTAssertEqual(field.value as? String, message)
+        XCTAssertTrue(app.buttons["settings.mail.send"].firstMatch.isEnabled)
+    }
+
     func testStandaloneMailCanTypeAndCloseWithoutSending() {
         let app = launch()
         app.buttons["open-fullscreen"].tap()

@@ -78,6 +78,8 @@ public class MailController: UITableViewController {
     private weak var dataProvider: (any SettingsControllerDataProvider)?
     private(set) var mailTask: Task<Void, Never>?
     private var isPreparingMail = false
+    private var pendingMailFallback: MailDraft?
+    private var fallbackPresentationScheduled = false
     private let mailLifetime = RequestLifetime()
     var openURL: OpenURLOperation = SystemActions.openURL
 
@@ -121,12 +123,19 @@ public class MailController: UITableViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    deinit { mailTask?.cancel() }
+    deinit {
+        mailTask?.cancel()
+        NotificationCenter.default.removeObserver(self)
+    }
 
     public override func viewDidLoad() {
         super.viewDidLoad()
         
         setupView()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(retryMailFallbackAfterActivation(_:)),
+            name: UIApplication.didBecomeActiveNotification, object: nil
+        )
     }
     
     public override func viewWillDisappear(_ animated: Bool) {
@@ -136,7 +145,8 @@ public class MailController: UITableViewController {
 
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+        if presentPendingMailFallbackIfPossible() { return }
+
         guard let cell = tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? MailCell else {
             return
         }
@@ -209,6 +219,7 @@ extension MailController: MailCellDelegate {
 
     func mailCell(_ cell: MailCell, didChangeText text: String, needsHeightUpdate: Bool) {
 
+        if currentText != text { pendingMailFallback = nil }
         // A later edit revokes the pending snapshot instead of opening stale text.
         if isPreparingMail && currentText != text { cancelMailPreparation() }
         currentText = text
@@ -226,6 +237,7 @@ extension MailController: MailCellDelegate {
 
 extension MailController {
     func cancelMailPreparation() {
+        pendingMailFallback = nil
         mailLifetime.invalidate()
         mailTask?.cancel()
         mailTask = nil
@@ -240,6 +252,7 @@ extension MailController {
 
     func prepareMail() {
         guard !isPreparingMail, currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount else { return }
+        pendingMailFallback = nil
         setPreparingMail(true)
         let request = mailLifetime.begin()
         let lifetime = mailLifetime
@@ -266,7 +279,10 @@ extension MailController {
             if let url = draft.url { opened = await open(url) } else { opened = false }
             guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
             self?.finishMailPreparation(request)
-            if !opened, self?.settingsCanPresent == true { self?.showMailFallback(draft) }
+            if !opened {
+                self?.pendingMailFallback = draft
+                self?.presentPendingMailFallbackIfPossible()
+            }
         }
     }
 
@@ -274,6 +290,36 @@ extension MailController {
         guard mailLifetime.finish(request) else { return }
         mailTask = nil
         setPreparingMail(false)
+    }
+
+    @objc private func retryMailFallbackAfterActivation(_ notification: Notification) {
+        presentPendingMailFallbackIfPossible()
+    }
+
+    @discardableResult
+    private func presentPendingMailFallbackIfPossible(afterTransition: Bool = false) -> Bool {
+        guard let draft = pendingMailFallback, settingsCanPresent else { return false }
+        if let scene = view.window?.windowScene, scene.activationState != .foregroundActive { return false }
+        var ancestor: UIViewController? = self
+        while let controller = ancestor {
+            guard controller.presentedViewController == nil else { return false }
+            if !afterTransition, let transition = controller.transitionCoordinator {
+                if !fallbackPresentationScheduled {
+                    fallbackPresentationScheduled = true
+                    let registered = transition.animate(alongsideTransition: nil) { [weak self] _ in
+                        self?.fallbackPresentationScheduled = false
+                        self?.presentPendingMailFallbackIfPossible(afterTransition: true)
+                    }
+                    if !registered { fallbackPresentationScheduled = false }
+                }
+                return false
+            }
+            ancestor = controller.parent
+        }
+        pendingMailFallback = nil
+        view.endEditing(true)
+        showMailFallback(draft)
+        return true
     }
 
     private func showMailFallback(_ draft: MailDraft) {

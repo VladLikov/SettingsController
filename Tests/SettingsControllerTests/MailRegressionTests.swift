@@ -88,6 +88,70 @@ final class MailRegressionTests: XCTestCase {
         controller.dismiss(animated: false)
     }
 
+    func testFailedOpenWhileDetachedShowsErrorWhenMailReturns() async throws {
+        let controller = MailController(type: .supportRequest, email: "support@example.com")
+        let navigation = UINavigationController(rootViewController: controller)
+        let window = mountedWindow(navigation)
+        defer { navigation.dismiss(animated: false); window.isHidden = true; window.rootViewController = nil }
+        let gate = ControlledValue<Bool>()
+        controller.openURL = { _ in (try? await gate.value()) ?? false }
+        let text = "Keep my message after the failed open"
+        controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: text, needsHeightUpdate: false)
+        controller.prepareMail()
+        let task = try XCTUnwrap(controller.mailTask)
+        await gate.waitUntilStarted()
+        window.rootViewController = nil
+        XCTAssertNil(controller.view.window)
+        gate.complete(.success(false)); await task.value
+        XCTAssertNil(controller.presentedViewController)
+        window.rootViewController = navigation
+        window.makeKeyAndVisible()
+        controller.viewDidAppear(false)
+        XCTAssertNotNil(controller.presentedViewController as? UIAlertController)
+        XCTAssertTrue(controller.navigationItem.rightBarButtonItem?.isEnabled == true)
+        let cell = try XCTUnwrap(controller.tableView(controller.tableView, cellForRowAt: IndexPath(row: 0, section: 0)) as? MailCell)
+        XCTAssertEqual(cell.contentView.subviews.compactMap { $0 as? UITextView }.first?.text, text)
+    }
+
+    func testDeferredMailErrorIsClearedByEditingOrClosing() async throws {
+        for edit in [false, true] {
+            let controller = MailController(type: .supportRequest, email: "support@example.com")
+            let navigation = UINavigationController(rootViewController: controller)
+            let window = mountedWindow(navigation)
+            defer { window.isHidden = true; window.rootViewController = nil }
+            let gate = ControlledValue<Bool>()
+            controller.openURL = { _ in (try? await gate.value()) ?? false }
+            controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Original pending message", needsHeightUpdate: false)
+            controller.prepareMail()
+            let task = try XCTUnwrap(controller.mailTask)
+            await gate.waitUntilStarted()
+            window.rootViewController = nil
+            gate.complete(.success(false)); await task.value
+            if edit {
+                controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Edited message after failure", needsHeightUpdate: false)
+            } else {
+                controller.cancelMailPreparation()
+            }
+            window.rootViewController = navigation
+            window.makeKeyAndVisible()
+            controller.viewDidAppear(false)
+            XCTAssertNil(controller.presentedViewController, "A revoked error must not appear later")
+        }
+    }
+
+    func testInvalidMailLinkShowsErrorWithoutCallingExternalOpener() async throws {
+        let controller = MailController(type: .supportRequest, email: "")
+        let window = mountedWindow(UINavigationController(rootViewController: controller))
+        defer { controller.dismiss(animated: false); window.isHidden = true; window.rootViewController = nil }
+        var opens = 0
+        controller.openURL = { _ in opens += 1; return true }
+        controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Keep my invalid link message", needsHeightUpdate: false)
+        controller.prepareMail(); await controller.mailTask?.value
+        XCTAssertEqual(opens, 0)
+        XCTAssertNotNil(controller.presentedViewController as? UIAlertController)
+        XCTAssertTrue(controller.navigationItem.rightBarButtonItem?.isEnabled == true)
+    }
+
     func testPreparingMailKeepsStandardSendButtonDisabled() async throws {
         let gate = ControlledValue<SettingsMailInfo?>()
         let provider = RegressionProvider()

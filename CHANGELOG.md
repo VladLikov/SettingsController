@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Fixed
+- Keep failed mail-opening recovery pending until the form reappears or the app becomes active; preserve editable text and re-enable Send after failure.
 - Restore a visible premium-card gradient, remove black Liquid Glass CTA tint, and remove whole-card press scaling/animation while preserving white foregrounds.
 
 ## 4.0.2 — 2026-10-28
