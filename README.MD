@@ -1,4 +1,4 @@
-> **4.0 implementation / unreleased.** This branch includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [final verification and its limits](Documentation/FINAL-RELEASE-VERIFICATION.md).
+> **4.0.0.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [final verification and its limits](Documentation/FINAL-RELEASE-VERIFICATION.md).
 
 # SettingsController
 
@@ -39,7 +39,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "3.1.5")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.0")
 ```
 
 Then add `SettingsController` to your target dependencies.
