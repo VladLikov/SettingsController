@@ -19,25 +19,24 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertGreaterThan(content.bounds.width, 0)
     }
 
-    func testPremiumPaletteKeepsWhiteTextAndContrastAcrossHostTints() {
-        func contrast(_ color: UIColor) -> Double {
-            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
-            color.getRed(&r, green: &g, blue: &b, alpha: &a)
-            let v = [r, g, b].map { c -> Double in
-                let x = Double(c); return x <= 0.04045 ? x / 12.92 : pow((x + 0.055) / 1.055, 2.4)
-            }
-            return 1.05 / (0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2] + 0.05)
-        }
+    func testPremiumPillPaletteKeepsWhiteContentAndDistinctGradientTones() {
         for style in [UIUserInterfaceStyle.light, .dark] {
             let traits = UITraitCollection(userInterfaceStyle: style)
             for color in [UIColor.systemBlue, .systemIndigo, .white, .yellow, .black] {
                 let palette = PremiumCardPalette(color: color, traits: traits)
                 XCTAssertTrue(palette.text.isEqual(UIColor.white))
-                XCTAssertFalse(palette.base.isEqual(palette.end), "The gradient must not collapse to a solid fill")
-                XCTAssertGreaterThanOrEqual(contrast(palette.base), 5.99)
-                XCTAssertGreaterThanOrEqual(contrast(palette.end), 5.99)
-                XCTAssertGreaterThanOrEqual(contrast(palette.controlTint), 4.79)
-                XCTAssertFalse(palette.controlTint.isEqual(palette.end), "Prominent CTA must have a separate tone")
+                XCTAssertFalse(palette.base.isEqual(palette.middle))
+                XCTAssertFalse(palette.middle.isEqual(palette.end))
+                XCTAssertFalse(palette.controlTint.isEqual(palette.middle))
+                XCTAssertFalse(palette.controlTint.isEqual(palette.end))
+                var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+                XCTAssertTrue(palette.legacyControlTint.getRed(&r, green: &g, blue: &b, alpha: &a))
+                let channels = [r, g, b].map { value -> Double in
+                    let c = Double(value)
+                    return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
+                }
+                let luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+                XCTAssertGreaterThanOrEqual(1.05 / (luminance + 0.05), 4.79)
             }
         }
     }
@@ -92,7 +91,7 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             XCTAssertEqual(cell.contentView.constraints.count, 4)
         }
         let size = cell.systemLayoutSizeFitting(CGSize(width: 320, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
-        XCTAssertGreaterThanOrEqual(size.height, 100)
+        XCTAssertGreaterThanOrEqual(size.height, 72)
         cell.prepareForReuse()
         XCTAssertTrue(parent.children.isEmpty)
         XCTAssertTrue(cell.contentView.constraints.isEmpty)

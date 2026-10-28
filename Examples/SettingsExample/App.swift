@@ -56,13 +56,17 @@ final class DemoStore: SettingsControllerDelegate {
     }
 
     func configuration() -> SettingsConfiguration {
-        let premium = PremiumPayload(isPremium: premium, color: .systemIndigo, destinationFactory: { [self] in
+        // Literal QA copy/colors match the owner's App Lock reference, without modifying the real host.
+        let appLockReference = ProcessInfo.processInfo.arguments.contains("-demo-applock-premium")
+        let purpleReference = ProcessInfo.processInfo.arguments.contains("-demo-premium-reference-purple")
+        let premium = PremiumPayload(isPremium: premium, color: purpleReference ? .systemIndigo : (appLockReference ? AppColor.blue.color : .systemIndigo), destinationFactory: { [self] in
             UINavigationController(rootViewController: PaywallController(store: self))
         })
         return SettingsConfiguration(title: "Settings", sections: [
             SettingsSection(kind: .rows([.defaultRow(.user(name, destinationFactory: { [self] in ProfileController(store: self) }))])),
-            SettingsSection(kind: .premiumCard(PremiumCardPayload(image: Image(systemName: "star.fill"), title: "Premium",
-                subtitle: "All example features", buttonTitle: "Continue", premium: premium))),
+            SettingsSection(kind: .premiumCard(PremiumCardPayload(image: Image(systemName: "star.fill"), title: appLockReference ? "App Lock PRO" : "Premium",
+                subtitle: appLockReference ? "Unlock all features" : "All example features",
+                buttonTitle: appLockReference ? "Get PRO" : "Continue", premium: premium))),
             SettingsSection(title: "Preferences", kind: .rows([
                 .defaultRow(.language),
                 .defaultRow(.appearance(theme: theme)),
