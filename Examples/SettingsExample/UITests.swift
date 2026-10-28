@@ -214,6 +214,16 @@ final class SettingsExampleUITests: XCTestCase {
         XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
     }
 
+    func testPremiumPillPurpleReferenceAppearance() {
+        let app = launch(["-demo-applock-premium", "-demo-premium-reference-purple"])
+        app.buttons["open-fullscreen"].tap()
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unlock all features")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        XCTAssertEqual(card.frame.height, 72, accuracy: 2)
+        XCTAssertFalse(app.staticTexts["Unlock all features"].exists)
+        attach(app, name: "premium-pill-purple-reference")
+    }
+
     func testSimulatedRestoreActivatesPremium() {
         let app = launch()
         app.buttons["open-fullscreen"].tap()

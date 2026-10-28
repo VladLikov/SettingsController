@@ -21,27 +21,16 @@ public struct PremiumCard: View {
 
     public var body: some View {
         let palette = PremiumCardPalette(color: color, traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light))
-        Group {
-            if dynamicTypeSize.isAccessibilitySize {
-                VStack(alignment: .leading, spacing: 16) {
-                    heading.allowsHitTesting(false)
-                    callToAction(palette)
-                }
-            } else {
-                HStack(spacing: 12) {
-                    heading.allowsHitTesting(false)
-                    Spacer(minLength: 0)
-                    callToAction(palette)
-                }
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
+        content(palette)
+        .padding(.leading, 24)
+        .padding(.trailing, 20)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
         .foregroundColor(Color(palette.text))
         .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(LinearGradient(colors: [Color(palette.base), Color(palette.end)], startPoint: .top, endPoint: .bottom))
-                .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            RoundedRectangle(cornerRadius: 36, style: .continuous)
+                .fill(LinearGradient(colors: [Color(palette.base), Color(palette.middle), Color(palette.end)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .contentShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
                 .onTapGesture(perform: onTap)
                 .accessibilityHidden(true)
         }
@@ -53,17 +42,44 @@ public struct PremiumCard: View {
         .accessibilityAction(.default) { onTap() }
     }
 
+    @ViewBuilder
+    private func content(_ palette: PremiumCardPalette) -> some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            stackedContent(palette)
+        } else if #available(iOS 16.0, *) {
+            ViewThatFits(in: .horizontal) {
+                horizontalContent(palette, allowsWrapping: false)
+                stackedContent(palette)
+            }
+        } else {
+            horizontalContent(palette, allowsWrapping: true)
+        }
+    }
+
+    private func horizontalContent(_ palette: PremiumCardPalette, allowsWrapping: Bool) -> some View {
+        HStack(spacing: 16) {
+            heading.fixedSize(horizontal: !allowsWrapping, vertical: true).allowsHitTesting(false)
+            Spacer(minLength: 0)
+            callToAction(palette).fixedSize(horizontal: true, vertical: true)
+        }
+    }
+
+    private func stackedContent(_ palette: PremiumCardPalette) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            heading.allowsHitTesting(false)
+            callToAction(palette)
+        }
+    }
+
     private var heading: some View {
-        HStack(alignment: .center, spacing: 10) {
-            // In narrow iPad columns, scaled decoration must not squeeze the text.
+        HStack(spacing: 16) {
             if !dynamicTypeSize.isAccessibilitySize {
-                image.renderingMode(.template).font(.title2).accessibilityHidden(true)
+                image.renderingMode(.template).font(.title3).accessibilityHidden(true)
             }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.title2.bold()).fixedSize(horizontal: false, vertical: true)
-                Text(subtitle).font(.subheadline).fixedSize(horizontal: false, vertical: true)
-            }
-            .layoutPriority(1)
+            Text(title)
+                .font(.title3.weight(.medium))
+                .fixedSize(horizontal: false, vertical: true)
+                .layoutPriority(1)
         }
     }
 
@@ -78,49 +94,54 @@ public struct PremiumCard: View {
         let button = Button(action: onTap) { label.padding(.horizontal, 4) }
         Group {
             if #available(iOS 26.0, *) {
-                button.buttonStyle(.glassProminent)
+                button.buttonStyle(.glassProminent).tint(Color(palette.controlTint))
             } else {
-                button.buttonStyle(.borderedProminent)
+                button.buttonStyle(.borderedProminent).tint(Color(palette.legacyControlTint))
             }
         }
         .buttonBorderShape(.capsule)
         .controlSize(.regular)
-        .tint(Color(palette.controlTint))
         .fixedSize(horizontal: false, vertical: true)
         .frame(minHeight: 44)
     }
 
 }
 
-/// Preserves the 3.1.5 gradient; the native CTA gets its own related shade.
+/// Three related hues make the reference pill's gradient pronounced without animating it.
 struct PremiumCardPalette {
     let base: UIColor
+    let middle: UIColor
     let end: UIColor
     let text = UIColor.white
     let controlTint: UIColor
+    let legacyControlTint: UIColor
 
     init(color: UIColor, traits: UITraitCollection) {
         let resolved = color.resolvedColor(with: traits)
-        base = resolved
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
-        guard resolved.getRed(&r, green: &g, blue: &b, alpha: &a) else {
-            end = resolved
-            controlTint = .darkGray
+        var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 1
+        guard resolved.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else {
+            base = resolved; middle = resolved; end = resolved; controlTint = .darkGray; legacyControlTint = .darkGray
             return
         }
-        // These are the original 3.1.5 stops, without contrast-based dimming.
-        end = UIColor(red: min(r + 0.07, 1), green: min(g + 0.12, 1), blue: min(b + 0.18, 1), alpha: 1)
-
-        var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0
-        resolved.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &a)
-        let shade: UIColor
         if saturation < 0.05 {
-            shade = UIColor(white: brightness > 0.5 ? 0.42 : 0.28, alpha: 1)
+            base = UIColor(white: max(brightness * 0.55, 0.08), alpha: 1)
+            middle = UIColor(white: max(brightness * 0.75, 0.16), alpha: 1)
+            end = UIColor(white: max(brightness * 0.95, 0.24), alpha: 1)
         } else {
-            shade = UIColor(hue: (hue + 0.035).truncatingRemainder(dividingBy: 1),
-                            saturation: max(saturation, 0.65), brightness: max(brightness * 0.85, 0.35), alpha: 1)
+            func stop(_ offset: CGFloat, saturation: CGFloat, brightness: CGFloat) -> UIColor {
+                UIColor(hue: (hue + offset + 1).truncatingRemainder(dividingBy: 1),
+                        saturation: min(max(saturation, 0), 1), brightness: brightness, alpha: 1)
+            }
+            base = stop(-0.035, saturation: max(saturation, 0.95), brightness: 0.92)
+            middle = stop(0.005, saturation: max(saturation, 0.9), brightness: 0.98)
+            end = stop(0.045, saturation: max(saturation * 0.8, 0.75), brightness: 1)
         }
-        shade.getRed(&r, green: &g, blue: &b, alpha: &a)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
+        middle.getRed(&r, green: &g, blue: &b, alpha: &a)
+        // The native prominent glass gets a softer, lighter tone than the banner.
+        controlTint = UIColor(red: r + (1 - r) * 0.55, green: g + (1 - g) * 0.55,
+                              blue: b + (1 - b) * 0.55, alpha: 1)
+        // Older systems have a solid prominent fill rather than adaptive native glass.
         func contrast(_ factor: CGFloat) -> Double {
             let channels = [r, g, b].map { value -> Double in
                 let v = Double(value * factor)
@@ -129,7 +150,7 @@ struct PremiumCardPalette {
             return 1.05 / (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2] + 0.05)
         }
         var factor: CGFloat = 1
-        if contrast(factor) < 4.8 {
+        if contrast(1) < 4.8 {
             var low: CGFloat = 0, high: CGFloat = 1
             for _ in 0..<12 {
                 let middle = (low + high) / 2
@@ -137,6 +158,6 @@ struct PremiumCardPalette {
             }
             factor = low
         }
-        controlTint = UIColor(red: r * factor, green: g * factor, blue: b * factor, alpha: 1)
+        legacyControlTint = UIColor(red: r * factor, green: g * factor, blue: b * factor, alpha: 1)
     }
 }

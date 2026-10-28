@@ -58,7 +58,8 @@ final class DemoStore: SettingsControllerDelegate {
     func configuration() -> SettingsConfiguration {
         // Literal QA copy/colors match the owner's App Lock reference, without modifying the real host.
         let appLockReference = ProcessInfo.processInfo.arguments.contains("-demo-applock-premium")
-        let premium = PremiumPayload(isPremium: premium, color: appLockReference ? AppColor.blue.color : .systemIndigo, destinationFactory: { [self] in
+        let purpleReference = ProcessInfo.processInfo.arguments.contains("-demo-premium-reference-purple")
+        let premium = PremiumPayload(isPremium: premium, color: purpleReference ? .systemIndigo : (appLockReference ? AppColor.blue.color : .systemIndigo), destinationFactory: { [self] in
             UINavigationController(rootViewController: PaywallController(store: self))
         })
         return SettingsConfiguration(title: "Settings", sections: [
