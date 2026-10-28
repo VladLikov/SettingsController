@@ -27,6 +27,9 @@ collect() {
   fi
 }
 trap collect EXIT
+# Wait for Apple's native boot-readiness monitor before starting UI automation.
+# A device can be selected while CoreSimulator is still completing its first boot.
+xcrun simctl bootstatus "$ID" -b 2>&1 | tee "$OUT/bootstatus.log"
 xcodebuild -project Examples/SettingsExample/SettingsExample.xcodeproj -scheme SettingsExample \
   -destination "platform=iOS Simulator,id=$ID" -derivedDataPath .build/example-derived \
   -resultBundlePath "$OUT/TestResults.xcresult" -parallel-testing-enabled NO -collect-test-diagnostics never \

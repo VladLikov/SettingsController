@@ -55,3 +55,7 @@ At caf1f0b all three package destinations passed and iPhone UI passed. Duo UI pa
 ## Locale isolation and cold sample routing
 
 The complete local iPad UI suite passed 9 tests with one explicit phone-gesture skip. Cloud caf1f0b iPad passed its other scenarios but exceeded the 120-second per-test allowance inside the combined locale test; detailed output also showed the next German Mail TextView absent after a relaunch. Sample QA routes now resolve the materialized SettingsController in presentation completion and load its view before selecting Mail/About. Sheet sample ownership is likewise refreshed after presentation. The ru/de/ar scenarios are three independent test cases with unchanged actions, assertions and 120-second allowance. Each passed locally on iPad after the routing change (3/3). The UI suite now has 12 cases; the iPad phone-gesture skip remains explicit. These changes do not alter library APIs or the profiled library source.
+
+## Simulator UI bootstrap readiness
+
+Two cloud Duo attempts on b9c1ad5 exited before the first UI test with the same UITests-Runner bootstrap/XCTWaiter stall. The public-example script now runs Apple's documented `simctl bootstatus <device> -b` readiness monitor before invoking xcodebuild and preserves bootstatus.log in its artifacts. This does not retry or ignore assertions, change test coverage or alter product code. Other first-attempt process-control failures and all local results remain retained separately.
