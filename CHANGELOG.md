@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 4.0.3 — 2026-10-28
 
 ### Fixed
 - Restore a visible premium gradient and use a native glass-prominent CTA with a distinct matching hue, white text and no whole-card press animation.
