@@ -3,7 +3,18 @@ import UIKit
 
 @MainActor
 final class SettingsExampleUITests: XCTestCase {
+    private var launchedApp: XCUIApplication?
+
     override func setUpWithError() throws { continueAfterFailure = false }
+
+    override func tearDownWithError() throws {
+        defer { launchedApp = nil }
+        if let app = launchedApp, app.state != .notRunning {
+            app.terminate()
+            XCTAssertTrue(app.wait(for: .notRunning, timeout: 10), "The previous app must stop before the next UI scenario.")
+        }
+        try super.tearDownWithError()
+    }
 
     func testSlowMailShowsPreparationAndCanCloseWithoutOpeningExternalMail() {
         let app = launch(["-demo-slow-provider"])
@@ -31,27 +42,33 @@ final class SettingsExampleUITests: XCTestCase {
     private func launch(_ arguments: [String] = [], language: String = "en") -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", language == "ar" ? "ar_SA" : "en_US"] + arguments
+        launchedApp = app
         app.launch()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
         return app
     }
 
     func testSettingsAccessibilityAudit() throws {
+        try auditSettings(afterScrolling: false)
+    }
+
+    func testSettingsAccessibilityAuditAfterScrolling() throws {
+        try auditSettings(afterScrolling: true)
+    }
+
+    private func auditSettings(afterScrolling: Bool) throws {
         guard #available(iOS 17, *) else { throw XCTSkip("Native accessibility audits require iOS 17 or newer.") }
         let app = launch()
         app.buttons["open-fullscreen"].tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 10))
+        if afterScrolling { app.tables.firstMatch.swipeUp() }
+        // Each viewport gets the complete audit in a fresh app process.
         try app.performAccessibilityAudit { issue in
             print("Accessibility audit: \(issue.compactDescription) — \(issue.detailedDescription)")
             print(issue.element?.debugDescription ?? "No associated element")
             return false // Diagnostic logging only; never suppress an issue.
         }
-        app.tables.firstMatch.swipeUp()
-        try app.performAccessibilityAudit { issue in
-            print("Accessibility audit: \(issue.compactDescription) — \(issue.detailedDescription)")
-            print(issue.element?.debugDescription ?? "No associated element")
-            return false // Diagnostic logging only; never suppress an issue.
-        }
-        attach(app, name: "settings-accessibility-audit")
+        attach(app, name: afterScrolling ? "settings-accessibility-audit-scrolled" : "settings-accessibility-audit")
     }
 
     func testLocalizedMailPreparationAndAboutRussian() {
@@ -72,6 +89,7 @@ final class SettingsExampleUITests: XCTestCase {
         let field = app.textViews.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10))
         field.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
         let introduction = app.buttons["Continue"].firstMatch
         if introduction.exists && introduction.isHittable { introduction.tap() }
         field.typeText("Please help with this message")

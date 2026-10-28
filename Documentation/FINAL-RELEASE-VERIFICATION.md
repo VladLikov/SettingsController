@@ -59,3 +59,9 @@ The complete local iPad UI suite passed 9 tests with one explicit phone-gesture 
 ## Simulator UI bootstrap readiness
 
 Two cloud Duo attempts on b9c1ad5 exited before the first UI test with the same UITests-Runner bootstrap/XCTWaiter stall. The public-example script now runs Apple's documented `simctl bootstatus <device> -b` readiness monitor before invoking xcodebuild and preserves bootstatus.log in its artifacts. This does not retry or ignore assertions, change test coverage or alter product code. Other first-attempt process-control failures and all local results remain retained separately.
+
+Apple documents that the initial Simulator launch can take several minutes (187708500) in the [Xcode 27.1 release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes). The readiness stage keeps this first boot outside UI-runner startup; it does not claim to fix every simulator process-control failure.
+
+## Independent audit processes and app cleanup
+
+The exact local Duo script ran 11/12 cases successfully, but the second consecutive full audit (after scrolling) ended with the test runner receiving signal TERM. Both viewports now run the same complete `.all` audit as independent cases in fresh app processes; these two isolated Duo cases passed 2/2. The UI fixture explicitly terminates its tracked application and waits for `.notRunning` in teardown, verifies `.runningForeground` after launch, and waits for the software keyboard before localized typing. No audit issue is suppressed. The suite now contains 13 cases. Cloud b9c1ad5 attempt2 passed iPhone12/12 and iPad11/12 with its explicit phone-only skip; Duo again failed before its first case. The library source remains unchanged since faf417d.
