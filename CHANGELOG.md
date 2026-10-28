@@ -1,6 +1,6 @@
 # Changelog
 
-## 4.0.0 — Unreleased
+## 4.0.0 — 2026-10-28
 
 ### Added
 - Optional avatar content revisions to avoid false profile changes when hosts recreate UIImage snapshots. Existing initializers and reference comparison remain supported.
@@ -12,6 +12,7 @@
 - Retriable catalog state and recoverable external-mail opening failures.
 
 ### Fixed
+- Compact empty-detail typography using Dynamic Type headline/subheadline styles, distinct text colours and tighter spacing.
 - Avoid the native iPadOS 27.0 accessibility separator crash by using supported column-style split presentation.
 - Reliable native Duo tabletop tracking, deferred column updates and restoration of minimum widths; cold empty detail remains visible.
 - Readable premium-card subtitle contrast verified by the complete native accessibility audit.

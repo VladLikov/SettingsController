@@ -1,6 +1,6 @@
 # Final verification — 28 October 2026
 
-PR: https://github.com/VladLikov/SettingsController/pull/2. No merge, release tag or signing changes.
+PR: https://github.com/VladLikov/SettingsController/pull/2. This report records pre-publication verification; publication of 4.0.0 was authorized by the owner on 28 October. Signing settings are unchanged.
 
 ## Changes discovered during acceptance
 
@@ -67,3 +67,7 @@ Apple documents that the initial Simulator launch can take several minutes (1877
 The exact local Duo script ran 11/12 cases successfully, but the second consecutive full audit (after scrolling) ended with the test runner receiving signal TERM. Both viewports now run the same complete `.all` audit as independent cases in fresh app processes; these two isolated Duo cases passed 2/2. The UI fixture explicitly terminates its tracked application and waits for `.notRunning` in teardown, verifies `.runningForeground` after launch, and waits for the software keyboard before localized typing. No audit issue is suppressed. The suite now contains 13 cases. Cloud b9c1ad5 attempt2 passed iPhone12/12 and iPad11/12 with its explicit phone-only skip; Duo again failed before its first case. The library source remains unchanged since faf417d.
 
 The exact local public-example script on native Duo 27.1 subsequently passed **13/13, zero failures/skips** on source 17bf604, including both independent complete audits and the actual interactive-cancellation callback. The first failed cloud Duo artifact's simulator inventory records the selected device as Shutdown before xcodebuild; the explicit readiness monitor now boots and waits before UI automation. This is a supported readiness stage, not an arbitrary sleep or a claim that all Apple simulator bugs are solved.
+
+## 4.0.0 publication candidate
+
+The final publication change replaces the oversized empty-detail large-title/body pair with Dynamic Type headline/subheadline styles, primary/secondary text colours and 8-point spacing. Swift parsing, diff validation and resource validation pass. A local sample rerun was blocked by Xcode package resolution (Missing package product SettingsController); release CI must validate this candidate before tagging. Previous profiling and manual screenshots predate this typography-only change. README installation now selects 4.0.0 and the changelog is dated for publication.

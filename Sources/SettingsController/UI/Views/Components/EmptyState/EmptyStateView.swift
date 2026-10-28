@@ -6,16 +6,17 @@ final class EmptyStateView: UIView {
         backgroundColor = .systemGroupedBackground
         let header = UILabel()
         header.text = title
-        header.font = .preferredFont(forTextStyle: .largeTitle)
+        header.font = .preferredFont(forTextStyle: .headline)
+        header.textColor = .label
         header.accessibilityTraits.insert(.header)
         let footer = UILabel()
         footer.text = subtitle
-        footer.font = .preferredFont(forTextStyle: .body)
+        footer.font = .preferredFont(forTextStyle: .subheadline)
+        footer.textColor = .secondaryLabel
         for label in [header, footer] {
             label.numberOfLines = 0
             label.adjustsFontForContentSizeCategory = true
             label.textAlignment = .center
-            label.textColor = .secondaryLabel
         }
         let scroll = UIScrollView()
         // The viewport extends behind bars; native safe-area/column insets still
@@ -24,7 +25,7 @@ final class EmptyStateView: UIView {
         let content = UIView()
         let stack = UIStackView(arrangedSubviews: [header, footer])
         stack.axis = .vertical
-        stack.spacing = 12
+        stack.spacing = 8
         [scroll, content, stack].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
         addSubview(scroll)
         scroll.addSubview(content)
