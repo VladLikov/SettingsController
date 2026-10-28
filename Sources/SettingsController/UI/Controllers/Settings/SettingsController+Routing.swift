@@ -21,6 +21,7 @@ extension SettingsController {
     }
 
     func pushViewController(_ viewController: UIViewController, navigationTitle: String?) {
+        cancelPendingStoreProduct()
         viewController.navigationItem.title = navigationTitle
         viewController.navigationItem.largeTitleDisplayMode = .never
 
@@ -60,6 +61,7 @@ extension SettingsController {
             guard presentedViewController == nil else { return }
             let destination = payload.destinationFactory?() ?? payload.destinationControllerType?.init()
             guard let viewController = destination else { return }
+            cancelPendingStoreProduct()
             if traitCollection.horizontalSizeClass == .compact {
                 viewController.modalPresentationStyle = .fullScreen
             }
@@ -69,6 +71,7 @@ extension SettingsController {
             }
 
         } else if let action = payload.action {
+            cancelPendingStoreProduct()
             action(self)
         }
     }
@@ -76,6 +79,7 @@ extension SettingsController {
     func openLanguageSettings() {
         guard languageSettingsTask == nil,
               let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        cancelPendingStoreProduct()
         let open = openURL
         languageSettingsTask = Task { @MainActor [weak self] in
             let success = await open(url)
@@ -92,6 +96,8 @@ extension SettingsController {
     }
 
     func sendMail(_ email: String) {
+        guard presentedViewController == nil else { return }
+        cancelPendingStoreProduct()
         let mailController = MailController(
             type: .supportRequest,
             email: email,
@@ -107,6 +113,8 @@ extension SettingsController {
         guard let cell = tableView.cellForRow(at: indexPath) as? SettingsCell else { return }
         guard let url = URL(string: "https://apps.apple.com/app/id\(appID)") else { return }
 
+        guard presentedViewController == nil else { return }
+        cancelPendingStoreProduct()
         let activityController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
         activityController.popoverPresentationController?.sourceView = tableView
         activityController.popoverPresentationController?.sourceRect = cell.frame
@@ -115,12 +123,14 @@ extension SettingsController {
 
     func rateApp(_ appID: String) {
         if let url = URL(string: "itms-apps://itunes.apple.com/app/id\(appID)?action=write-review") {
+            cancelPendingStoreProduct()
             UIApplication.shared.open(url)
         }
     }
 
     func moreApps(_ developerID: String) {
         if let url = URL(string: "itms-apps://itunes.apple.com/developer/id\(developerID)") {
+            cancelPendingStoreProduct()
             UIApplication.shared.open(url)
         }
     }
@@ -132,8 +142,10 @@ extension SettingsController {
         }
 
         if UIApplication.shared.canOpenURL(appURL) {
+            cancelPendingStoreProduct()
             UIApplication.shared.open(appURL)
         } else {
+            cancelPendingStoreProduct()
             UIApplication.shared.open(webURL)
         }
     }
@@ -145,8 +157,10 @@ extension SettingsController {
         }
 
         if UIApplication.shared.canOpenURL(appURL) {
+            cancelPendingStoreProduct()
             UIApplication.shared.open(appURL)
         } else {
+            cancelPendingStoreProduct()
             UIApplication.shared.open(webURL)
         }
     }

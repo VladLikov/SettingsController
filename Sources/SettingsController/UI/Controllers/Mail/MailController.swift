@@ -46,7 +46,7 @@ public enum MailType: Equatable {
         case .languageRequest:
             return 2
         case .custom(_, let minCharactersCount, _, _):
-            return minCharactersCount
+            return max(0, minCharactersCount)
         }
     }
     
@@ -78,7 +78,6 @@ public class MailController: UITableViewController {
     private weak var dataProvider: (any SettingsControllerDataProvider)?
     private(set) var mailTask: Task<Void, Never>?
     private var isPreparingMail = false
-    private lazy var preparationView = MailPreparationView()
     private let mailLifetime = RequestLifetime()
     var openURL: OpenURLOperation = SystemActions.openURL
 
@@ -100,7 +99,7 @@ public class MailController: UITableViewController {
         
         button.accessibilityIdentifier = "settings.mail.send"
         button.accessibilityLabel = NSLocalizedString("Send", bundle: .module, comment: "Mail navigation action preparing an external draft; it does not send the email itself.")
-        button.isEnabled = false
+        button.isEnabled = type.minCharactersCount == 0
         
         return button
     }()
@@ -142,13 +141,6 @@ public class MailController: UITableViewController {
             return
         }
         cell.textViewBecomeFirstResponder()
-    } 
-
-    private var preparationMeasurement: (width: CGFloat, category: UIContentSizeCategory, safeArea: UIEdgeInsets, direction: UIUserInterfaceLayoutDirection, height: CGFloat)?
-
-    public override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        if isPreparingMail { sizePreparationView() }
     }
 }
 
@@ -217,6 +209,8 @@ extension MailController: MailCellDelegate {
 
     func mailCell(_ cell: MailCell, didChangeText text: String, needsHeightUpdate: Bool) {
 
+        // A later edit revokes the pending snapshot instead of opening stale text.
+        if isPreparingMail && currentText != text { cancelMailPreparation() }
         currentText = text
 
         sendButton.isEnabled = !isPreparingMail && text.prefix(type.minCharactersCount).count >= type.minCharactersCount
@@ -242,34 +236,6 @@ extension MailController {
         isPreparingMail = preparing
         sendButton.isEnabled = !preparing && currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount
         navigationItem.rightBarButtonItem = sendButton
-        guard isViewLoaded else { return }
-        if preparing {
-            preparationView.indicator.startAnimating()
-            sizePreparationView()
-        } else {
-            preparationView.indicator.stopAnimating()
-            tableView.tableHeaderView = nil
-        }
-    }
-
-    private func sizePreparationView() {
-        let width = tableView.bounds.width
-        guard width > 0 else { return }
-        let category = traitCollection.preferredContentSizeCategory
-        if let measured = preparationMeasurement, measured.width == width, measured.category == category,
-           measured.safeArea == preparationView.safeAreaInsets, measured.direction == preparationView.effectiveUserInterfaceLayoutDirection,
-           tableView.tableHeaderView === preparationView, preparationView.frame.height == measured.height { return }
-        let size = preparationView.systemLayoutSizeFitting(
-            CGSize(width: width, height: 0),
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .fittingSizeLevel
-        )
-        preparationMeasurement = (width, category, preparationView.safeAreaInsets, preparationView.effectiveUserInterfaceLayoutDirection, ceil(size.height))
-        let frame = CGRect(x: 0, y: 0, width: width, height: ceil(size.height))
-        if tableView.tableHeaderView !== preparationView || preparationView.frame != frame {
-            preparationView.frame = frame
-            tableView.tableHeaderView = preparationView
-        }
     }
 
     func prepareMail() {
@@ -325,33 +291,4 @@ extension MailController {
         alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", bundle: .module, comment: "Cancel action dismissing the mail recovery alert without changing the message."), style: .cancel))
         present(alert, animated: true)
     }
-}
-
-private final class MailPreparationView: UIView {
-    let indicator = UIActivityIndicatorView(style: .medium)
-
-    init() {
-        super.init(frame: .zero)
-        let label = UILabel()
-        label.text = NSLocalizedString("Preparing message…", bundle: .module, comment: "Visible loading status above the mail editor while host diagnostic data is prepared; no email has been sent.")
-        label.font = .preferredFont(forTextStyle: .body)
-        label.adjustsFontForContentSizeCategory = true
-        label.numberOfLines = 0
-        label.textColor = .secondaryLabel
-        indicator.isAccessibilityElement = false
-        let stack = UIStackView(arrangedSubviews: [indicator, label])
-        stack.axis = .horizontal
-        stack.alignment = .center
-        stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stack)
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -20),
-            stack.topAnchor.constraint(equalTo: topAnchor, constant: 12),
-            stack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12)
-        ])
-    }
-
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }

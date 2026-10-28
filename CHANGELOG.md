@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.0.1 — 2026-10-28
+
+### Fixed
+- Replace anonymous custom-icon address keys with definition-scoped unique identities; definition copies retain cache hits without retaining the original image in the cache.
+- Revoke pending StoreKit navigation after a newer accepted detail/modal/external route, preserving independent background requests.
+- Clamp custom mail minimums to zero, make initial Send consistent, and cancel pending drafts when text changes.
+- Validate Privacy/Terms HTTP(S) URLs and host before Safari, with a localized recoverable error.
+- Use actor-correct async UI-test teardown and restore accessibility split widths without overriding Duo division policy.
+- Use native interactive Liquid Glass for the premium-card CTA on iOS 26+, retaining a white capsule fallback on earlier systems.
+- Remove the Mail preparation banner and its layout work; keep Send disabled while diagnostics are pending.
+- Keep premium-card foregrounds white and increase background contrast while preserving the supplied hue; the native glass CTA uses a darker tint for readability.
+- Show a native activity indicator instead of the visible Checking status in About; restore the row after completion or cancellation.
+
 ## 4.0.0 — 2026-10-28
 
 ### Added

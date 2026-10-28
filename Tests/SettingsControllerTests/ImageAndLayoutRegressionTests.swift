@@ -19,11 +19,24 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertGreaterThan(content.bounds.width, 0)
     }
 
-    func testPremiumPaletteKeepsLightAndDarkHostTintsReadable() {
-        let traits = UITraitCollection(userInterfaceStyle: .light)
-        XCTAssertTrue(PremiumCardPalette(color: .white, traits: traits).text.isEqual(UIColor.black))
-        XCTAssertTrue(PremiumCardPalette(color: .yellow, traits: traits).text.isEqual(UIColor.black))
-        XCTAssertTrue(PremiumCardPalette(color: .black, traits: traits).text.isEqual(UIColor.white))
+    func testPremiumPaletteKeepsWhiteTextAndContrastAcrossHostTints() {
+        func contrast(_ color: UIColor) -> Double {
+            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
+            color.getRed(&r, green: &g, blue: &b, alpha: &a)
+            let v = [r, g, b].map { c -> Double in
+                let x = Double(c); return x <= 0.04045 ? x / 12.92 : pow((x + 0.055) / 1.055, 2.4)
+            }
+            return 1.05 / (0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2] + 0.05)
+        }
+        for style in [UIUserInterfaceStyle.light, .dark] {
+            let traits = UITraitCollection(userInterfaceStyle: style)
+            for color in [UIColor.systemBlue, .systemIndigo, .white, .yellow, .black] {
+                let palette = PremiumCardPalette(color: color, traits: traits)
+                XCTAssertTrue(palette.text.isEqual(UIColor.white))
+                XCTAssertGreaterThanOrEqual(contrast(palette.base), 5.99)
+                XCTAssertGreaterThanOrEqual(contrast(palette.end), 5.99)
+            }
+        }
     }
 
     func testNilAndZeroInsetDoNotCollide() throws {

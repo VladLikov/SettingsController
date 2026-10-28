@@ -152,8 +152,10 @@ final class AboutAppController: UITableViewController {
     func cancelRequests() {
         cancelAccountRequest()
         updateLifetime.invalidate()
+        let wasChecking = checkUpdateTask != nil
         checkUpdateTask?.cancel()
         checkUpdateTask = nil
+        if wasChecking { refreshUpdateRow() }
         accountResolved = false
     }
 
@@ -427,16 +429,27 @@ extension AboutAppController {
         config.textProperties.numberOfLines = 0
         config.textProperties.lineBreakMode = .byWordWrapping
 
-        config.secondaryText = item.action == .checkForUpdate && checkUpdateTask != nil
-            ? NSLocalizedString("Checking…", bundle: .module, comment: "About row status while the App Store update check is running.")
-            : item.subtitle ?? item.value
+        let isChecking = item.action == .checkForUpdate && checkUpdateTask != nil
+        config.secondaryText = isChecking ? nil : item.subtitle ?? item.value
         config.secondaryTextProperties.color = .secondaryLabel
         config.secondaryTextProperties.numberOfLines = 0
         config.secondaryTextProperties.lineBreakMode = .byWordWrapping
 
         cell.accessoryType = accessoryType(for: item)
-        cell.accessoryView = nil
-        cell.selectionStyle = item.isSelectable ? .default : .none
+        if isChecking {
+            let indicator = (cell.accessoryView as? UIActivityIndicatorView) ?? UIActivityIndicatorView(style: .medium)
+            indicator.isAccessibilityElement = false
+            indicator.startAnimating()
+            cell.accessoryView = indicator
+        } else {
+            (cell.accessoryView as? UIActivityIndicatorView)?.stopAnimating()
+            cell.accessoryView = nil
+        }
+        cell.accessibilityIdentifier = item.action == .checkForUpdate ? "settings.about.checkUpdate" : nil
+        cell.accessibilityValue = isChecking
+            ? NSLocalizedString("Checking…", bundle: .module, comment: "VoiceOver status of the About update-check row while its activity indicator is spinning.")
+            : nil
+        cell.selectionStyle = item.isSelectable && !isChecking ? .default : .none
         cell.contentConfiguration = config
         
         return cell
@@ -488,10 +501,25 @@ extension AboutAppController {
         }
     }
 
+    static func validatedWebURL(_ url: URL) -> URL? {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let scheme = components.scheme?.lowercased(), ["http", "https"].contains(scheme),
+              let host = components.host, !host.isEmpty else { return nil }
+        components.scheme = scheme
+        return components.url
+    }
+
     private func pushSafari(with url: URL) {
-        
-        let safari = SFSafariViewController(url: url)
-        present(safari, animated: true)
+        guard let url = Self.validatedWebURL(url) else {
+            let alert = UIAlertController(
+                title: NSLocalizedString("Unable to open link", bundle: .module, comment: "About error when the configured Privacy or Terms link is not an absolute HTTP or HTTPS URL."),
+                message: nil, preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: "Dismiss the invalid Privacy or Terms link alert."), style: .cancel))
+            present(alert, animated: true)
+            return
+        }
+        present(SFSafariViewController(url: url), animated: true)
     }
 }
 

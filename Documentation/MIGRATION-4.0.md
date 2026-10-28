@@ -1,6 +1,6 @@
 > Current 4.0 requirement: Swift 6.4+ / Xcode 27.1+. Minimum deployment remains iOS 15. Older version notes below are historical.
 
-# Migrating from 3.1.5 to 4.0 (unreleased)
+# Migrating from 3.1.5 to 4.0
 
 4.0 is a source-breaking release. Do not change an existing 3.x tag or publish this branch as a patch. Keep the package revision and the host integration changes together when rolling back.
 
@@ -102,4 +102,9 @@ For the library-created modal root, `settingsDidDismiss()` reports completion of
 
 ## Verification before rollout
 
-Build and run the public example, then migrate one real host app. Verify external Settings/Mail/StoreKit on a device, the oldest supported OS, and the final host archive's privacy report. A successful build with deployment target 15.0 does **not** prove execution on iOS 15. Do not tag 4.0.0 until the release checklist is satisfied.
+Build and run the public example, then migrate one real host app. Verify external Settings/Mail/StoreKit on a device, the oldest supported OS, and the final host archive's privacy report. A successful build with deployment target 15.0 does **not** prove execution on iOS 15. Keep deployment-target builds, simulator tests and physical-device acceptance as separate evidence.
+
+
+## Patch 4.0.1
+
+Correct 4.0 integrations remain source-compatible. Negative custom mail minimums now behave as zero; zero permits an initially empty draft. A later edit cancels pending preparation; a new Send prepares the edited snapshot. Privacy/Terms accept only absolute HTTP/HTTPS links with a nonempty host and otherwise show a recoverable alert. For custom image cache identifiers, change the revision whenever pixels change; anonymous definition copies share a unique token rather than an address-derived key. Pending StoreKit navigation is revoked by a later library-managed detail/modal/external route; unrelated catalog/state/image loading remains independent. No provider, factory or User ID contract changes.

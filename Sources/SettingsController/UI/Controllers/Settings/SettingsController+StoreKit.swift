@@ -16,6 +16,13 @@ enum StoreProductLoader {
 }
 
 extension SettingsController {
+    /// Only navigation intent is revoked; catalog/image/state requests are independent.
+    func cancelPendingStoreProduct() {
+        storeLifetime.invalidate()
+        storeProductTask?.cancel()
+        storeProductTask = nil
+    }
+
     func openApp(_ id: Int, url: URL) {
         let lifetime = storeLifetime
         let request = lifetime.begin()
@@ -48,6 +55,7 @@ extension SettingsController {
     }
 
     func redeemCode() {
+        cancelPendingStoreProduct()
         SKPaymentQueue.default().presentCodeRedemptionSheet()
     }
 

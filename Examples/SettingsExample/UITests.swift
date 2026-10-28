@@ -7,16 +7,16 @@ final class SettingsExampleUITests: XCTestCase {
 
     override func setUpWithError() throws { continueAfterFailure = false }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         defer { launchedApp = nil }
         if let app = launchedApp, app.state != .notRunning {
             app.terminate()
             XCTAssertTrue(app.wait(for: .notRunning, timeout: 10), "The previous app must stop before the next UI scenario.")
         }
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
-    func testSlowMailShowsPreparationAndCanCloseWithoutOpeningExternalMail() {
+    func testSlowMailKeepsEditorAndCanCloseWithoutOpeningExternalMail() {
         let app = launch(["-demo-slow-provider"])
         app.buttons["open-fullscreen"].tap()
         let standalone = app.staticTexts["Standalone mail"].firstMatch
@@ -32,9 +32,14 @@ final class SettingsExampleUITests: XCTestCase {
         let send = app.buttons["settings.mail.send"].firstMatch
         XCTAssertTrue(send.isEnabled)
         send.tap()
-        XCTAssertTrue(app.staticTexts["Preparing message…"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Preparing message…"].exists)
+        XCTAssertEqual(field.value as? String, "Please help with this message")
         XCTAssertFalse(send.isEnabled)
-        attach(app, name: "mail-preparing")
+        attach(app, name: "mail-pending-diagnostics")
+        field.typeText(" edited")
+        XCTAssertTrue(send.isEnabled)
+        send.tap()
+        XCTAssertFalse(send.isEnabled)
         app.buttons["settings.mail.close"].firstMatch.tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 5))
     }
@@ -72,18 +77,18 @@ final class SettingsExampleUITests: XCTestCase {
     }
 
     func testLocalizedMailPreparationAndAboutRussian() {
-        assertLocalizedMailPreparationAndAbout(locale: "ru", preparing: "Подготовка сообщения…", preferred: "Предпочитаемый язык")
+        assertLocalizedMailPreparationAndAbout(locale: "ru", preferred: "Предпочитаемый язык")
     }
 
     func testLocalizedMailPreparationAndAboutGerman() {
-        assertLocalizedMailPreparationAndAbout(locale: "de", preparing: "Nachricht wird vorbereitet…", preferred: "Bevorzugte Sprache")
+        assertLocalizedMailPreparationAndAbout(locale: "de", preferred: "Bevorzugte Sprache")
     }
 
     func testLocalizedMailPreparationAndAboutArabic() {
-        assertLocalizedMailPreparationAndAbout(locale: "ar", preparing: "جارٍ تحضير الرسالة…", preferred: "اللغة المفضلة")
+        assertLocalizedMailPreparationAndAbout(locale: "ar", preferred: "اللغة المفضلة")
     }
 
-    private func assertLocalizedMailPreparationAndAbout(locale: String, preparing: String, preferred: String) {
+    private func assertLocalizedMailPreparationAndAbout(locale: String, preferred: String) {
         let direction = locale == "ar" ? ["-demo-rtl"] : []
         let app = launch(["-demo-open-settings", "-qa-open-mail", "-demo-slow-provider"] + direction, language: locale)
         let field = app.textViews.firstMatch
@@ -96,7 +101,6 @@ final class SettingsExampleUITests: XCTestCase {
         let send = app.buttons["settings.mail.send"].firstMatch
         XCTAssertTrue(send.isEnabled)
         send.tap()
-        XCTAssertTrue(app.staticTexts[preparing].waitForExistence(timeout: 5))
         XCTAssertFalse(send.isEnabled)
         attach(app, name: "localized-mail-" + locale)
         app.buttons["settings.mail.close"].firstMatch.tap()
