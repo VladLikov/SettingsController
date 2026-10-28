@@ -81,6 +81,7 @@ extension SettingsController {
                 pushViewController(viewController, navigationTitle: row.title)
             } else if let action = row.action {
                 tableView.deselectRow(at: indexPath, animated: true)
+                cancelPendingStoreProduct()
                 action(indexPath, tableView, self)
             }
 
