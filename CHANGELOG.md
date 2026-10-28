@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.0.7 — 2026-10-29
+
+### Fixed
+- Use appearance-aware native glass-prominent CTA tints, including Increased Contrast, to avoid the pale dark-mode fill. Keep the approved normal-light tint; let native glass style the label and retain the older-system fallback.
+
+### Added
+- Expose `SettingsController.updatePremiumColor(_:)` for host-owned appearance screens. Update visible premium cards without reloading unrelated rows; retain the color across state refreshes and premium activation/restoration. Built-in Appearance already calls this method.
+
 ## 4.0.6 — 2026-10-28
 
 ### Fixed

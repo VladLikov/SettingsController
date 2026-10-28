@@ -41,6 +41,21 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         }
     }
 
+    func testGlassTintUsesDarkAndIncreasedContrastVariants() {
+        for color in [UIColor.systemBlue, .systemOrange, .systemIndigo, .yellow, .white, .black] {
+            let light = PremiumCardPalette(color: color, traits: UITraitCollection(userInterfaceStyle: .light))
+            let dark = PremiumCardPalette(color: color, traits: UITraitCollection(userInterfaceStyle: .dark))
+            XCTAssertTrue(dark.controlTint.isEqual(dark.legacyControlTint))
+            XCTAssertFalse(light.controlTint.isEqual(light.legacyControlTint))
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                let traits = UITraitCollection(traitsFrom: [UITraitCollection(userInterfaceStyle: style),
+                    UITraitCollection(accessibilityContrast: .high)])
+                let increased = PremiumCardPalette(color: color, traits: traits)
+                XCTAssertTrue(increased.controlTint.isEqual(increased.legacyControlTint))
+            }
+        }
+    }
+
     func testNilAndZeroInsetDoNotCollide() throws {
         SettingsIconGenerator.removeAllCachedImages()
         let image = UIImage(systemName: "square.fill")!

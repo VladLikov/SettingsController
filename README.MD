@@ -1,4 +1,4 @@
-> **4.0.6.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [4.0.6 verification and its limits](Documentation/VERIFICATION-4.0.6.md).
+> **4.0.7.** This release includes source-breaking changes relative to 3.1.5. Read [Migration to 4.0](Documentation/MIGRATION-4.0.md) and the [release checklist](Documentation/RELEASE-CHECKLIST.md). Existing 3.x release tags are unchanged. See the [4.0.7 verification and its limits](Documentation/VERIFICATION-4.0.7.md).
 
 # SettingsController
 
@@ -39,7 +39,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.6")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "4.0.7")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -636,3 +636,13 @@ Privacy/Terms require absolute HTTP or HTTPS URLs with a nonempty host. Unsuppor
 Anonymous custom SettingsIcon definitions receive a unique cache identity at initialization; copying a definition preserves its cache hits without retaining its source in the cache. For independently rebuilt definitions, supply a cacheIdentifier containing the content revision. Never reuse one explicit ID for different pixels.
 
 Premium foregrounds remain white. The pill-shaped background uses a pronounced three-tone gradient in the host color family. The title stays in one row when it fits; narrow widths and accessibility text use a stacked layout. The subtitle remains accepted and available to accessibility, but is not shown in the compact visual layout. The compact CTA uses native glass-prominent styling on iOS 26+ in a distinct related shade, with native bordered-prominent styling earlier; no manual outline is drawn. The CTA and card background open the same destination; the whole card has no press scaling or spring animation. Accessibility text sizes may widen a regular split primary; an active Duo division always keeps 50/50 left/right panes.
+
+### Host-owned appearance screens
+
+When your own appearance screen changes the app accent, notify the existing settings controller:
+
+```swift
+settingsController.updatePremiumColor(newColor)
+```
+
+Call on the main actor. Visible premium cards update immediately without reloading unrelated rows or restarting catalog/image requests. The selected color persists across state refreshes and premium activation/restoration. The built-in Appearance screen already calls this automatically.
