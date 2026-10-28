@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Revoke pending StoreKit navigation before invoking a custom `SettingsRow(action:)`, without cancelling catalog or image loading.
+
 ## 4.0.1 — 2026-10-28
 
 ### Fixed

@@ -4,6 +4,76 @@ import UIKit
 
 @MainActor
 final class RoutingRegressionTests: XCTestCase {
+    func testCustomActionRevokesLateStoreSuccessWithoutCancellingIndependentLoads() async throws {
+        try await verifyCustomActionRevokesStore(fails: false)
+    }
+
+    func testCustomActionRevokesLateStoreErrorWithoutCancellingIndependentLoads() async throws {
+        try await verifyCustomActionRevokesStore(fails: true)
+    }
+
+    private func verifyCustomActionRevokesStore(fails: Bool) async throws {
+        let store = ControlledValue<Bool>(), catalog = ControlledValue<[AppItem]>()
+        var calls = 0
+        let row = SettingsRow(title: "Custom", icon: SettingsIcon(image: nil, color: .blue), action: { path, table, presenter in
+            calls += 1
+            XCTAssertEqual(path, IndexPath(row: 0, section: 0))
+            let settings = presenter as! SettingsController
+            XCTAssertTrue(table === settings.tableView)
+            // Cancellation must happen before host code executes.
+            XCTAssertNil(settings.storeProductTask)
+            XCTAssertFalse(settings.appLoadTasks[1]?.isCancelled ?? true)
+        })
+        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
+            SettingsSection(kind: .rows([.row(row)])),
+            SettingsSection(kind: .ourApps(developerID: "fixture", limit: 1, excludeAppID: "0"))
+        ]))
+        settings.needsStateRefresh = false
+        settings.fetchApps = { _, _, _ in try await catalog.value() }
+        let window = mountedWindow(settings)
+        defer { settings.dismiss(animated: false); window.isHidden = true; window.rootViewController = nil }
+        await catalog.waitUntilStarted()
+        let catalogTask = try XCTUnwrap(settings.appLoadTasks[1])
+        let url = URL(string: "https://fixture.example/\(UUID().uuidString).png")!
+        let png = try XCTUnwrap(UIGraphicsImageRenderer(size: CGSize(width: 8, height: 8)).image { c in
+            UIColor.red.setFill(); c.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
+        }.pngData())
+        await FixtureServer.shared.register(url, data: png, hold: true)
+        let session = fixtureSession()
+        defer { session.invalidateAndCancel() }
+        let loader = RemoteImageLoader(session: session)
+        let imageTask = Task { try await loader.image(from: url, maxPixelSize: 8, scale: 1) }
+        await FixtureServer.shared.waitForRequest(url)
+        let product = UIViewController()
+        var externalOpens = 0
+        settings.openURL = { _ in externalOpens += 1; return true }
+        settings.loadStoreProduct = { _ in
+            _ = try await store.value()
+            if fails { throw URLError(.notConnectedToInternet) }
+            return product
+        }
+        settings.openApp(1, url: URL(string: "https://apps.apple.com/app/id1")!)
+        let stale = try XCTUnwrap(settings.storeProductTask)
+        await store.waitUntilStarted()
+        settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: 0, section: 0))
+        XCTAssertEqual(calls, 1)
+        XCTAssertTrue(stale.isCancelled)
+        XCTAssertFalse(catalogTask.isCancelled)
+        XCTAssertFalse(imageTask.isCancelled)
+        let activeImages = await loader.activeConsumerCount
+        XCTAssertEqual(activeImages, 1)
+        store.complete(.success(true)); await stale.value
+        XCTAssertNil(settings.presentedViewController)
+        XCTAssertEqual(externalOpens, 0)
+        catalog.complete(.success([])); await catalogTask.value
+        XCTAssertEqual(settings.catalogStates[1], .empty)
+        await FixtureServer.shared.release(url)
+        let image = try await imageTask.value
+        XCTAssertNotNil(image.cgImage)
+        let requests = await FixtureServer.shared.requestCount(url)
+        XCTAssertEqual(requests, 1)
+    }
+
     func testLanguageOpensSystemSettingsOnceWithoutNavigationOrProvider() async throws {
         let provider = RegressionProvider()
         let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .rows([.defaultRow(.language)]))], dataProvider: provider))
