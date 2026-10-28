@@ -32,6 +32,7 @@ public final class SettingsController: UITableViewController {
     var catalogStates: [Int: AppCatalogState] = [:]
     var catalogLifetimes: [Int: RequestLifetime] = [:]
     var appLoadTasks: [Int: Task<Void, Never>] = [:]
+    var premiumColorOverride: UIColor?
     var isPremium: Bool
     var currentUser: UserInfo?
     var currentMailInfo: SettingsMailInfo?
@@ -181,14 +182,19 @@ public final class SettingsController: UITableViewController {
                 case .failed: section.kind = .rows([.app(.failed)])
                 }
             case .premiumCard(let card):
+                let premium = premiumColorOverride.map { card.premium.withColor($0) } ?? card.premium
                 if isPremium {
-                    section.kind = .rows([.defaultRow(.premium(card.premium.withPremiumStatus(true)))])
+                    section.kind = .rows([.defaultRow(.premium(premium.withPremiumStatus(true)))])
+                } else if premiumColorOverride != nil {
+                    section.kind = .premiumCard(PremiumCardPayload(image: card.image, title: card.title,
+                        tierTitle: card.tierTitle, subtitle: card.subtitle, buttonTitle: card.buttonTitle, premium: premium))
                 }
             case .rows(let rows):
                 section.kind = .rows(rows.map { row in
                     switch row {
                     case .defaultRow(.premium(let payload)):
-                        return .defaultRow(.premium(payload.withPremiumStatus(isPremium)))
+                        let premium = premiumColorOverride.map { payload.withColor($0) } ?? payload
+                        return .defaultRow(.premium(premium.withPremiumStatus(isPremium)))
                     case .defaultRow(.user(_, _, let type)):
                         guard let user = currentUser else { return row }
                         return .defaultRow(.user(user.name, user.avatar, type))
@@ -227,6 +233,20 @@ public final class SettingsController: UITableViewController {
                 visibleSectionIDs = ids
             }
             if !reconfiguredRows.isEmpty { tableView.reconfigureRows(at: reconfiguredRows) }
+        }
+    }
+
+    func updatePremiumColor(_ color: UIColor) {
+        guard premiumColorOverride?.isEqual(color) != true else { return }
+        premiumColorOverride = color
+        rebuildSections(reload: false)
+        guard isViewLoaded else { return }
+        let rows = (tableView.indexPathsForVisibleRows ?? []).filter {
+            if case .premiumCard = sections[$0.section].kind { return true }
+            return false
+        }
+        if !rows.isEmpty {
+            UIView.performWithoutAnimation { tableView.reconfigureRows(at: rows) }
         }
     }
 

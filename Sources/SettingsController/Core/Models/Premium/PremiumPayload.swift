@@ -10,7 +10,7 @@ import UIKit
 
 public struct PremiumPayload {
     public private(set) var isPremium: Bool
-    public let color: UIColor
+    public private(set) var color: UIColor
     public let destinationControllerType: UIViewController.Type?
     public let action: PremiumAction?
     public let destinationFactory: SettingsDestinationFactory?
@@ -38,6 +38,12 @@ public struct PremiumPayload {
         self.destinationControllerType = nil
         self.action = nil
         self.destinationFactory = destinationFactory
+    }
+
+    func withColor(_ color: UIColor) -> Self {
+        var result = self
+        result.color = color
+        return result
     }
 
     func withPremiumStatus(_ value: Bool) -> Self {

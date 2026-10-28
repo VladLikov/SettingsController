@@ -124,14 +124,10 @@ extension SettingsController {
             openLanguageSettings()
 
         case .appearance(let theme, let colors):
-            pushViewController(
-                AppearanceController(
-                    themeStorage: theme,
-                    colors: colors,
-                    eventHandler: configuration.eventHandler
-                ),
-                navigationTitle: row.title
-            )
+            let appearance = AppearanceController(themeStorage: theme, colors: colors,
+                                                  eventHandler: configuration.eventHandler)
+            appearance.onColorChange = { [weak self] color in self?.updatePremiumColor(color) }
+            pushViewController(appearance, navigationTitle: row.title)
 
         case .telegram(let channelURL):
             openTelegramChannel(channelURL)

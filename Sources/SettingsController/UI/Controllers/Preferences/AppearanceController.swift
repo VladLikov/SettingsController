@@ -13,6 +13,8 @@ class AppearanceController: UITableViewController {
     
     // MARK: Properties [Private]
 
+    var onColorChange: ((UIColor) -> Void)?
+
     private let colors: [any AppColorType]
     
     private var theme: ThemeStorage
@@ -172,6 +174,7 @@ extension AppearanceController {
             theme.appColor = newColor
             theme.appColorRawValue = newAppColor.rawValue
             eventHandler?.settingsDidUpdateTheme(theme)
+            onColorChange?(newColor)
             
             navigationController?.navigationBar.tintColor = newColor
                                                 
