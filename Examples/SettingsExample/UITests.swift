@@ -215,6 +215,20 @@ final class SettingsExampleUITests: XCTestCase {
         XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
     }
 
+    func testPremiumGlassDarkAppearanceAndNavigation() {
+        let app = launch(["-demo-applock-premium", "-demo-dark"])
+        app.buttons["open-fullscreen"].tap()
+        let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unlock all features")).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+        attach(app, name: "premium-glass-dark")
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
+        app.buttons["demo.paywall.close"].tap()
+        XCTAssertTrue(card.waitForExistence(timeout: 5))
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.5)).tap()
+        XCTAssertTrue(app.buttons["restore"].waitForExistence(timeout: 5))
+    }
+
     func testPremiumPillPurpleReferenceAppearance() {
         let app = launch(["-demo-applock-premium", "-demo-premium-reference-purple"])
         app.buttons["open-fullscreen"].tap()

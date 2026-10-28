@@ -10,6 +10,7 @@ public struct PremiumCard: View {
     public let onTap: () -> Void
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
 
     public init(image: Image, title: String, subtitle: String, buttonTitle: String, color: UIColor, onTap: @escaping () -> Void) {
         self.init(image: image, title: title, tierTitle: nil, subtitle: subtitle,
@@ -45,13 +46,16 @@ public struct PremiumCard: View {
     }
 
     public var body: some View {
-        let palette = PremiumCardPalette(color: color, traits: UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light))
+        let traits = UITraitCollection(traitsFrom: [
+            UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light),
+            UITraitCollection(accessibilityContrast: colorSchemeContrast == .increased ? .high : .normal)
+        ])
+        let palette = PremiumCardPalette(color: color, traits: traits)
         content(palette)
         .padding(.leading, 24)
         .padding(.trailing, 20)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-        .foregroundColor(Color(palette.text))
         .background {
             RoundedRectangle(cornerRadius: 36, style: .continuous)
                 .fill(LinearGradient(colors: [Color(palette.base), Color(palette.middle), Color(palette.end)], startPoint: .topLeading, endPoint: .bottomTrailing))
@@ -105,13 +109,13 @@ public struct PremiumCard: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .layoutPriority(1)
         }
+        .foregroundColor(.white)
     }
 
     @ViewBuilder
     private func callToAction(_ palette: PremiumCardPalette) -> some View {
         let label = Text(buttonTitle)
             .font(.headline)
-            .foregroundColor(.white)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
 
@@ -121,6 +125,7 @@ public struct PremiumCard: View {
                 button.buttonStyle(.glassProminent).tint(Color(palette.controlTint))
             } else {
                 button.buttonStyle(.borderedProminent).tint(Color(palette.legacyControlTint))
+                    .foregroundColor(.white)
             }
         }
         .buttonBorderShape(.capsule)
@@ -163,8 +168,8 @@ struct PremiumCardPalette {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 1
         middle.getRed(&r, green: &g, blue: &b, alpha: &a)
         // The native prominent glass gets a softer, lighter tone than the banner.
-        controlTint = UIColor(red: r + (1 - r) * 0.55, green: g + (1 - g) * 0.55,
-                              blue: b + (1 - b) * 0.55, alpha: 1)
+        let lightControlTint = UIColor(red: r + (1 - r) * 0.55, green: g + (1 - g) * 0.55,
+                                       blue: b + (1 - b) * 0.55, alpha: 1)
         // Older systems have a solid prominent fill rather than adaptive native glass.
         func contrast(_ factor: CGFloat) -> Double {
             let channels = [r, g, b].map { value -> Double in
@@ -173,15 +178,25 @@ struct PremiumCardPalette {
             }
             return 1.05 / (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2] + 0.05)
         }
+        // Leave luminance headroom for the native glass material in dark/high-contrast appearances.
+        let minimumContrast = traits.userInterfaceStyle == .dark || traits.accessibilityContrast == .high ? 5.5 : 4.8
         var factor: CGFloat = 1
-        if contrast(1) < 4.8 {
+        if contrast(1) < minimumContrast {
             var low: CGFloat = 0, high: CGFloat = 1
             for _ in 0..<12 {
                 let middle = (low + high) / 2
-                if contrast(middle) >= 4.8 { low = middle } else { high = middle }
+                if contrast(middle) >= minimumContrast { low = middle } else { high = middle }
             }
             factor = low
         }
+        if traits.userInterfaceStyle == .dark || traits.accessibilityContrast == .high {
+            // Already-dark accents still need a distinct CTA tone rather than the gradient's middle stop.
+            factor = min(factor, 0.9)
+        }
         legacyControlTint = UIColor(red: r * factor, green: g * factor, blue: b * factor, alpha: 1)
+        // Custom tints need appearance and Increased Contrast variants (Apple's adoption guidance).
+        // Keep the approved light tint; avoid adding white to a dark-mode glass fill.
+        controlTint = traits.userInterfaceStyle == .dark || traits.accessibilityContrast == .high
+            ? legacyControlTint : lightControlTint
     }
 }
