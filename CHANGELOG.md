@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Configure the standard modal Close navigation item in viewWillAppear, before the presentation animation, instead of after viewDidAppear. Embedded settings keep their existing navigation items.
+
 ## 4.0.7 — 2026-10-29
 
 ### Fixed
