@@ -98,6 +98,9 @@ public final class SettingsController: UITableViewController {
 
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        if presentationRoot?.presentingViewController != nil || navigationController?.presentingViewController != nil {
+            navigationItem.rightBarButtonItem = closeButton
+        }
         if presentationRoot == nil && (isBeingPresented || navigationController?.isBeingPresented == true) {
             beginPresentation()
         }
@@ -106,9 +109,6 @@ public final class SettingsController: UITableViewController {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         finishingModal = false
-        if presentationRoot?.presentingViewController != nil || navigationController?.presentingViewController != nil {
-            navigationItem.rightBarButtonItem = closeButton
-        }
         if needsStateRefresh {
             needsStateRefresh = false
             _ = startStateRefresh()
