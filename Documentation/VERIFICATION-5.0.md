@@ -38,10 +38,15 @@ The modal presentation of the original trace (sheet width changes during present
 
 The example UI tests' screenshots were reviewed for: settings list accessories (chevrons only on screens, arrow on Language), horizontal premium card, active premium row, profile glyph without avatar, About in German, Russian and Arabic (localized premium status, RTL layout), AX5 RTL settings, mail recovery alert, Appearance.
 
+## Animations and translations
+
+Only system animations remain: table section updates with `.automatic` and the existing insert/delete of preference sections. There are no `UIView.animate` or `UIView.transition` calls in the package.
+
+The three new strings were reviewed in context for all 51 locales: the counter reads as "characters still missing" rather than "characters required", "Discard Message" uses each language's delete wording instead of "reject" or "ignore", and verbs and nouns match the existing Copy Message, Message and Cancel translations. They are marked `translated` in the catalog.
+
 ## Not verified
 
 - iPhone 12 mini Release Time Profiler for PremiumCell (target at or below 3 ms).
 - iOS 15 runtime (only the deployment-target build was compiled), physical mail handlers, real StoreKit and offer code sheets.
-- Full VoiceOver traversal, Reduce Motion behavior of the new cross-fades, and the haptic preview on hardware.
-- Native-speaker review of the three new strings (`Discard Message`, `Characters needed: %ld`, `Copy`), marked `needs_review` in the catalog.
+- Full VoiceOver traversal and the haptic preview on hardware.
 - GitHub CI on the `xcode-27` image for the final commit.

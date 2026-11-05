@@ -120,9 +120,9 @@ extension TapticEngineController {
         eventHandler?.settingsDidUpdateTaptic(taptic)
         let sections = IndexSet(integer: Section.styles.rawValue)
         if isOn {
-            tableView.insertSections(sections, with: .fade)
+            tableView.insertSections(sections, with: .automatic)
         } else {
-            tableView.deleteSections(sections, with: .fade)
+            tableView.deleteSections(sections, with: .automatic)
         }
     }
 }

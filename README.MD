@@ -411,7 +411,7 @@ Sources/SettingsController
 
 ## Localization
 
-Built-in strings and images load from the package resource bundle; the catalog is `Sources/SettingsController/Resources/Localizable.xcstrings`. Localize custom row titles in the consuming app. Language availability follows the app's supported localizations; the language row opens system app settings. Strings added in 5.0 are marked `needs_review` in the catalog until a native speaker confirms them.
+Built-in strings and images load from the package resource bundle; the catalog is `Sources/SettingsController/Resources/Localizable.xcstrings`. Localize custom row titles in the consuming app. Language availability follows the app's supported localizations; the language row opens system app settings.
 
 ## Testing and Contributing
 

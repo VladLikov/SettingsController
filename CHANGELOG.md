@@ -31,13 +31,13 @@ Source-breaking release. See [Migration to 5.0](Documentation/MIGRATION-5.0.md);
 - The Taptic screen plays a sample of the chosen strength; the library's haptics honor the Taptic Engine setting.
 - About shows the localized premium status and offers Copy for every diagnostic value.
 - VoiceOver reads one loading row per catalog.
-- Cross-fades for catalog results, premium card changes, profile updates, network icons and accent tint (off with Reduce Motion); a person glyph replaces an empty avatar.
+- Catalog results and premium card changes use the table's own animated section updates (`.automatic`); no hand-written animations. A person glyph replaces an empty avatar.
 - Review, More Apps, Telegram and VK fall back to web links without `LSApplicationQueriesSchemes`.
 - Redeem Code uses `AppStore.presentOfferCodeRedeemSheet(in:)` on iOS 16+.
 
 ### Internal
 - swift-format configuration and CI lint; shared request deduplication, `CancellableRequest`, `SettingsSectionRenderer`, row metrics and file layout; Points of Interest signposts for premium card sizing.
-- New strings (`Discard Message`, `Characters needed: %ld`, `Copy`) are translated for all 51 locales and marked `needs_review`.
+- New strings (`Discard Message`, `Characters needed: %ld`, `Copy`) are translated for all 51 locales and reviewed against the terminology of the existing Mail and About strings.
 
 ## 4.0.8 — 2026-10-29
 

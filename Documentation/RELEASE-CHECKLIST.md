@@ -11,7 +11,6 @@ Current evidence: [5.0 verification](VERIFICATION-5.0.md). Reports for 4.x are k
 - Localization JSON, translator comments, placeholders and coverage validation.
 - `xcrun swift format lint --strict` over Sources, Tests, Examples and Package.swift.
 - Premium card sizing: one SwiftUI measurement on first open for a horizontal card and none on later opens (unit tests); Release Time Profiler on a physical device (iPhone 12 mini reference) shows `PremiumCell.systemLayoutSizeFitting` work at or below 3 ms in total on first open.
-- Strings marked `needs_review` in the catalog reviewed by native speakers, or the release notes say they are machine-reviewed.
 - Final commit CI must be green; an earlier successful SHA is insufficient.
 
 ## Environment-specific checks

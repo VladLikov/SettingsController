@@ -4990,308 +4990,308 @@
       "localizations": {
         "ar": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "الأحرف المطلوبة: %ld"
+            "state": "translated",
+            "value": "عدد الأحرف المتبقية: %ld"
           }
         },
         "bg": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Нужни знаци: %ld"
+            "state": "translated",
+            "value": "Необходими още знаци: %ld"
           }
         },
         "bn": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "আরও অক্ষর প্রয়োজন: %ld"
           }
         },
         "ca": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caràcters necessaris: %ld"
+            "state": "translated",
+            "value": "Caràcters que falten: %ld"
           }
         },
         "cs": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Potřebné znaky: %ld"
+            "state": "translated",
+            "value": "Zbývá znaků: %ld"
           }
         },
         "da": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tegn mangler: %ld"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Benötigte Zeichen: %ld"
+            "state": "translated",
+            "value": "Noch %ld Zeichen erforderlich"
           }
         },
         "el": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Απαιτούμενοι χαρακτήρες: %ld"
+            "state": "translated",
+            "value": "Απομένουν χαρακτήρες: %ld"
           }
         },
         "en-IN": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Characters needed: %ld"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caracteres necesarios: %ld"
+            "state": "translated",
+            "value": "Caracteres que faltan: %ld"
           }
         },
         "es-419": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caracteres necesarios: %ld"
+            "state": "translated",
+            "value": "Caracteres que faltan: %ld"
           }
         },
         "es-US": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caracteres necesarios: %ld"
+            "state": "translated",
+            "value": "Caracteres que faltan: %ld"
           }
         },
         "fi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Merkkejä puuttuu: %ld"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caractères requis : %ld"
+            "state": "translated",
+            "value": "Caractères manquants : %ld"
           }
         },
         "gu": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "જરૂરી અક્ષરો: %ld"
+            "state": "translated",
+            "value": "હજુ જરૂરી અક્ષરો: %ld"
           }
         },
         "he": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "תווים נדרשים: %ld"
+            "state": "translated",
+            "value": "תווים חסרים: %ld"
           }
         },
         "hi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "आवश्यक वर्ण: %ld"
+            "state": "translated",
+            "value": "और अक्षर चाहिए: %ld"
           }
         },
         "hr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Potrebno znakova: %ld"
+            "state": "translated",
+            "value": "Nedostaje znakova: %ld"
           }
         },
         "hu": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Szükséges karakterek: %ld"
+            "state": "translated",
+            "value": "Hiányzó karakterek: %ld"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Karakter diperlukan: %ld"
+            "state": "translated",
+            "value": "Kurang %ld karakter"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caratteri necessari: %ld"
+            "state": "translated",
+            "value": "Caratteri mancanti: %ld"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "あと必要な文字数：%ld"
+            "state": "translated",
+            "value": "あと%ld文字入力してください"
           }
         },
         "kk": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Қажетті таңбалар: %ld"
+            "state": "translated",
+            "value": "Тағы %ld таңба қажет"
           }
         },
         "kn": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ಅಗತ್ಯವಿರುವ ಅಕ್ಷರಗಳು: %ld"
+            "state": "translated",
+            "value": "ಇನ್ನೂ ಬೇಕಾದ ಅಕ್ಷರಗಳು: %ld"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "필요한 글자 수: %ld"
+            "state": "translated",
+            "value": "%ld자 더 입력하세요"
           }
         },
         "lt": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Trūksta simbolių: %ld"
           }
         },
         "ml": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ആവശ്യമായ അക്ഷരങ്ങൾ: %ld"
+            "state": "translated",
+            "value": "ഇനിയും വേണ്ട അക്ഷരങ്ങൾ: %ld"
           }
         },
         "mr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "आवश्यक अक्षरे: %ld"
+            "state": "translated",
+            "value": "आणखी अक्षरे हवीत: %ld"
           }
         },
         "ms": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Aksara diperlukan: %ld"
+            "state": "translated",
+            "value": "Kurang %ld aksara"
           }
         },
         "nb": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Tegn som mangler: %ld"
           }
         },
         "nl": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Benodigde tekens: %ld"
+            "state": "translated",
+            "value": "Ontbrekende tekens: %ld"
           }
         },
         "or": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ଆବଶ୍ୟକ ଅକ୍ଷର: %ld"
+            "state": "translated",
+            "value": "ଆଉ ଆବଶ୍ୟକ ଅକ୍ଷର: %ld"
           }
         },
         "pa": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ਲੋੜੀਂਦੇ ਅੱਖਰ: %ld"
+            "state": "translated",
+            "value": "ਹੋਰ ਲੋੜੀਂਦੇ ਅੱਖਰ: %ld"
           }
         },
         "pl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Brakujące znaki: %ld"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caracteres necessários: %ld"
+            "state": "translated",
+            "value": "Caracteres faltando: %ld"
           }
         },
         "pt-PT": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caracteres necessários: %ld"
+            "state": "translated",
+            "value": "Caracteres em falta: %ld"
           }
         },
         "ro": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Caractere necesare: %ld"
+            "state": "translated",
+            "value": "Caractere lipsă: %ld"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Нужно ещё символов: %ld"
           }
         },
         "sk": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Potrebné znaky: %ld"
+            "state": "translated",
+            "value": "Zostáva znakov: %ld"
           }
         },
         "sl": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Potrebni znaki: %ld"
+            "state": "translated",
+            "value": "Manjkajoči znaki: %ld"
           }
         },
         "sv": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Tecken som behövs: %ld"
+            "state": "translated",
+            "value": "Tecken som saknas: %ld"
           }
         },
         "ta": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "தேவையான எழுத்துகள்: %ld"
+            "state": "translated",
+            "value": "இன்னும் தேவையான எழுத்துகள்: %ld"
           }
         },
         "te": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "అవసరమైన అక్షరాలు: %ld"
+            "state": "translated",
+            "value": "ఇంకా కావాల్సిన అక్షరాలు: %ld"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "จำนวนอักขระที่ต้องการ: %ld"
+            "state": "translated",
+            "value": "ต้องพิมพ์อีก %ld อักขระ"
           }
         },
         "tr": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Gereken karakter: %ld"
+            "state": "translated",
+            "value": "%ld karakter daha gerekli"
           }
         },
         "uk": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Потрібно ще символів: %ld"
           }
         },
         "ur": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "درکار حروف: %ld"
+            "state": "translated",
+            "value": "مزید درکار حروف: %ld"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Số ký tự cần thêm: %ld"
+            "state": "translated",
+            "value": "Cần thêm %ld ký tự"
           }
         },
         "zh-HK": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "尚需字元數：%ld"
+            "state": "translated",
+            "value": "還需輸入 %ld 個字元"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "还需字符数：%ld"
+            "state": "translated",
+            "value": "还需输入 %ld 个字符"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "尚需字元數：%ld"
+            "state": "translated",
+            "value": "還需輸入 %ld 個字元"
           }
         }
       }
@@ -6547,307 +6547,307 @@
       "localizations": {
         "ar": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "نسخ"
           }
         },
         "bg": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Копиране"
+            "state": "translated",
+            "value": "Копирай"
           }
         },
         "bn": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "কপি করুন"
           }
         },
         "ca": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copia"
           }
         },
         "cs": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopírovat"
           }
         },
         "da": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopiér"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopieren"
           }
         },
         "el": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Αντιγραφή"
           }
         },
         "en-IN": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copy"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copiar"
           }
         },
         "es-419": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copiar"
           }
         },
         "es-US": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copiar"
           }
         },
         "fi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopioi"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copier"
           }
         },
         "gu": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "કૉપિ કરો"
           }
         },
         "he": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "העתקה"
           }
         },
         "hi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "कॉपी करें"
           }
         },
         "hr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopiraj"
           }
         },
         "hu": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Másolás"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Salin"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copia"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "コピー"
           }
         },
         "kk": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Көшіру"
           }
         },
         "kn": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ನಕಲಿಸಿ"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "복사"
           }
         },
         "lt": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopijuoti"
           }
         },
         "ml": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "പകർത്തുക"
           }
         },
         "mr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "कॉपी करा"
           }
         },
         "ms": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Salin"
           }
         },
         "nb": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopier"
           }
         },
         "nl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopieer"
           }
         },
         "or": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "କପି କରନ୍ତୁ"
           }
         },
         "pa": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ਕਾਪੀ ਕਰੋ"
           }
         },
         "pl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopiuj"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copiar"
           }
         },
         "pt-PT": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Copiar"
           }
         },
         "ro": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Copiază"
+            "state": "translated",
+            "value": "Copiați"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Скопировать"
           }
         },
         "sk": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopírovať"
           }
         },
         "sl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopiraj"
           }
         },
         "sv": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopiera"
           }
         },
         "ta": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "நகலெடு"
           }
         },
         "te": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "కాపీ చేయండి"
+            "state": "translated",
+            "value": "కాపీ చేయి"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "คัดลอก"
           }
         },
         "tr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kopyala"
           }
         },
         "uk": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Скопіювати"
           }
         },
         "ur": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "کاپی کریں"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Sao chép"
           }
         },
         "zh-HK": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "拷貝"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "拷贝"
+            "state": "translated",
+            "value": "复制"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "拷貝"
           }
         }
@@ -8416,308 +8416,308 @@
       "localizations": {
         "ar": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "تجاهل الرسالة"
+            "state": "translated",
+            "value": "حذف الرسالة"
           }
         },
         "bg": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Отхвърляне на съобщението"
+            "state": "translated",
+            "value": "Изтрий съобщението"
           }
         },
         "bn": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "বার্তা বাতিল করুন"
+            "state": "translated",
+            "value": "বার্তা মুছে ফেলুন"
           }
         },
         "ca": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Descarta el missatge"
           }
         },
         "cs": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Zahodit zprávu"
           }
         },
         "da": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Kassér besked"
           }
         },
         "de": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Nachricht verwerfen"
           }
         },
         "el": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Απόρριψη μηνύματος"
           }
         },
         "en-IN": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Discard Message"
           }
         },
         "es": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Descartar mensaje"
           }
         },
         "es-419": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Descartar mensaje"
           }
         },
         "es-US": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Descartar mensaje"
           }
         },
         "fi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Hylkää viesti"
           }
         },
         "fr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Supprimer le message"
           }
         },
         "gu": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "સંદેશ કાઢી નાખો"
           }
         },
         "he": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "מחיקת ההודעה"
           }
         },
         "hi": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "संदेश हटाएँ"
           }
         },
         "hr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Odbaci poruku"
           }
         },
         "hu": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Üzenet elvetése"
           }
         },
         "id": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Buang Pesan"
           }
         },
         "it": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Elimina messaggio"
           }
         },
         "ja": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "メッセージを破棄"
           }
         },
         "kk": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Хабарды жою"
           }
         },
         "kn": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ಸಂದೇಶವನ್ನು ತ್ಯಜಿಸಿ"
+            "state": "translated",
+            "value": "ಸಂದೇಶವನ್ನು ಅಳಿಸಿ"
           }
         },
         "ko": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "메시지 폐기"
+            "state": "translated",
+            "value": "메시지 삭제"
           }
         },
         "lt": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Atmesti žinutę"
+            "state": "translated",
+            "value": "Ištrinti žinutę"
           }
         },
         "ml": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "സന്ദേശം ഉപേക്ഷിക്കുക"
           }
         },
         "mr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "संदेश काढून टाका"
           }
         },
         "ms": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Buang Mesej"
           }
         },
         "nb": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Forkast meldingen"
+            "state": "translated",
+            "value": "Forkast melding"
           }
         },
         "nl": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Bericht verwijderen"
+            "state": "translated",
+            "value": "Verwijder bericht"
           }
         },
         "or": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ବାର୍ତ୍ତା ବାତିଲ କରନ୍ତୁ"
+            "state": "translated",
+            "value": "ବାର୍ତ୍ତା ହଟାନ୍ତୁ"
           }
         },
         "pa": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "ਸੁਨੇਹਾ ਰੱਦ ਕਰੋ"
+            "state": "translated",
+            "value": "ਸੁਨੇਹਾ ਮਿਟਾਓ"
           }
         },
         "pl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Odrzuć wiadomość"
           }
         },
         "pt-BR": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Descartar Mensagem"
+            "state": "translated",
+            "value": "Descartar mensagem"
           }
         },
         "pt-PT": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Descartar mensagem"
           }
         },
         "ro": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Renunță la mesaj"
+            "state": "translated",
+            "value": "Ștergeți mesajul"
           }
         },
         "ru": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Удалить сообщение"
           }
         },
         "sk": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Zahodiť správu"
           }
         },
         "sl": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Zavrzi sporočilo"
           }
         },
         "sv": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Släng meddelandet"
+            "state": "translated",
+            "value": "Radera meddelande"
           }
         },
         "ta": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "செய்தியை நிராகரி"
+            "state": "translated",
+            "value": "செய்தியை நீக்கு"
           }
         },
         "te": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "సందేశాన్ని విస్మరించండి"
+            "state": "translated",
+            "value": "సందేశాన్ని తొలగించు"
           }
         },
         "th": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "ทิ้งข้อความ"
           }
         },
         "tr": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Mesajı Sil"
           }
         },
         "uk": {
           "stringUnit": {
-            "state": "needs_review",
+            "state": "translated",
             "value": "Видалити повідомлення"
           }
         },
         "ur": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "پیغام مسترد کریں"
+            "state": "translated",
+            "value": "پیغام حذف کریں"
           }
         },
         "vi": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "Hủy tin nhắn"
+            "state": "translated",
+            "value": "Xóa tin nhắn"
           }
         },
         "zh-HK": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "捨棄訊息"
+            "state": "translated",
+            "value": "刪除訊息"
           }
         },
         "zh-Hans": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "放弃信息"
+            "state": "translated",
+            "value": "删除消息"
           }
         },
         "zh-Hant": {
           "stringUnit": {
-            "state": "needs_review",
-            "value": "捨棄訊息"
+            "state": "translated",
+            "value": "刪除訊息"
           }
         }
       }

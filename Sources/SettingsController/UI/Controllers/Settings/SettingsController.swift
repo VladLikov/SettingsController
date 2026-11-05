@@ -195,7 +195,7 @@ public final class SettingsController: UITableViewController {
         configuration.eventHandler?.settingsDidDismiss()
     }
 
-    /// `animated` cross-fades replaced sections (catalog results, premium card and row), unless Reduce Motion is on.
+    /// `animated` lets the table animate replaced sections (catalog results, premium card and row) natively.
     func rebuildSections(
         reload: Bool = true, changedSectionIDs: Set<Int>? = nil, reconfiguredRows: [IndexPath] = [], animated: Bool = false
     ) {
@@ -218,8 +218,8 @@ public final class SettingsController: UITableViewController {
         let deleted = IndexSet(oldIDs.indices.filter { !ids.contains(oldIDs[$0]) })
         let inserted = IndexSet(ids.indices.filter { !oldIDs.contains(ids[$0]) })
         let replaced = IndexSet(oldIDs.indices.filter { ids.contains(oldIDs[$0]) && changedSectionIDs.contains(oldIDs[$0]) })
-        let fades = animated && !UIAccessibility.isReduceMotionEnabled
-        let animation: UITableView.RowAnimation = fades ? .fade : .none
+        // System table animations only; UIKit picks the style and honors accessibility settings.
+        let animation: UITableView.RowAnimation = animated ? .automatic : .none
         let apply = { [self] in
             if !deleted.isEmpty || !inserted.isEmpty || !replaced.isEmpty {
                 tableView.performBatchUpdates {
@@ -235,7 +235,7 @@ public final class SettingsController: UITableViewController {
             }
             if !reconfiguredRows.isEmpty { tableView.reconfigureRows(at: reconfiguredRows) }
         }
-        if fades { apply() } else { UIView.performWithoutAnimation(apply) }
+        if animated { apply() } else { UIView.performWithoutAnimation(apply) }
     }
 
     /// Updates premium gradients and CTA tint after a host-owned appearance change.

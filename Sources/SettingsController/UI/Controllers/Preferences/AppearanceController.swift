@@ -174,28 +174,19 @@ extension AppearanceController {
         eventHandler?.settingsDidUpdateTheme(theme)
         let sections = IndexSet(integer: Section.style.rawValue)
         if isOn {
-            tableView.deleteSections(sections, with: .fade)
+            tableView.deleteSections(sections, with: .automatic)
         } else {
-            tableView.insertSections(sections, with: .fade)
+            tableView.insertSections(sections, with: .automatic)
         }
     }
 
-    /// Cross-fades the navigation bar, switch and checkmarks to the new accent color.
+    /// Applies the new accent to the navigation bar, switch and checkmarks.
     private func applyTint(_ color: UIColor) {
-        let switchCell = tableView.cellForRow(at: IndexPath(row: 0, section: Section.automatic.rawValue)) as? SwitchCell
-        let styleCells =
-            followsSystemAppearance
-            ? []
-            : InterfaceStyle.allCases.indices.compactMap { tableView.cellForRow(at: IndexPath(row: $0, section: Section.style.rawValue)) }
-        let changes = { [navigationController] in
-            navigationController?.navigationBar.tintColor = color
-            switchCell?.switchControl.onTintColor = color
-            for cell in styleCells { cell.tintColor = color }
-        }
-        if UIAccessibility.isReduceMotionEnabled {
-            changes()
-        } else {
-            UIView.animate(withDuration: 0.25, delay: 0, options: [.beginFromCurrentState, .allowUserInteraction], animations: changes)
+        navigationController?.navigationBar.tintColor = color
+        (tableView.cellForRow(at: IndexPath(row: 0, section: Section.automatic.rawValue)) as? SwitchCell)?.switchControl.onTintColor = color
+        guard !followsSystemAppearance else { return }
+        for row in InterfaceStyle.allCases.indices {
+            tableView.cellForRow(at: IndexPath(row: row, section: Section.style.rawValue))?.tintColor = color
         }
     }
 }

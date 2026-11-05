@@ -142,7 +142,6 @@ extension AppCell {
         iconRequest = request
         let scale = max(traitCollection.displayScale, 1)
         representedScale = scale
-        let start = CACurrentMediaTime()
 
         iconTask = Task { @MainActor [weak self] in
             do {
@@ -158,14 +157,7 @@ extension AppCell {
                 iconTask = nil
                 isShowingPlaceholder = false
                 currentIcon = image
-                // Cached icons appear at once; icons that arrive from the network fade in.
-                if CACurrentMediaTime() - start > 0.05, window != nil, !UIAccessibility.isReduceMotionEnabled {
-                    UIView.transition(with: contentView, duration: 0.2, options: [.transitionCrossDissolve, .allowUserInteraction]) {
-                        self.updateContentConfiguration()
-                    }
-                } else {
-                    updateContentConfiguration()
-                }
+                updateContentConfiguration()
             } catch is CancellationError {
                 return
             } catch {

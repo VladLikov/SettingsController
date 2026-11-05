@@ -7,7 +7,6 @@ class UserCell: UITableViewCell {
     // MARK: Properties
 
     private static let userImageViewSize: CGFloat = 45
-    private var representedAvatar: UIImage?
 
     private lazy var userImageView: UIImageView = {
         let imageView = UIImageView()
@@ -50,31 +49,20 @@ class UserCell: UITableViewCell {
     func configure(title: String, avatar: UIImage?, accessory: RowAccessory = .disclosure) {
         accessibilityLabel = title
         accessory.apply(to: self)
-        let changed = userLabel.text != nil && (userLabel.text != title || representedAvatar !== avatar)
-        let update = { [self] in
-            userLabel.text = title
-            representedAvatar = avatar
-            if let avatar {
-                userImageView.image = avatar
-                userImageView.contentMode = .scaleAspectFill
-            } else {
-                // Without a photo, show a neutral person glyph rather than an empty circle.
-                userImageView.image = UIImage(systemName: "person.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 22))
-                userImageView.contentMode = .center
-            }
-        }
-        if changed, window != nil, !UIAccessibility.isReduceMotionEnabled {
-            UIView.transition(
-                with: contentView, duration: 0.2, options: [.transitionCrossDissolve, .allowUserInteraction], animations: update)
+        userLabel.text = title
+        if let avatar {
+            userImageView.image = avatar
+            userImageView.contentMode = .scaleAspectFill
         } else {
-            update()
+            // Without a photo, show a neutral person glyph rather than an empty circle.
+            userImageView.image = UIImage(systemName: "person.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 22))
+            userImageView.contentMode = .center
         }
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
         userLabel.text = nil
-        representedAvatar = nil
     }
 
     // MARK: Setup View
