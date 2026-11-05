@@ -53,6 +53,7 @@ public final class SettingsController: UITableViewController {
     private var finishingModal = false
     var overlayAppViewDidShown = false
     var overlayFrame: CGRect?
+    var selectionBeforeTap: IndexPath?
     var baseBottomInset: CGFloat { configuration.insets?.bottom ?? 0 }
 
     private lazy var closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(closeAction(_:)))
@@ -246,9 +247,15 @@ public final class SettingsController: UITableViewController {
         premiumColorOverride = color
         rebuildSections(reload: false)
         guard isViewLoaded else { return }
-        let rows = (tableView.indexPathsForVisibleRows ?? []).filter {
-            if case .premiumCard = sections[$0.section].kind { return true }
-            return false
+        // An active entitlement renders the card as a premium row whose icon uses the same color.
+        let rows = (tableView.indexPathsForVisibleRows ?? []).filter { path in
+            switch sections[path.section].kind {
+            case .premiumCard: return true
+            case .rows(let items):
+                guard items.indices.contains(path.row), case .defaultRow(.premium) = items[path.row] else { return false }
+                return true
+            case .ourApps: return false
+            }
         }
         if !rows.isEmpty {
             UIView.performWithoutAnimation { tableView.reconfigureRows(at: rows) }

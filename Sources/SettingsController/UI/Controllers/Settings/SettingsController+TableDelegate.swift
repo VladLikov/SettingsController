@@ -49,6 +49,18 @@ extension SettingsController {
         }
     }
 
+    public override func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
+        guard case .rows(let rows) = sections[indexPath.section].kind, rows.indices.contains(indexPath.row) else { return true }
+        if case .app(.placeholder) = rows[indexPath.row] { return false }
+        return true
+    }
+
+    public override func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+        guard self.tableView(tableView, shouldHighlightRowAt: indexPath) else { return nil }
+        selectionBeforeTap = tableView.indexPathForSelectedRow
+        return indexPath
+    }
+
     public override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let section = indexPath.section
         let row = indexPath.row
@@ -56,11 +68,17 @@ extension SettingsController {
         switch sections[section].kind {
         case .rows(let rows):
             let item = rows[row]
+            let previousSelection = selectionBeforeTap
+            selectionBeforeTap = nil
 
             if splitViewController?.isCollapsed != false {
                 tableView.deselectRow(at: indexPath, animated: true)
-            } else if case .defaultRow(let row) = item, case .premium = row {
+            } else if !item.opensDetail {
+                // Only a row whose screen is shown in the detail column keeps the selection.
                 tableView.deselectRow(at: indexPath, animated: true)
+                if let previousSelection, previousSelection != indexPath {
+                    tableView.selectRow(at: previousSelection, animated: false, scrollPosition: .none)
+                }
             }
 
             select(item, at: indexPath, in: tableView)
@@ -164,6 +182,22 @@ extension SettingsController {
                 termsURL: termsURL,
                 navigationTitle: row.title
             )
+        }
+    }
+}
+
+extension SettingsRowItem {
+    /// Whether selecting the row shows a destination screen rather than performing an action.
+    var opensDetail: Bool {
+        switch self {
+        case .row(let row):
+            return row.destinationFactory != nil || row.destinationControllerType != nil
+        case .defaultRow(let row):
+            switch row {
+            case .appearance, .tapticEngine, .about, .user, .userFactory: return true
+            default: return false
+            }
+        case .app: return false
         }
     }
 }
