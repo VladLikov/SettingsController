@@ -47,14 +47,15 @@ extension SettingsController {
         let fallback = isPremium
         let task = Task { @MainActor [weak self] in
             defer { if lifetime.finish(request) { self?.stateRefreshTask = nil } }
-            let context: (info: SettingsMailInfo?, isPremium: Bool?)
-            if wantsAccount {
-                context = await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback)
-            } else {
-                context = (nil, nil)
+            // Account and profile are independent: both main-actor requests interleave at their suspension points.
+            let profile: Task<UserInfo?, Never>? = wantsUser ? Task { @MainActor in await provider.settingsCurrentUserInfo() } : nil
+            let (context, user) = await withTaskCancellationHandler {
+                let context: (info: SettingsMailInfo?, isPremium: Bool?) =
+                    wantsAccount ? await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback) : (nil, nil)
+                return (context, await profile?.value)
+            } onCancel: {
+                profile?.cancel()
             }
-            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
-            let user = wantsUser ? await provider.settingsCurrentUserInfo() : nil
             guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
             self?.applyResolvedState(info: context.info, premium: context.isPremium, user: user, includesAccount: wantsAccount)
         }

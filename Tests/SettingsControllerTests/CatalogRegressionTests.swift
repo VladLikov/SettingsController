@@ -285,3 +285,45 @@ private final class FixtureURLProtocol: URLProtocol {
         pending.0?.cancel()
     }
 }
+
+@MainActor
+final class CatalogMemoryCacheTests: XCTestCase {
+    private let key = CatalogMemoryCache.Key(developerID: "cache-test", limit: 3, excludedAppID: "9")
+    private let app = AppItem(
+        id: 1, name: "Cached", iconURL: URL(string: "https://example.com/i.png")!,
+        storeURL: URL(string: "https://apps.apple.com/app/id1")!)
+
+    override func tearDown() {
+        CatalogMemoryCache.shared.removeAll()
+        CatalogMemoryCache.shared.now = { Date() }
+    }
+
+    func testFreshCacheShowsTheCatalogWithoutLoadingState() {
+        CatalogMemoryCache.shared.store([app], for: key)
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .ourApps(developerID: "cache-test", limit: 3, excludeAppID: "9"))
+            ]))
+        settings.fetchApps = { _, _, _ in
+            XCTFail("A fresh cache must not refetch")
+            return []
+        }
+        settings.loadViewIfNeeded()
+        XCTAssertEqual(settings.catalogStates[0], .loaded([app]))
+        XCTAssertNil(settings.appLoadTasks[0])
+    }
+
+    func testStaleCacheRefetchesButSizesPlaceholdersByTheLastCount() {
+        let start = Date()
+        CatalogMemoryCache.shared.now = { start }
+        CatalogMemoryCache.shared.store([app], for: key)
+        CatalogMemoryCache.shared.now = { start.addingTimeInterval(AppStoreAppsLoader.memoryCacheLifetime + 1) }
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .ourApps(developerID: "cache-test", limit: 3, excludeAppID: "9"))
+            ]))
+        XCTAssertEqual(settings.catalogStates[0], .loading)
+        guard case .rows(let rows) = settings.sections[0].kind else { return XCTFail("Expected placeholder rows") }
+        XCTAssertEqual(rows.count, 1, "Placeholders match the last received count, not the limit")
+    }
+}

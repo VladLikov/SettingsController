@@ -187,3 +187,27 @@ final class StateRegressionTests: XCTestCase {
         XCTAssertEqual(provider.dismissals, 2)
     }
 }
+
+@MainActor
+final class StateRefreshConcurrencyTests: XCTestCase {
+    func testProfileIsRequestedWhileTheAccountRequestIsPending() async throws {
+        let mail = ControlledValue<SettingsMailInfo?>()
+        let provider = RegressionProvider()
+        provider.user = UserInfo(name: "Profile")
+        provider.mailOperation = { try? await mail.value() ?? nil }
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(
+                sections: [
+                    SettingsSection(kind: .rows([.defaultRow(.user("Initial", nil, UIViewController.self))])),
+                    SettingsSection(kind: .premiumCard(premiumCard())),
+                ], dataProvider: provider))
+        let task = try XCTUnwrap(settings.startStateRefresh())
+        await mail.waitUntilStarted()
+        for _ in 0..<20 where provider.userRequests == 0 { await Task.yield() }
+        XCTAssertEqual(provider.userRequests, 1, "The profile must not wait for the account request")
+        mail.complete(.success(SettingsMailInfo(userID: "u", isPremium: true)))
+        await task.value
+        XCTAssertEqual(settings.currentUser?.name, "Profile")
+        XCTAssertTrue(settings.isPremium)
+    }
+}

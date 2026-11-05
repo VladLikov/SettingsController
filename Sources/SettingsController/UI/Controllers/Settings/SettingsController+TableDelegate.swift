@@ -11,10 +11,6 @@ import UIKit
 
 extension SettingsController {
 
-    public override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        UITableView.automaticDimension
-    }
-
     public override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
         switch sections[indexPath.section].kind {
         case .rows(let rows):

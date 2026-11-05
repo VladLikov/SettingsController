@@ -47,6 +47,13 @@ public final class SettingsController: UITableViewController {
     var fetchApps: @Sendable (String, Int, String?) async throws -> [AppItem] = {
         try await AppStoreAppsLoader.fetch(developerId: $0, limit: $1, excludeAppID: $2)
     }
+    /// Synchronous lookups of the default loader's memory cache. Tests that inject `fetchApps` never fill it.
+    var cachedCatalog: (String, Int, String?) -> [AppItem]? = {
+        AppStoreAppsLoader.cachedApps(developerId: $0, limit: $1, excludeAppID: $2)
+    }
+    var lastKnownCatalogCount: (String, Int, String?) -> Int? = {
+        AppStoreAppsLoader.lastKnownCount(developerId: $0, limit: $1, excludeAppID: $2)
+    }
     weak var activeAboutController: AboutAppController?
     weak var presentationRoot: UIViewController?
     private var didReportDismissal = false
@@ -54,6 +61,7 @@ public final class SettingsController: UITableViewController {
     var overlayAppViewDidShown = false
     var overlayFrame: CGRect?
     var selectionBeforeTap: IndexPath?
+    private var lastOverlayGeometry: OverlayGeometry?
     var baseBottomInset: CGFloat { configuration.insets?.bottom ?? 0 }
 
     private lazy var closeButton = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(closeAction(_:)))
@@ -64,7 +72,13 @@ public final class SettingsController: UITableViewController {
         super.init(style: .insetGrouped)
         for (id, section) in configuration.sections.enumerated() {
             if case .ourApps(_, let limit, _) = section.kind {
-                catalogStates[id] = limit > 0 ? .loading : .empty
+                if limit <= 0 {
+                    catalogStates[id] = .empty
+                } else if let apps = cachedApps(section.kind) {
+                    catalogStates[id] = apps.isEmpty ? .empty : .loaded(apps)
+                } else {
+                    catalogStates[id] = .loading
+                }
             }
         }
         rebuildSections(reload: false)
@@ -135,7 +149,19 @@ public final class SettingsController: UITableViewController {
 
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        // The table is this controller's view, so this runs on every scroll frame.
+        // The overlay inset only depends on geometry, not on the scroll offset.
+        let geometry = overlayGeometry
+        guard geometry != lastOverlayGeometry else { return }
+        lastOverlayGeometry = geometry
         updateOverlayInset()
+    }
+
+    private var overlayGeometry: OverlayGeometry {
+        OverlayGeometry(
+            overlayFrame: overlayFrame, tableSize: tableView.bounds.size,
+            tableOrigin: view.window.flatMap { window in tableView.superview?.convert(tableView.frame.origin, to: window) },
+            adjustedBottom: tableView.adjustedContentInset.bottom - tableView.contentInset.bottom)
     }
 
     func cancelOperations() {
@@ -177,7 +203,9 @@ public final class SettingsController: UITableViewController {
                 case .empty: continue
                 case .loading:
                     guard limit > 0 else { continue }
-                    section.kind = .rows(Array(repeating: .app(.placeholder), count: limit))
+                    // Match the last received count so the section does not jump when apps arrive.
+                    let count = min(limit, max(1, placeholderCount(definition.kind) ?? limit))
+                    section.kind = .rows(Array(repeating: .app(.placeholder), count: count))
                 case .loaded(let apps):
                     guard !apps.isEmpty else { continue }
                     section.kind = .rows(apps.map { .app(.loaded($0)) })
@@ -331,6 +359,16 @@ public final class SettingsController: UITableViewController {
         rebuildSections(changedSectionIDs: [id])
     }
 
+    private func cachedApps(_ kind: SettingsSectionKind) -> [AppItem]? {
+        guard case .ourApps(let developer, let limit, let excluded) = kind else { return nil }
+        return cachedCatalog(developer, limit, excluded)
+    }
+
+    private func placeholderCount(_ kind: SettingsSectionKind) -> Int? {
+        guard case .ourApps(let developer, let limit, let excluded) = kind else { return nil }
+        return lastKnownCatalogCount(developer, limit, excluded)
+    }
+
     private static func initialPremium(in sections: [SettingsSection]) -> Bool {
         for section in sections {
             switch section.kind {
@@ -346,4 +384,11 @@ public final class SettingsController: UITableViewController {
     }
 
     public override var preferredStatusBarStyle: UIStatusBarStyle { .default }
+}
+
+struct OverlayGeometry: Equatable {
+    let overlayFrame: CGRect?
+    let tableSize: CGSize
+    let tableOrigin: CGPoint?
+    let adjustedBottom: CGFloat
 }

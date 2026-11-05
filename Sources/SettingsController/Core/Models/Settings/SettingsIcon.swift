@@ -68,6 +68,9 @@ public struct SettingsIcon {
             return nil
         }
 
+        #if DEBUG
+        AutomaticIconIdentityMonitor.record(glyphKey: cacheKey as String)
+        #endif
         Self.tileCache.setObject(rendered, forKey: cacheKey, cost: (rendered.cgImage?.bytesPerRow ?? 0) * (rendered.cgImage?.height ?? 0))
         return rendered
     }
@@ -344,3 +347,26 @@ extension CGFloat {
         String(format: "%.4f", Double(self))
     }
 }
+
+#if DEBUG
+import os
+
+/// Icons built with `SettingsIcon(image:)` and no `cacheIdentifier` get a unique cache identity.
+/// Creating such icons repeatedly, e.g. in a computed property, renders and caches duplicates.
+@MainActor
+enum AutomaticIconIdentityMonitor {
+    private static var identities = Set<Substring>()
+    private static var didWarn = false
+    static let threshold = 40
+
+    static func record(glyphKey: String) {
+        guard !didWarn, glyphKey.hasPrefix("image:"), let identity = glyphKey.split(separator: "|").first else { return }
+        identities.insert(identity)
+        guard identities.count > threshold else { return }
+        didWarn = true
+        Logger(subsystem: "SettingsController", category: "SettingsIcon").warning(
+            "More than \(threshold) SettingsIcon(image:) values without cacheIdentifier were rendered. Create icons once or pass a stable cacheIdentifier to avoid duplicate rendering."
+        )
+    }
+}
+#endif

@@ -143,7 +143,7 @@ extension AppCell {
         let scale = max(traitCollection.displayScale, 1)
         representedScale = scale
 
-        iconTask = Task { [weak self] in
+        iconTask = Task { @MainActor [weak self] in
             do {
                 let image = try await RemoteImageLoader.shared.image(
                     from: url,
@@ -153,23 +153,19 @@ extension AppCell {
 
                 guard !Task.isCancelled else { return }
 
-                await MainActor.run { [weak self] in
-                    guard let self, iconRequest == request, representedIconURL == url else { return }
-                    iconTask = nil
-                    isShowingPlaceholder = false
-                    currentIcon = image
-                    updateContentConfiguration()
-                }
+                guard let self, iconRequest == request, representedIconURL == url else { return }
+                iconTask = nil
+                isShowingPlaceholder = false
+                currentIcon = image
+                updateContentConfiguration()
             } catch is CancellationError {
                 return
             } catch {
-                await MainActor.run { [weak self] in
-                    guard !Task.isCancelled, let self, iconRequest == request, representedIconURL == url else { return }
-                    iconTask = nil
-                    isShowingPlaceholder = true
-                    currentIcon = makePlaceholder()
-                    updateContentConfiguration()
-                }
+                guard !Task.isCancelled, let self, iconRequest == request, representedIconURL == url else { return }
+                iconTask = nil
+                isShowingPlaceholder = true
+                currentIcon = makePlaceholder()
+                updateContentConfiguration()
             }
         }
     }

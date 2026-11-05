@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-public struct UserInfo {
+public struct UserInfo: Sendable {
 
     public let name: String
     public let avatar: UIImage?

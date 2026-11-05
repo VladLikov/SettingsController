@@ -9,8 +9,27 @@ import Foundation
 
 public enum AppStoreAppsLoader {
 
+    /// Results stay in memory for this long, so reopening settings shows the catalog without a loading state.
+    static let memoryCacheLifetime: TimeInterval = 10 * 60
+
     public static func fetch(developerId: String, limit: Int, excludeAppID: String? = nil) async throws -> [AppItem] {
-        try await fetch(developerId: developerId, limit: limit, excludeAppID: excludeAppID, session: .shared)
+        let key = CatalogMemoryCache.Key(developerID: developerId, limit: limit, excludedAppID: excludeAppID)
+        if let apps = CatalogMemoryCache.shared.apps(for: key, maxAge: memoryCacheLifetime) { return apps }
+        let apps = try await fetch(developerId: developerId, limit: limit, excludeAppID: excludeAppID, session: .shared)
+        CatalogMemoryCache.shared.store(apps, for: key)
+        return apps
+    }
+
+    /// A fresh in-memory result, available synchronously when settings are created.
+    static func cachedApps(developerId: String, limit: Int, excludeAppID: String?) -> [AppItem]? {
+        let key = CatalogMemoryCache.Key(developerID: developerId, limit: limit, excludedAppID: excludeAppID)
+        return CatalogMemoryCache.shared.apps(for: key, maxAge: memoryCacheLifetime)
+    }
+
+    /// The number of apps last received for this catalog, even if stale; sizes the loading placeholders.
+    static func lastKnownCount(developerId: String, limit: Int, excludeAppID: String?) -> Int? {
+        let key = CatalogMemoryCache.Key(developerID: developerId, limit: limit, excludedAppID: excludeAppID)
+        return CatalogMemoryCache.shared.apps(for: key, maxAge: .infinity)?.count
     }
 
     static func fetch(
@@ -131,5 +150,44 @@ actor CatalogRequestLoader {
         } else {
             flights[key] = flight
         }
+    }
+}
+
+/// Process-wide memory cache of successful catalog lookups. Thread-safe; values are immutable.
+final class CatalogMemoryCache: @unchecked Sendable {
+    struct Key: Hashable {
+        let developerID: String
+        let limit: Int
+        let excludedAppID: String?
+    }
+
+    private struct Entry {
+        let apps: [AppItem]
+        let date: Date
+    }
+
+    static let shared = CatalogMemoryCache()
+
+    private let lock = NSLock()
+    private var entries: [Key: Entry] = [:]
+    var now: @Sendable () -> Date = { Date() }
+
+    func apps(for key: Key, maxAge: TimeInterval) -> [AppItem]? {
+        lock.lock()
+        defer { lock.unlock() }
+        guard let entry = entries[key], now().timeIntervalSince(entry.date) <= maxAge else { return nil }
+        return entry.apps
+    }
+
+    func store(_ apps: [AppItem], for key: Key) {
+        lock.lock()
+        defer { lock.unlock() }
+        entries[key] = Entry(apps: apps, date: now())
+    }
+
+    func removeAll() {
+        lock.lock()
+        defer { lock.unlock() }
+        entries.removeAll()
     }
 }
