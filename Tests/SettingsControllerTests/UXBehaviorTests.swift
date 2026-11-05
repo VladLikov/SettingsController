@@ -114,3 +114,38 @@ private final class PresentedNavigation: UINavigationController {
         completion?()
     }
 }
+
+@MainActor
+final class ExternalLinkTests: XCTestCase {
+    private func opened(appInstalled: Bool, _ action: (SettingsController) -> Void) async -> [URL] {
+        let settings = SettingsController(configuration: SettingsConfiguration(sections: []))
+        var urls: [URL] = []
+        let done = ControlledValue<Bool>()
+        settings.openURL = { url in
+            urls.append(url)
+            let isApp = url.scheme != "https"
+            if !isApp || appInstalled { done.complete(.success(true)) }
+            return isApp ? appInstalled : true
+        }
+        action(settings)
+        _ = try? await done.value()
+        return urls
+    }
+
+    func testTelegramFallsBackToTheWebWithoutQuerySchemes() async {
+        let urls = await opened(appInstalled: false) { $0.openTelegramChannel("my channel") }
+        XCTAssertEqual(urls.map(\.absoluteString), ["tg://resolve?domain=my%20channel", "https://t.me/my%20channel"])
+    }
+
+    func testInstalledAppOpensOnce() async {
+        let urls = await opened(appInstalled: true) { $0.openVKGroup("42") }
+        XCTAssertEqual(urls.map(\.absoluteString), ["vk://vk.com/club42"])
+    }
+
+    func testReviewUsesTheStoreAppThenTheWebPage() async {
+        let urls = await opened(appInstalled: false) { $0.rateApp("123") }
+        XCTAssertEqual(
+            urls.map(\.absoluteString),
+            ["itms-apps://itunes.apple.com/app/id123?action=write-review", "https://apps.apple.com/app/id123?action=write-review"])
+    }
+}

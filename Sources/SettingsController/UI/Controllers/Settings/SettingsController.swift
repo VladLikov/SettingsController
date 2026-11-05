@@ -24,7 +24,10 @@ public final class SettingsController: UITableViewController {
     }
 
     private static func makePresentation(for settings: SettingsController) -> SplitController {
-        let root = SplitController.makeDefault(for: UINavigationController(rootViewController: settings))
+        let navigation = UINavigationController(rootViewController: settings)
+        // Large titles belong to the library's own navigation; a host navigation keeps its setting.
+        navigation.navigationBar.prefersLargeTitles = true
+        let root = SplitController.makeDefault(for: navigation)
         settings.presentationRoot = root
         root.onWillPresent = { [weak settings] in settings?.beginPresentation() }
         root.onWillDismiss = { [weak settings] in settings?.cancelOperations() }
@@ -112,7 +115,6 @@ public final class SettingsController: UITableViewController {
         tableView.contentInset.top = configuration.insets?.top ?? 0
         tableView.contentInset.bottom = baseBottomInset
         navigationItem.largeTitleDisplayMode = .automatic
-        navigationController?.navigationBar.prefersLargeTitles = true
         clearsSelectionOnViewWillAppear = true
         observeTextSizeChanges()
         resumeCatalogLoads()

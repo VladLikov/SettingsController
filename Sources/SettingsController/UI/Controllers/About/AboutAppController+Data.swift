@@ -74,7 +74,7 @@ extension AboutAppController {
         let systemLanguage = Locale.preferredLanguages.first ?? "-"
         let appLanguage = Bundle.main.preferredLocalizations.first ?? "-"
 
-        let region = Locale.current.regionCode ?? "-"
+        let region = Locale.current.regionIdentifier ?? "-"
 
         data = [
             (

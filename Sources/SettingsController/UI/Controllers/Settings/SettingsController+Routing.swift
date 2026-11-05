@@ -122,49 +122,58 @@ extension SettingsController {
     }
 
     func rateApp(_ appID: String) {
-        if let url = URL(string: "itms-apps://itunes.apple.com/app/id\(appID)?action=write-review") {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(url)
-        }
+        openExternal(
+            Self.storeURL(scheme: "itms-apps", path: "/app/id\(appID)", query: [URLQueryItem(name: "action", value: "write-review")]),
+            fallback: Self.storeURL(scheme: "https", path: "/app/id\(appID)", query: [URLQueryItem(name: "action", value: "write-review")]))
     }
 
     func moreApps(_ developerID: String) {
-        if let url = URL(string: "itms-apps://itunes.apple.com/developer/id\(developerID)") {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(url)
-        }
+        openExternal(
+            Self.storeURL(scheme: "itms-apps", path: "/developer/id\(developerID)"),
+            fallback: Self.storeURL(scheme: "https", path: "/developer/id\(developerID)"))
     }
 
-    func openTelegramChannel(_ channelUsername: String) {
-        guard let appURL = URL(string: "tg://resolve?domain=\(channelUsername)"),
-            let webURL = URL(string: "https://t.me/\(channelUsername)")
-        else {
-            return
-        }
-
-        if UIApplication.shared.canOpenURL(appURL) {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(appURL)
-        } else {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(webURL)
-        }
+    func openTelegramChannel(_ channel: String) {
+        var app = URLComponents()
+        app.scheme = "tg"
+        app.host = "resolve"
+        app.queryItems = [URLQueryItem(name: "domain", value: channel)]
+        openExternal(app.url, fallback: Self.webURL(host: "t.me", path: "/\(channel)"))
     }
 
     func openVKGroup(_ groupID: String) {
-        guard let appURL = URL(string: "vk://vk.com/club\(groupID)"),
-            let webURL = URL(string: "https://vk.com/club\(groupID)")
-        else {
-            return
-        }
+        openExternal(
+            Self.webURL(scheme: "vk", host: "vk.com", path: "/club\(groupID)"),
+            fallback: Self.webURL(host: "vk.com", path: "/club\(groupID)"))
+    }
 
-        if UIApplication.shared.canOpenURL(appURL) {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(appURL)
-        } else {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(webURL)
+    /// Opens the app link, or the web link when the app is not installed. No Info.plist query schemes are needed.
+    func openExternal(_ primary: URL?, fallback: URL?) {
+        guard let target = primary ?? fallback else { return }
+        cancelPendingStoreProduct()
+        let open = openURL
+        Task { @MainActor in
+            if await open(target) { return }
+            if let fallback, fallback != target { _ = await open(fallback) }
         }
+    }
+
+    private static func storeURL(scheme: String, path: String, query: [URLQueryItem]? = nil) -> URL? {
+        var components = URLComponents()
+        components.scheme = scheme
+        components.host = scheme == "https" ? "apps.apple.com" : "itunes.apple.com"
+        components.path = path
+        components.queryItems = query
+        return components.url
+    }
+
+    /// Builds a URL from an unescaped path, so configured IDs with spaces or slashes cannot break it.
+    private static func webURL(scheme: String = "https", host: String, path: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = scheme
+        components.host = host
+        components.path = path
+        return components.url
     }
 }
 
