@@ -35,7 +35,7 @@ final class PremiumThemeTests: XCTestCase {
         settings.updatePremiumColor(.systemGreen)
         settings.applyResolvedState(info: nil, premium: true, user: nil, includesAccount: true)
         guard case .rows(let rows) = settings.sections[0].kind,
-            case .defaultRow(.premium(let active)) = rows[0]
+            case .item(.defaultRow(.premium(let active))) = rows[0]
         else { return XCTFail("Expected active row") }
         XCTAssertEqual(active.color, UIColor.systemGreen)
         settings.applyResolvedState(info: nil, premium: false, user: nil, includesAccount: true)
@@ -49,10 +49,9 @@ final class PremiumThemeTests: XCTestCase {
 }
 
 private final class TestTheme: ThemeStorage {
-    var appColor: UIColor = .blue
-    var appColorRawValue = "blue"
-    var autoTheme = true
-    var interfaceStyle = 1
+    var appColorID = "blue"
+    var followsSystemAppearance = true
+    var interfaceStyle = InterfaceStyle.light
 }
 private enum TestColor: String, CaseIterable, AppColorType {
     case red

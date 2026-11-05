@@ -68,8 +68,8 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
     func testNilAndZeroInsetDoNotCollide() throws {
         SettingsIconGenerator.removeAllCachedImages()
         let image = UIImage(systemName: "square.fill")!
-        let nilInset = SettingsIcon(image: image, color: .red, inset: nil, cacheIdentifier: "same")
-        let zeroInset = SettingsIcon(image: image, color: .red, inset: Inset(0), cacheIdentifier: "same")
+        let nilInset = SettingsIcon(image: image, color: .red, padding: nil, cacheIdentifier: "same")
+        let zeroInset = SettingsIcon(image: image, color: .red, padding: IconPadding(0), cacheIdentifier: "same")
         let a = try XCTUnwrap(nilInset.generateSettingsImage())
         let b = try XCTUnwrap(zeroInset.generateSettingsImage())
         XCTAssertFalse(a === b)
@@ -82,7 +82,7 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         let icon = SettingsIcon(image: UIImage(systemName: "star"), color: .blue)
         XCTAssertNil(icon.generateSettingsImage(size: CGSize(width: CGFloat.infinity, height: 30)))
         XCTAssertNil(icon.generateSettingsImage(cornerRadius: .nan))
-        let invalid = SettingsIcon(image: UIImage(systemName: "star"), color: .blue, inset: Inset(.infinity))
+        let invalid = SettingsIcon(image: UIImage(systemName: "star"), color: .blue, padding: IconPadding(.infinity))
         XCTAssertNil(invalid.generateSettingsImage())
     }
 
@@ -91,7 +91,7 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             UIColor.black.setFill()
             context.fill(CGRect(x: 0, y: 0, width: 1024, height: 2048))
         }
-        let icon = SettingsIcon(image: source, color: .blue, inset: Inset(20))
+        let icon = SettingsIcon(image: source, color: .blue, padding: IconPadding(20))
         let traits = UITraitCollection(displayScale: 2)
         let result = try XCTUnwrap(icon.generateSettingsImage(traitCollection: traits))
         XCTAssertEqual(result.cgImage?.width, 60)
@@ -123,13 +123,24 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertTrue(cell.contentView.constraints.isEmpty)
     }
 
-    func testAutomaticAppearanceExplanationBelongsToSwitchSection() {
+    func testAutomaticAppearanceExplanationBelongsToSwitchSection() throws {
         let theme = RegressionTheme()
         let controller = AppearanceController(themeStorage: theme, colors: SameColor.allCases, eventHandler: nil)
-        controller.loadViewIfNeeded()
+        let window = mountedWindow(controller)
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         XCTAssertEqual(controller.numberOfSections(in: controller.tableView), 2)
         XCTAssertNotNil(controller.tableView(controller.tableView, titleForFooterInSection: 1))
-        theme.autoTheme = false
+        let toggle = try XCTUnwrap(controller.tableView.cellForRow(at: IndexPath(row: 0, section: 1)) as? SwitchCell)
+        toggle.switchControl.isOn = false
+        for target in toggle.switchControl.allTargets {
+            for action in toggle.switchControl.actions(forTarget: target, forControlEvent: .valueChanged) ?? [] {
+                _ = (target as NSObject).perform(NSSelectorFromString(action), with: toggle.switchControl)
+            }
+        }
+        XCTAssertFalse(theme.followsSystemAppearance)
         XCTAssertEqual(controller.numberOfSections(in: controller.tableView), 3)
         XCTAssertNotNil(controller.tableView(controller.tableView, titleForFooterInSection: 1))
         XCTAssertNil(controller.tableView(controller.tableView, titleForFooterInSection: 2))
@@ -138,11 +149,11 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
     func testRemovedSavedColorDoesNotPreventSelection() {
         let theme = RegressionTheme()
         let provider = RegressionProvider()
-        theme.appColorRawValue = "deleted"
+        theme.appColorID = "deleted"
         let controller = AppearanceController(themeStorage: theme, colors: SameColor.allCases, eventHandler: provider)
         controller.loadViewIfNeeded()
         controller.tableView(controller.tableView, didSelectRowAt: IndexPath(row: 1, section: 0))
-        XCTAssertEqual(theme.appColorRawValue, "second")
+        XCTAssertEqual(theme.appColorID, "second")
         XCTAssertEqual(provider.themeUpdates, 1)
         let first = controller.tableView(controller.tableView, cellForRowAt: IndexPath(row: 0, section: 0))
         let second = controller.tableView(controller.tableView, cellForRowAt: IndexPath(row: 1, section: 0))
@@ -238,10 +249,9 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
 }
 
 private final class RegressionTheme: ThemeStorage {
-    var appColor: UIColor = .blue
-    var appColorRawValue = "first"
-    var autoTheme = true
-    var interfaceStyle = 1
+    var appColorID = "first"
+    var followsSystemAppearance = true
+    var interfaceStyle = InterfaceStyle.light
 }
 
 private enum SameColor: String, CaseIterable, AppColorType {

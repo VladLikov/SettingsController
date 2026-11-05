@@ -9,7 +9,7 @@ import UIKit
 
 // MARK: - SettingsCell
 
-public final class SettingsCell: UITableViewCell {
+final class SettingsCell: UITableViewCell {
 
     private var currentTitle: String?
     private var currentDetail: String?
@@ -18,13 +18,13 @@ public final class SettingsCell: UITableViewCell {
 
     // MARK: Properties [Public]
 
-    public var title: String? {
+    var title: String? {
         currentTitle
     }
 
     // MARK: Life Cycle
 
-    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         accessoryType = .disclosureIndicator
@@ -37,7 +37,7 @@ public final class SettingsCell: UITableViewCell {
         observeAppearance()
     }
 
-    public override func prepareForReuse() {
+    override func prepareForReuse() {
         super.prepareForReuse()
 
         resetContent()
@@ -52,7 +52,7 @@ public final class SettingsCell: UITableViewCell {
     }
 
     @available(iOS, introduced: 8, deprecated: 17)
-    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         if #unavailable(iOS 17) { refreshIconForTraits() }
     }
@@ -68,7 +68,7 @@ public final class SettingsCell: UITableViewCell {
 
 extension SettingsCell {
 
-    public func configure(title: String?, icon: SettingsIcon?, detail: String? = nil) {
+    func configure(title: String?, icon: SettingsIcon?, detail: String? = nil) {
         accessoryType = .disclosureIndicator
         accessoryView = nil
         selectionStyle = .default

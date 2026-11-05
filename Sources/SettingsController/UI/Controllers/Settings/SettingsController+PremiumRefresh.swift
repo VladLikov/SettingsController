@@ -20,7 +20,7 @@ extension SettingsController {
             guard case .rows(let rows) = section.kind else { return false }
             return rows.contains { row in
                 switch row {
-                case .defaultRow(.user), .defaultRow(.userFactory): return true
+                case .defaultRow(.user): return true
                 default: return false
                 }
             }
@@ -82,8 +82,7 @@ extension SettingsController {
                 for (index, row) in definitions.enumerated() {
                     switch row {
                     case .defaultRow(.premium) where premiumChanged,
-                        .defaultRow(.user) where userChanged,
-                        .defaultRow(.userFactory) where userChanged:
+                        .defaultRow(.user) where userChanged:
                         rows.append(IndexPath(row: index, section: visible))
                     default: break
                     }
@@ -104,6 +103,7 @@ extension SettingsController {
             appID: appID, privacyURL: privacyURL, termsURL: termsURL)
         controller.dataProvider = configuration.dataProvider
         controller.openURL = openURL
+        controller.haptics = haptics
         controller.onAccountUpdate = { [weak self] info, premium in
             self?.applyResolvedState(info: info, premium: premium, user: nil, includesAccount: true)
         }

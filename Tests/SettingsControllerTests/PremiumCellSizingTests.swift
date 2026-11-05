@@ -21,7 +21,7 @@ final class PremiumCellSizingTests: XCTestCase {
     }
 
     private func mount(width: CGFloat = 375, card: PremiumCardPayload = premiumCard()) -> (UIWindow, SettingsController) {
-        let root = SettingsController.getSplitPresentationSettingsController(configuration: makeConfiguration(card: card))
+        let root = SettingsController.makeSplitPresentation(configuration: makeConfiguration(card: card))
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: width, height: 812))
         // A phone-sized window on an iPad simulator would otherwise expand the split into narrow columns.
         if #available(iOS 17, *) { window.traitOverrides.horizontalSizeClass = .compact }

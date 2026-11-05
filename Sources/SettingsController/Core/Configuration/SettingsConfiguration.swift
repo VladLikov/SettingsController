@@ -15,6 +15,12 @@ public protocol SettingsControllerEventHandler: AnyObject {
 
     func settingsDidUpdateTheme(_ theme: ThemeStorage)
     func settingsDidUpdateTaptic(_ taptic: TapticStorage)
+    /// Called with the chosen accent before `settingsDidUpdateTheme(_:)`, so the host can apply its `color`.
+    func settingsDidSelectAppColor(_ color: any AppColorType)
+}
+
+extension SettingsControllerEventHandler {
+    public func settingsDidSelectAppColor(_ color: any AppColorType) {}
 }
 
 // MARK: - SettingsControllerDataProvider

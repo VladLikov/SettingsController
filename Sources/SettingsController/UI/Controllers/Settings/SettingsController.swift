@@ -11,9 +11,16 @@ public final class SettingsController: UITableViewController {
         return settings
     }
 
+    /// A split view controller with the settings list, for embedding or custom presentation.
+    @MainActor
+    public static func makeSplitPresentation(configuration: SettingsConfiguration) -> UIViewController {
+        makePresentation(for: SettingsController(configuration: configuration))
+    }
+
+    @available(*, deprecated, renamed: "makeSplitPresentation(configuration:)")
     @MainActor
     public static func getSplitPresentationSettingsController(configuration: SettingsConfiguration) -> UIViewController {
-        makePresentation(for: SettingsController(configuration: configuration))
+        makeSplitPresentation(configuration: configuration)
     }
 
     private static func makePresentation(for settings: SettingsController) -> SplitController {
@@ -27,7 +34,7 @@ public final class SettingsController: UITableViewController {
 
     let configuration: SettingsConfiguration
     // Original definitions remain in configuration. These arrays are a rendered projection.
-    var sections: [SettingsSection] = []
+    var sections: [DisplaySection] = []
     var visibleSectionIDs: [Int] = []
     var catalogStates: [Int: AppCatalogState] = [:]
     var catalogRequests: [Int: CancellableRequest] = [:]
@@ -61,6 +68,7 @@ public final class SettingsController: UITableViewController {
     var didShowAppOverlay = false
     var overlayFrame: CGRect?
     var selectionBeforeTap: IndexPath?
+    lazy var haptics = SettingsHaptics.from(configuration.sections)
     private var lastOverlayGeometry: OverlayGeometry?
     var baseBottomInset: CGFloat { configuration.insets?.bottom ?? 0 }
 
@@ -237,11 +245,10 @@ public final class SettingsController: UITableViewController {
             switch sections[path.section].kind {
             case .premiumCard: return true
             case .rows(let items):
-                guard includingActiveRows, items.indices.contains(path.row), case .defaultRow(.premium) = items[path.row] else {
+                guard includingActiveRows, items.indices.contains(path.row), case .item(.defaultRow(.premium)) = items[path.row] else {
                     return false
                 }
                 return true
-            case .ourApps: return false
             }
         }
         if !rows.isEmpty {

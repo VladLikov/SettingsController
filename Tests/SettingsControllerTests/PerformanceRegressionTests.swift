@@ -54,7 +54,10 @@ final class PerformanceRegressionTests: XCTestCase {
         let avatar = UIImage(systemName: "person")!
         let controller = SettingsController(
             configuration: SettingsConfiguration(sections: [
-                SettingsSection(kind: .rows([.defaultRow(.user("Initial", nil, UIViewController.self)), .defaultRow(.language)]))
+                SettingsSection(
+                    kind: .rows([
+                        .defaultRow(.user(name: "Initial", destination: .controller(UIViewController.self))), .defaultRow(.language),
+                    ]))
             ]))
         let (window, table) = probe(controller)
         defer {

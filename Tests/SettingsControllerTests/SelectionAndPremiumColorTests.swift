@@ -33,13 +33,16 @@ final class SelectionAndPremiumColorTests: XCTestCase {
     }
 
     func testRowsOpeningDetailAreDistinguishedFromActions() {
-        XCTAssertTrue(SettingsRowItem.defaultRow(.appearance(theme: StubTheme())).opensDetail)
-        XCTAssertTrue(SettingsRowItem.defaultRow(.user("Name", nil, UIViewController.self)).opensDetail)
-        XCTAssertTrue(SettingsRowItem.row(SettingsRow(title: "A", icon: icon(), destinationFactory: { UIViewController() })).opensDetail)
-        XCTAssertFalse(SettingsRowItem.defaultRow(.shareApp(appID: "1")).opensDetail)
-        XCTAssertFalse(SettingsRowItem.defaultRow(.rateApp(appID: "1")).opensDetail)
-        XCTAssertFalse(SettingsRowItem.defaultRow(.redeemCode).opensDetail)
-        XCTAssertFalse(SettingsRowItem.row(SettingsRow(title: "A", icon: icon(), action: { _, _, _ in })).opensDetail)
+        func opens(_ item: SettingsRowItem) -> Bool { DisplayRow.item(item).opensDetail }
+        XCTAssertTrue(opens(.defaultRow(.appearance(theme: StubTheme()))))
+        XCTAssertTrue(opens(.defaultRow(.user(name: "Name", destination: .controller(UIViewController.self)))))
+        XCTAssertFalse(opens(.defaultRow(.user(name: "Name", destination: .action { _ in }))))
+        XCTAssertTrue(opens(.row(SettingsRow(title: "A", icon: icon(), destination: .factory { UIViewController() }))))
+        XCTAssertFalse(opens(.defaultRow(.shareApp(appID: "1"))))
+        XCTAssertFalse(opens(.defaultRow(.rateApp(appID: "1"))))
+        XCTAssertFalse(opens(.defaultRow(.redeemCode)))
+        XCTAssertFalse(opens(.row(SettingsRow(title: "A", icon: icon(), destination: .action { _ in }))))
+        XCTAssertFalse(DisplayRow.app(.failed).opensDetail)
     }
 
     func testActionRowRestoresDetailSelectionInExpandedSplit() throws {
@@ -48,11 +51,11 @@ final class SelectionAndPremiumColorTests: XCTestCase {
         let configuration = SettingsConfiguration(sections: [
             SettingsSection(
                 kind: .rows([
-                    .row(SettingsRow(title: "Detail", icon: icon(), destinationFactory: { UIViewController() })),
-                    .row(SettingsRow(title: "Action", icon: icon(), action: { _, _, _ in actions += 1 })),
+                    .row(SettingsRow(title: "Detail", icon: icon(), destination: .factory { UIViewController() })),
+                    .row(SettingsRow(title: "Action", icon: icon(), destination: .action { _ in actions += 1 })),
                 ]))
         ])
-        let root = SettingsController.getSplitPresentationSettingsController(configuration: configuration)
+        let root = SettingsController.makeSplitPresentation(configuration: configuration)
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 1180, height: 820))
         window.traitOverrides.horizontalSizeClass = .regular
         window.rootViewController = root
@@ -106,8 +109,7 @@ final class SelectionAndPremiumColorTests: XCTestCase {
 }
 
 private final class StubTheme: ThemeStorage {
-    var appColor: UIColor = .systemBlue
-    var appColorRawValue = "blue"
-    var autoTheme = true
-    var interfaceStyle = 1
+    var appColorID = "blue"
+    var followsSystemAppearance = true
+    var interfaceStyle = InterfaceStyle.light
 }

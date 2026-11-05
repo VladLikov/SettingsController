@@ -5,11 +5,11 @@ import UIKit
 
 extension AboutAppController {
 
-    static func icon(_ systemName: String, color: UIColor = .systemGray, inset: Inset? = Inset()) -> SettingsIcon {
+    static func icon(_ systemName: String, color: UIColor = .systemGray, padding: IconPadding? = IconPadding()) -> SettingsIcon {
         SettingsIcon(
             image: UIImage(systemName: systemName),
             color: color,
-            inset: inset,
+            padding: padding,
             cacheIdentifier: "sf:\(systemName)"
         )
     }

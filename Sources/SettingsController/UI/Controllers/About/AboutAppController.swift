@@ -82,6 +82,7 @@ final class AboutAppController: UITableViewController {
     private(set) var userID: String?
     weak var dataProvider: (any SettingsControllerDataProvider)?
     var openURL: OpenURLOperation = SystemActions.openURL
+    var haptics = SettingsHaptics(storage: nil)
     var loadUpdate: @Sendable (String) async throws -> AppUpdate? = AppUpdateLookup.fetch
     var currentVersion: @MainActor () -> String? = { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String }
     var currentOSVersion: @MainActor () -> String = { UIDevice.current.systemVersion }
@@ -298,8 +299,8 @@ extension AboutAppController {
                     title: NSLocalizedString(
                         "Copied", bundle: .module, comment: "Confirmation after the user explicitly copies an identifier."),
                     icon: .custom(UIImage(.doc.onClipboard)),
-                    style: .iOS17AppleMusic,
-                    haptic: .success
+                    style: .settingsConfirmation,
+                    haptic: haptics.alertHaptic
                 )
             }
 

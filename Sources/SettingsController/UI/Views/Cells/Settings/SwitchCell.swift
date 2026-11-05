@@ -1,16 +1,16 @@
 import UIKit
 
-public class SwitchCell: UITableViewCell {
+class SwitchCell: UITableViewCell {
 
     private var valueChanged: ((Bool) -> Void)?
 
-    public lazy var switchControl: UISwitch = {
+    lazy var switchControl: UISwitch = {
         let control = UISwitch()
         control.onTintColor = tintColor
         return control
     }()
 
-    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupView()
     }
@@ -20,7 +20,7 @@ public class SwitchCell: UITableViewCell {
         setupView()
     }
 
-    public override func prepareForReuse() {
+    override func prepareForReuse() {
         super.prepareForReuse()
         contentConfiguration = nil
         valueChanged = nil
@@ -29,7 +29,7 @@ public class SwitchCell: UITableViewCell {
         switchControl.onTintColor = tintColor
     }
 
-    public func configure(
+    func configure(
         title: String?, isOn: Bool, onTintColor: UIColor?,
         valueChanged: @escaping (Bool) -> Void
     ) {

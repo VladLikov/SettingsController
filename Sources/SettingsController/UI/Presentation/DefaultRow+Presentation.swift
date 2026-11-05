@@ -40,75 +40,75 @@ extension SettingsRowItem.DefaultRow {
             SettingsIcon(
                 symbol: .lightbulb.fill,
                 color: .systemIndigo,
-                inset: .init())
+                padding: .init())
 
         case .tapticEngine:
             SettingsIcon(
                 symbol: .hand.tapFill,
                 color: .systemOrange,
-                inset: .init())
+                padding: .init())
 
         case .shareApp(_):
             SettingsIcon(
                 symbol: .square.andArrowUpFill,
                 color: .systemOrange,
-                inset: .init())
+                padding: .init())
 
         case .rateApp(_):
             SettingsIcon(
                 symbol: .heart.fill,
                 color: .systemRed,
-                inset: .init())
+                padding: .init())
 
         case .moreApps(_):
             SettingsIcon(
                 symbol: .square.stack_3dUpFill,
                 color: .systemIndigo,
-                inset: .init())
+                padding: .init())
 
         case .premium(let payload):
             SettingsIcon(
                 symbol: .star.fill,
                 color: payload.color,
-                inset: .init())
+                padding: .init())
 
         case .contactDeveloper(_):
             SettingsIcon(
                 symbol: .envelope.fill,
                 color: .systemBlue,
-                inset: .init())
+                padding: .init())
 
         case .language:
             SettingsIcon(
                 symbol: .globe,
                 color: .gray,
-                inset: .init())
+                padding: .init())
 
         case .about:
             SettingsIcon(
                 symbol: .house.fill,
                 color: UIColor(red: 50 / 255, green: 173 / 255, blue: 230 / 255, alpha: 1),
-                inset: .init())
+                padding: .init())
 
         case .telegram(_):
             SettingsIcon(
                 image: .init(resource: .telegram),
                 color: UIColor(red: 0, green: 145 / 255, blue: 1, alpha: 1),
-                inset: .init(1),
+                padding: .init(1),
                 cacheIdentifier: "asset:telegram")
 
         case .vkGroup(_):
             SettingsIcon(
                 image: .init(resource: .vk),
                 color: .systemBlue,
-                inset: .init(5),
+                padding: .init(5),
                 cacheIdentifier: "asset:vk")
 
         case .redeemCode:
             SettingsIcon(
                 symbol: .number,
                 color: .systemOrange,
-                inset: .init(5))
+                padding: .init(5))
 
         default: nil
 

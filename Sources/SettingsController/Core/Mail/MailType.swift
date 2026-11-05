@@ -60,4 +60,13 @@ public enum MailType: Equatable {
             return subject
         }
     }
+
+    /// Characters still needed before the message can be sent. Whitespace and line breaks do not count.
+    public func missingCharacters(in text: String) -> Int {
+        max(0, minCharactersCount - text.trimmingCharacters(in: .whitespacesAndNewlines).count)
+    }
+
+    public func allowsSending(_ text: String) -> Bool {
+        missingCharacters(in: text) == 0
+    }
 }

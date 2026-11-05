@@ -49,7 +49,8 @@ final class DemoStore: SettingsControllerDelegate {
         settings = nil
         dismissalProbe = nil
     }
-    func settingsDidUpdateTheme(_ theme: ThemeStorage) { settings?.view.window?.tintColor = theme.appColor }
+    func settingsDidSelectAppColor(_ color: any AppColorType) { settings?.view.window?.tintColor = color.color }
+    func settingsDidUpdateTheme(_ theme: ThemeStorage) {}
     func settingsDidUpdateTaptic(_ taptic: TapticStorage) {}
 
     func logout() async {
@@ -65,13 +66,14 @@ final class DemoStore: SettingsControllerDelegate {
         let purpleReference = ProcessInfo.processInfo.arguments.contains("-demo-premium-reference-purple")
         let premium = PremiumPayload(
             isPremium: premium, color: purpleReference ? .systemIndigo : (appLockReference ? AppColor.blue.color : .systemIndigo),
-            destinationFactory: { [self] in
+            destination: .factory { [self] in
                 UINavigationController(rootViewController: PaywallController(store: self))
             })
         return SettingsConfiguration(
             title: "Settings",
             sections: [
-                SettingsSection(kind: .rows([.defaultRow(.user(name, destinationFactory: { [self] in ProfileController(store: self) }))])),
+                SettingsSection(
+                    kind: .rows([.defaultRow(.user(name: name, destination: .factory { [self] in ProfileController(store: self) }))])),
                 SettingsSection(
                     kind: .premiumCard(
                         PremiumCardPayload(
@@ -89,7 +91,7 @@ final class DemoStore: SettingsControllerDelegate {
                             SettingsRow(
                                 title: "Injected destination",
                                 icon: SettingsIcon(image: UIImage(systemName: "shippingbox"), color: .systemGreen),
-                                destinationFactory: { [self] in ProfileController(store: self) })),
+                                destination: .factory { [self] in ProfileController(store: self) })),
                     ])),
                 SettingsSection(
                     title: "Support",
@@ -102,7 +104,8 @@ final class DemoStore: SettingsControllerDelegate {
                         .row(
                             SettingsRow(
                                 title: "Standalone mail", icon: SettingsIcon(image: UIImage(systemName: "envelope"), color: .systemBlue),
-                                action: { [self] _, _, presenter in
+                                destination: .action { [self] context in
+                                    let presenter = context.viewController
                                     // Standalone MailController holds its provider weakly; the dashboard retains DemoStore.
                                     let mail = MailController(
                                         type: .custom(
@@ -131,10 +134,9 @@ final class QADismissalProbe: NSObject, UIAdaptivePresentationControllerDelegate
 }
 
 final class DemoTheme: ThemeStorage {
-    var appColor: UIColor = .systemIndigo
-    var appColorRawValue = AppColor.allCases.first!.rawValue
-    var autoTheme = true
-    var interfaceStyle = UIUserInterfaceStyle.light.rawValue
+    var appColorID = AppColor.allCases.first!.rawValue
+    var followsSystemAppearance = true
+    var interfaceStyle = InterfaceStyle.light
 }
 
 @MainActor
@@ -151,7 +153,7 @@ final class DashboardController: UIViewController {
         else { return }
         didOpenLaunchScenario = true
         let configuration = store.configuration()
-        let root = SettingsController.getSplitPresentationSettingsController(configuration: configuration)
+        let root = SettingsController.makeSplitPresentation(configuration: configuration)
         store.settings = findSettings(in: root)
         root.modalPresentationStyle = .fullScreen
         present(root, animated: false) { [weak self, weak root] in
@@ -201,7 +203,7 @@ final class DashboardController: UIViewController {
 
     private func open(sheet: Bool) {
         if sheet {
-            let root = SettingsController.getSplitPresentationSettingsController(configuration: store.configuration())
+            let root = SettingsController.makeSplitPresentation(configuration: store.configuration())
             store.settings = findSettings(in: root)
             root.modalPresentationStyle = .pageSheet
             present(root, animated: true) { [weak self, weak root] in

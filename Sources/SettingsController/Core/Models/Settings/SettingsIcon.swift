@@ -12,7 +12,10 @@ public struct SettingsIcon {
 
     public let image: UIImage?
     public let color: UIColor
-    public let inset: Inset?
+    public let padding: IconPadding?
+
+    @available(*, deprecated, renamed: "padding")
+    public var inset: IconPadding? { padding }
 
     @MainActor
     fileprivate static let tileCache: NSCache<NSString, UIImage> = {
@@ -27,9 +30,9 @@ public struct SettingsIcon {
 
     public func generateImage() -> UIImage? {
         guard let image else { return nil }
-        guard let inset else { return image }
+        guard let padding else { return image }
 
-        return image.padded(by: inset.edgeInsets, renderingMode: .alwaysTemplate)
+        return image.padded(by: padding.edgeInsets, renderingMode: .alwaysTemplate)
     }
 
     @MainActor
@@ -77,20 +80,30 @@ public struct SettingsIcon {
 
     /// Without an explicit ID, copies of this definition share a unique cache identity.
     /// Reuse an explicit ID only for identical pixels; change its revision when pixels change.
-    public init(image: UIImage?, color: UIColor, inset: Inset? = nil, cacheIdentifier: String? = nil) {
+    public init(image: UIImage?, color: UIColor, padding: IconPadding? = nil, cacheIdentifier: String? = nil) {
         self.image = image
         self.color = color
-        self.inset = inset
+        self.padding = padding
         self.symbol = nil
         self.cacheIdentifier = cacheIdentifier ?? "image:\(UUID().uuidString)"
     }
 
-    public init(symbol: SafeSFSymbol, color: UIColor, inset: Inset? = Inset()) {
+    public init(symbol: SafeSFSymbol, color: UIColor, padding: IconPadding? = IconPadding()) {
         self.image = UIImage(symbol)
         self.color = color
-        self.inset = inset
+        self.padding = padding
         self.symbol = symbol
         self.cacheIdentifier = "sf:\(symbol.name)"
+    }
+
+    @available(*, deprecated, renamed: "init(image:color:padding:cacheIdentifier:)")
+    public init(image: UIImage?, color: UIColor, inset: IconPadding?, cacheIdentifier: String? = nil) {
+        self.init(image: image, color: color, padding: inset, cacheIdentifier: cacheIdentifier)
+    }
+
+    @available(*, deprecated, renamed: "init(symbol:color:padding:)")
+    public init(symbol: SafeSFSymbol, color: UIColor, inset: IconPadding?) {
+        self.init(symbol: symbol, color: color, padding: inset)
     }
 
     @MainActor
@@ -131,7 +144,7 @@ public enum SettingsIconGenerator {
     public static func generate(
         systemName: String,
         backgroundColor: UIColor,
-        inset: Inset? = Inset(),
+        padding: IconPadding? = IconPadding(),
         size: CGSize = defaultSize,
         cornerRadius: CGFloat = defaultCornerRadius,
         traitCollection: UITraitCollection = .current
@@ -139,7 +152,7 @@ public enum SettingsIconGenerator {
         generate(
             image: UIImage(systemName: systemName),
             backgroundColor: backgroundColor,
-            inset: inset,
+            padding: padding,
             cacheIdentifier: "sf:\(systemName)",
             size: size,
             cornerRadius: cornerRadius,
@@ -151,13 +164,13 @@ public enum SettingsIconGenerator {
     public static func generate(
         symbol: SafeSFSymbol,
         backgroundColor: UIColor,
-        inset: Inset? = Inset(),
+        padding: IconPadding? = IconPadding(),
         size: CGSize = defaultSize,
         cornerRadius: CGFloat = defaultCornerRadius,
         traitCollection: UITraitCollection = .current
     ) -> UIImage? {
         generate(
-            SettingsIcon(symbol: symbol, color: backgroundColor, inset: inset),
+            SettingsIcon(symbol: symbol, color: backgroundColor, padding: padding),
             size: size,
             cornerRadius: cornerRadius,
             traitCollection: traitCollection
@@ -168,7 +181,7 @@ public enum SettingsIconGenerator {
     public static func generate(
         image: UIImage?,
         backgroundColor: UIColor,
-        inset: Inset? = nil,
+        padding: IconPadding? = nil,
         cacheIdentifier: String? = nil,
         size: CGSize = defaultSize,
         cornerRadius: CGFloat = defaultCornerRadius,
@@ -178,7 +191,7 @@ public enum SettingsIconGenerator {
             SettingsIcon(
                 image: image,
                 color: backgroundColor,
-                inset: inset,
+                padding: padding,
                 cacheIdentifier: cacheIdentifier
             ),
             size: size,
@@ -225,13 +238,13 @@ extension SettingsIcon {
     }
 
     fileprivate func glyphRect(for glyph: UIImage, in bounds: CGRect) -> CGRect? {
-        let padding = inset?.value ?? 0
+        let padding = self.padding?.value ?? 0
         guard padding.isFinite, padding >= 0 else { return nil }
         let virtualSize = CGSize(
             width: glyph.size.width + padding * 2,
             height: glyph.size.height + padding * 2)
         guard virtualSize.width.isFinite, virtualSize.height.isFinite else { return nil }
-        let maxSize = inset == nil ? bounds.size.applyingScale(0.7) : bounds.size
+        let maxSize = self.padding == nil ? bounds.size.applyingScale(0.7) : bounds.size
         let fitted = virtualSize.aspectFit(in: maxSize)
         let scale = fitted.width / virtualSize.width
         return CGRect(
@@ -249,7 +262,7 @@ extension SettingsIcon {
         guard image != nil, let glyphKey = cacheIdentifier else { return nil }
         let colorKey = color.resolvedColor(with: traitCollection).rgbaCacheKey
         let scale = max(traitCollection.displayScale, 1)
-        let insetValue = inset?.value ?? 0
+        let paddingValue = padding?.value ?? 0
 
         return [
             glyphKey,
@@ -258,7 +271,7 @@ extension SettingsIcon {
             size.height.cacheKeyComponent,
             cornerRadius.cacheKeyComponent,
             scale.cacheKeyComponent,
-            inset == nil ? "inset:none" : "inset:" + insetValue.cacheKeyComponent,
+            padding == nil ? "inset:none" : "inset:" + paddingValue.cacheKeyComponent,
             "\(traitCollection.userInterfaceStyle.rawValue)",
         ].joined(separator: "|") as NSString
     }

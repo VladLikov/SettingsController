@@ -5,25 +5,28 @@
 //  Created by Влад Лыков on 12.09.2024.
 //
 
-import Foundation
 import UIKit
 
 public enum SettingsRowItem {
 
     case row(SettingsRow)
     case defaultRow(DefaultRow)
-    case app(AppStoreAppRowState)
 
     public enum DefaultRow {
 
-        case user(String, UIImage?, UIViewController.Type)
-        case userFactory(String, UIImage?, SettingsDestinationFactory)
+        /// The profile row. `refreshState()` replaces the name and avatar with the provider's `UserInfo`.
+        case user(name: String, avatar: UIImage? = nil, destination: SettingsDestination)
 
+        @available(*, deprecated, message: "Use .user(name:avatar:destination:) with .controller(...).")
+        public static func user(_ name: String, _ avatar: UIImage?, _ destinationControllerType: UIViewController.Type) -> Self {
+            .user(name: name, avatar: avatar, destination: .controller(destinationControllerType))
+        }
+
+        @available(*, deprecated, message: "Use .user(name:avatar:destination:) with .factory(...).")
         public static func user(
-            _ name: String, _ avatar: UIImage? = nil,
-            destinationFactory: @escaping SettingsDestinationFactory
+            _ name: String, _ avatar: UIImage? = nil, destinationFactory: @escaping SettingsDestinationFactory
         ) -> Self {
-            .userFactory(name, avatar, destinationFactory)
+            .user(name: name, avatar: avatar, destination: .factory(destinationFactory))
         }
 
         case premium(PremiumPayload)

@@ -26,7 +26,7 @@ final class StateRegressionTests: XCTestCase {
         await settings.refreshState()
         XCTAssertTrue(settings.isPremium)
         guard case .rows(let rows) = settings.sections[0].kind,
-            case .defaultRow(.premium(let active)) = rows[0]
+            case .item(.defaultRow(.premium(let active))) = rows[0]
         else { return XCTFail("Expected Active row") }
         XCTAssertTrue(active.isPremium)
         provider.info = SettingsMailInfo(userID: "second", isPremium: false)
@@ -56,7 +56,7 @@ final class StateRegressionTests: XCTestCase {
         await settings.refreshState()
         guard case .rows(let rows) = settings.sections[0].kind else { return XCTFail("Expected rows") }
         for row in rows {
-            guard case .defaultRow(.premium(let premium)) = row else { return XCTFail("Expected premium") }
+            guard case .item(.defaultRow(.premium(let premium))) = row else { return XCTFail("Expected premium") }
             XCTAssertTrue(premium.isPremium)
         }
         XCTAssertEqual(provider.mailRequests, 1)
@@ -70,7 +70,7 @@ final class StateRegressionTests: XCTestCase {
                 sections: [
                     SettingsSection(
                         kind: .rows([
-                            .defaultRow(.user("Initial", avatar, UIViewController.self))
+                            .defaultRow(.user(name: "Initial", avatar: avatar, destination: .controller(UIViewController.self)))
                         ]))
                 ], dataProvider: provider))
         provider.user = UserInfo(name: "Updated", avatar: avatar)
@@ -198,7 +198,7 @@ final class StateRefreshConcurrencyTests: XCTestCase {
         let settings = SettingsController(
             configuration: SettingsConfiguration(
                 sections: [
-                    SettingsSection(kind: .rows([.defaultRow(.user("Initial", nil, UIViewController.self))])),
+                    SettingsSection(kind: .rows([.defaultRow(.user(name: "Initial", destination: .controller(UIViewController.self)))])),
                     SettingsSection(kind: .premiumCard(premiumCard())),
                 ], dataProvider: provider))
         let task = try XCTUnwrap(settings.startStateRefresh())
@@ -217,7 +217,7 @@ final class SettingsSectionRendererTests: XCTestCase {
     private let definitions = [
         SettingsSection(kind: .ourApps(developerID: "d", limit: 3, excludeAppID: "0")),
         SettingsSection(kind: .premiumCard(premiumCard())),
-        SettingsSection(kind: .rows([.defaultRow(.user("Initial", nil, UIViewController.self))])),
+        SettingsSection(kind: .rows([.defaultRow(.user(name: "Initial", destination: .controller(UIViewController.self)))])),
     ]
 
     private func state(_ catalog: AppCatalogState, premium: Bool = false, user: UserInfo? = nil) -> SettingsRenderState {
@@ -239,11 +239,12 @@ final class SettingsSectionRendererTests: XCTestCase {
 
     func testActivePremiumReplacesTheCardAndUserRowShowsTheProfile() {
         let rendered = SettingsSectionRenderer.render(definitions, state: state(.failed, premium: true, user: UserInfo(name: "New")))
-        guard case .rows(let premiumRows) = rendered.sections[1].kind, case .defaultRow(.premium(let payload)) = premiumRows[0] else {
+        guard case .rows(let premiumRows) = rendered.sections[1].kind, case .item(.defaultRow(.premium(let payload))) = premiumRows[0]
+        else {
             return XCTFail("Expected an active premium row")
         }
         XCTAssertTrue(payload.isPremium)
-        guard case .rows(let userRows) = rendered.sections[2].kind, case .defaultRow(.user(let name, _, _)) = userRows[0] else {
+        guard case .rows(let userRows) = rendered.sections[2].kind, case .item(.defaultRow(.user(let name, _, _))) = userRows[0] else {
             return XCTFail("Expected the user row")
         }
         XCTAssertEqual(name, "New")

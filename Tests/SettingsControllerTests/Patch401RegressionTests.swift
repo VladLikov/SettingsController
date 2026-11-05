@@ -131,11 +131,11 @@ final class Patch401RegressionTests: XCTestCase {
         XCTAssertNil(settings.storeProductTask)
     }
 
-    func testCustomMinimumIsSafeForEveryIntAndUsesGraphemes() throws {
+    func testCustomMinimumIsSafeForEveryIntUsesGraphemesAndIgnoresWhitespace() throws {
         for (minimum, text, enabled) in [
             (Int.min, "", true), (-1, "", true), (0, "", true), (1, "", false),
             (1, "👨‍👩‍👧‍👦", true), (2, "👨‍👩‍👧‍👦", false),
-            (1, "e\u{301}", true), (2, "e\u{301}\n", true),
+            (1, "e\u{301}", true), (2, "e\u{301}\n", false), (1, "  \n\t", false), (2, " ab ", true),
             (10, "123456789", false), (10, "1234567890", true), (Int.max, "message", false),
         ] {
             let type = MailType.custom(placeholder: "", minCharactersCount: minimum, navigationTitle: "Test", subject: "Test")

@@ -98,7 +98,7 @@ public class MailController: UITableViewController {
         guard let cell = tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? MailCell else {
             return
         }
-        cell.textViewBecomeFirstResponder()
+        cell.beginEditing()
     }
 }
 
@@ -175,7 +175,7 @@ extension MailController: MailCellDelegate {
         if isPreparingMail && currentText != text { cancelMailPreparation() }
         currentText = text
 
-        sendButton.isEnabled = !isPreparingMail && text.prefix(type.minCharactersCount).count >= type.minCharactersCount
+        sendButton.isEnabled = !isPreparingMail && type.allowsSending(text)
 
         if needsHeightUpdate {
             UIView.performWithoutAnimation {
@@ -195,12 +195,12 @@ extension MailController {
 
     private func setPreparingMail(_ preparing: Bool) {
         isPreparingMail = preparing
-        sendButton.isEnabled = !preparing && currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount
+        sendButton.isEnabled = !preparing && type.allowsSending(currentText)
         navigationItem.rightBarButtonItem = sendButton
     }
 
     func prepareMail() {
-        guard !isPreparingMail, currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount else { return }
+        guard !isPreparingMail, type.allowsSending(currentText) else { return }
         pendingMailFallback = nil
         setPreparingMail(true)
         let text = currentText

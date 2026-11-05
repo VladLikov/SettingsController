@@ -43,27 +43,20 @@ extension SettingsController {
 
     func presentPremium(_ payload: PremiumPayload) {
         if isPremium {
-            let style: AlertViewStyle
-
-            #if os(visionOS)
-            style = .iOS17AppleMusic
-            #else
-            style = .iOS16AppleMusic
-            #endif
-
             AlertKitAPI.present(
                 title: NSLocalizedString(
                     "Premium is active", bundle: .module,
                     comment: "Confirmation shown when an already-premium user taps the premium action."),
                 icon: .custom(UIImage(.star.fill)),
-                style: style,
-                haptic: .success
+                style: .settingsConfirmation,
+                haptic: haptics.alertHaptic
             )
 
-        } else if payload.destinationFactory != nil || payload.destinationControllerType != nil {
-            guard presentedViewController == nil else { return }
-            let destination = payload.destinationFactory?() ?? payload.destinationControllerType?.init()
-            guard let viewController = destination else { return }
+        } else if case .action(let action) = payload.destination {
+            cancelPendingStoreProduct()
+            action(SettingsActionContext(viewController: self))
+        } else if let destination = payload.destination {
+            guard presentedViewController == nil, let viewController = destination.makeViewController() else { return }
             cancelPendingStoreProduct()
             if traitCollection.horizontalSizeClass == .compact {
                 viewController.modalPresentationStyle = .fullScreen
@@ -73,9 +66,6 @@ extension SettingsController {
                 viewController.presentationController?.delegate = self
             }
 
-        } else if let action = payload.action {
-            cancelPendingStoreProduct()
-            action(self)
         }
     }
 

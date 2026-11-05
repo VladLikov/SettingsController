@@ -7,12 +7,12 @@
 
 import Foundation
 
-public enum AppStoreAppsLoader {
+enum AppStoreAppsLoader {
 
     /// Results stay in memory for this long, so reopening settings shows the catalog without a loading state.
     static let memoryCacheLifetime: TimeInterval = 10 * 60
 
-    public static func fetch(developerId: String, limit: Int, excludeAppID: String? = nil) async throws -> [AppItem] {
+    static func fetch(developerId: String, limit: Int, excludeAppID: String? = nil) async throws -> [AppItem] {
         let key = CatalogMemoryCache.Key(developerID: developerId, limit: limit, excludedAppID: excludeAppID)
         if let apps = CatalogMemoryCache.shared.apps(for: key, maxAge: memoryCacheLifetime) { return apps }
         let apps = try await fetch(developerId: developerId, limit: limit, excludeAppID: excludeAppID, session: .shared)

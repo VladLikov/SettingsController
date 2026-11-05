@@ -16,7 +16,7 @@ protocol MailCellDelegate: AnyObject {
 
 // MARK: - MailCell
 
-public class MailCell: UITableViewCell {
+class MailCell: UITableViewCell {
 
     weak var delegate: MailCellDelegate?
 
@@ -62,7 +62,7 @@ public class MailCell: UITableViewCell {
 
     // MARK: Life Cycle
 
-    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         setupView()
@@ -78,7 +78,7 @@ public class MailCell: UITableViewCell {
 
 extension MailCell {
 
-    public func configure(type: MailType, text: String? = nil) {
+    func configure(type: MailType, text: String? = nil) {
 
         placeholderLabel.text = type.placeholder
         if let text { textView.text = text }
@@ -89,7 +89,7 @@ extension MailCell {
         lastMeasuredTextHeight = measuredTextHeight()
     }
 
-    public func textViewBecomeFirstResponder() {
+    func beginEditing() {
 
         textView.becomeFirstResponder()
     }
@@ -155,7 +155,7 @@ extension MailCell {
 
 extension MailCell: UITextViewDelegate {
 
-    public func textViewDidChange(_ textView: UITextView) {
+    func textViewDidChange(_ textView: UITextView) {
 
         let text = textView.text ?? ""
 

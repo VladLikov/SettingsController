@@ -19,7 +19,10 @@ final class RoutingRegressionTests: XCTestCase {
         var calls = 0
         let row = SettingsRow(
             title: "Custom", icon: SettingsIcon(image: nil, color: .blue),
-            action: { path, table, presenter in
+            destination: .action { context in
+                let path = context.indexPath
+                let table = context.tableView
+                let presenter = context.viewController
                 calls += 1
                 XCTAssertEqual(path, IndexPath(row: 0, section: 0))
                 let settings = presenter as! SettingsController
@@ -118,10 +121,12 @@ final class RoutingRegressionTests: XCTestCase {
     func testCustomFactoryIsLazyAndReceivesInjectedDependency() {
         var calls = 0
         let dependency = NSObject()
-        let row = SettingsRow(title: "Custom", icon: SettingsIcon(image: nil, color: .blue)) {
-            calls += 1
-            return DependencyController(dependency)
-        }
+        let row = SettingsRow(
+            title: "Custom", icon: SettingsIcon(image: nil, color: .blue),
+            destination: .factory {
+                calls += 1
+                return DependencyController(dependency)
+            })
         let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .rows([.row(row)]))]))
         let navigation = UINavigationController(rootViewController: settings)
         settings.loadViewIfNeeded()
@@ -132,7 +137,7 @@ final class RoutingRegressionTests: XCTestCase {
         XCTAssertEqual(navigation.topViewController?.navigationItem.largeTitleDisplayMode, .never)
     }
 
-    func testUserFactoryIsLazyAndOldTypeDestinationStillWorks() {
+    func testUserFactoryIsLazy() {
         var calls = 0
         let settings = SettingsController(
             configuration: SettingsConfiguration(sections: [
@@ -140,8 +145,8 @@ final class RoutingRegressionTests: XCTestCase {
                     kind: .rows([
                         .defaultRow(
                             .user(
-                                "User",
-                                destinationFactory: {
+                                name: "User",
+                                destination: .factory {
                                     calls += 1
                                     return UIViewController()
                                 }))
@@ -153,9 +158,24 @@ final class RoutingRegressionTests: XCTestCase {
         settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: 0, section: 0))
         XCTAssertEqual(calls, 1)
         XCTAssertEqual(navigation.viewControllers.count, 2)
-        let old = SettingsRow(title: "Old", icon: SettingsIcon(image: nil, color: .blue), destinationControllerType: UIViewController.self)
-        XCTAssertNotNil(old.destinationControllerType)
-        XCTAssertNil(old.destinationFactory)
+    }
+
+    /// The 4.x initializers stay available, deprecated, and map to one destination each.
+    @available(*, deprecated)
+    func testDeprecated4xInitializersMapToDestinations() {
+        let icon = SettingsIcon(image: nil, color: .blue)
+        guard case .controller = SettingsRow(title: "Old", icon: icon, destinationControllerType: UIViewController.self).destination,
+            case .action = SettingsRow(title: "Old", icon: icon, action: { _, _, _ in }).destination,
+            case .factory = SettingsRow(title: "Old", icon: icon, destinationFactory: { UIViewController() }).destination,
+            case .controller = PremiumPayload(isPremium: false, color: .blue, destinationControllerType: UIViewController.self).destination,
+            case .action = PremiumPayload(isPremium: false, color: .blue, action: { _ in }).destination,
+            case .factory = PremiumPayload(isPremium: false, color: .blue, destinationFactory: { UIViewController() }).destination,
+            case .user(_, _, .factory) = SettingsRowItem.DefaultRow.user("U", destinationFactory: { UIViewController() }),
+            case .user(_, _, .controller) = SettingsRowItem.DefaultRow.user("U", nil, UIViewController.self)
+        else { return XCTFail("Each deprecated initializer maps to its destination") }
+        XCTAssertNil(SettingsRow(title: "Inert", icon: icon, destinationControllerType: nil, action: nil).destination)
+        XCTAssertEqual(SettingsIcon(image: nil, color: .blue, inset: Inset(3)).padding?.value, 3)
+        XCTAssertNotNil(SettingsController.getSplitPresentationSettingsController(configuration: SettingsConfiguration(sections: [])))
     }
 
     func testCancelledStoreSuccessNeverPresentsOrOpensFallback() async throws {
