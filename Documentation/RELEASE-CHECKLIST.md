@@ -1,6 +1,6 @@
-# 4.0 release acceptance
+# 5.0 release acceptance
 
-Current evidence: [28 October verification](FINAL-RELEASE-VERIFICATION.md). Historical reports retain their dated results and do not override this report.
+Current evidence: [5.0 verification](VERIFICATION-5.0.md). Reports for 4.x are kept in [Archive/4.x](Archive/4.x/) with their dated results.
 
 ## Automated gates
 
@@ -9,6 +9,8 @@ Current evidence: [28 October verification](FINAL-RELEASE-VERIFICATION.md). Hist
 - Public example uses ordinary `import SettingsController`.
 - Native accessibility audit with all checks enabled, lifecycle and interactive-dismissal cancellation regressions.
 - Localization JSON, translator comments, placeholders and coverage validation.
+- `xcrun swift format lint --strict` over Sources, Tests, Examples and Package.swift.
+- Premium card sizing: one SwiftUI measurement on first open for a horizontal card and none on later opens (unit tests); Release Time Profiler on a physical device (iPhone 12 mini reference) shows `PremiumCell.systemLayoutSizeFitting` work at or below 3 ms in total on first open.
 - Final commit CI must be green; an earlier successful SHA is insufficient.
 
 ## Environment-specific checks

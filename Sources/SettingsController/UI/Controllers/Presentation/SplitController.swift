@@ -3,8 +3,11 @@ import UIKit
 final class SplitPlaceholderController: UIViewController {
     override func loadView() {
         view = EmptyStateView(
-            title: NSLocalizedString("Select an item", bundle: .module, comment: "Prompt in an empty split detail column before a settings item is selected."),
-            subtitle: NSLocalizedString("Additional information will appear here.", bundle: .module, comment: "Explanation in the empty split detail column on iPad or an expanded phone before a settings item is selected.")
+            title: NSLocalizedString(
+                "Select an item", bundle: .module, comment: "Prompt in an empty split detail column before a settings item is selected."),
+            subtitle: NSLocalizedString(
+                "Additional information will appear here.", bundle: .module,
+                comment: "Explanation in the empty split detail column on iPad or an expanded phone before a settings item is selected.")
         )
     }
 }
@@ -73,7 +76,7 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
                 tracker.leadingAnchor.constraint(equalTo: view.leadingAnchor),
                 tracker.trailingAnchor.constraint(equalTo: view.trailingAnchor),
                 tracker.topAnchor.constraint(equalTo: view.topAnchor),
-                tracker.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+                tracker.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             ])
         }
         if #available(iOS 17.0, *) {
@@ -91,16 +94,19 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
     }
 
     private func captureWidths() -> ColumnWidths {
-        var secondaryMinimum: CGFloat = 0, secondaryFraction: CGFloat = 0, secondaryWidth: CGFloat = 0
+        var secondaryMinimum: CGFloat = 0
+        var secondaryFraction: CGFloat = 0
+        var secondaryWidth: CGFloat = 0
         if #available(iOS 26.0, *), style != .unspecified {
             secondaryMinimum = minimumSecondaryColumnWidth
             secondaryFraction = preferredSecondaryColumnWidthFraction
             secondaryWidth = preferredSecondaryColumnWidth
         }
-        return ColumnWidths(primaryFraction: preferredPrimaryColumnWidthFraction,
-                            primaryWidth: preferredPrimaryColumnWidth, primaryMaximum: maximumPrimaryColumnWidth,
-                            primaryMinimum: minimumPrimaryColumnWidth, secondaryMinimum: secondaryMinimum,
-                            secondaryFraction: secondaryFraction, secondaryWidth: secondaryWidth)
+        return ColumnWidths(
+            primaryFraction: preferredPrimaryColumnWidthFraction,
+            primaryWidth: preferredPrimaryColumnWidth, primaryMaximum: maximumPrimaryColumnWidth,
+            primaryMinimum: minimumPrimaryColumnWidth, secondaryMinimum: secondaryMinimum,
+            secondaryFraction: secondaryFraction, secondaryWidth: secondaryWidth)
     }
 
     private func restoreWidths(_ widths: ColumnWidths) {
@@ -117,7 +123,8 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
 
     func updateAccessibilityColumnWidth() {
         guard unfoldedColumnWidths == nil else { return }
-        let expandedText = traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+        let expandedText =
+            traitCollection.preferredContentSizeCategory.isAccessibilityCategory
             && traitCollection.horizontalSizeClass == .regular
         if expandedText {
             guard accessibilityColumnWidths == nil else { return }
@@ -162,9 +169,9 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
         }
     }
 
-
     func showSettingsDetail(_ controller: UIViewController) {
-        let navigation = (controller as? UINavigationController)
+        let navigation =
+            (controller as? UINavigationController)
             ?? UINavigationController(rootViewController: controller)
         if style == .unspecified {
             showDetailViewController(navigation, sender: self)
@@ -182,13 +189,17 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
         return secondary is SplitPlaceholderController
     }
 
-    func splitViewController(_ svc: UISplitViewController,
-                             topColumnForCollapsingToProposedTopColumn proposedTopColumn: UISplitViewController.Column) -> UISplitViewController.Column {
+    func splitViewController(
+        _ svc: UISplitViewController,
+        topColumnForCollapsingToProposedTopColumn proposedTopColumn: UISplitViewController.Column
+    ) -> UISplitViewController.Column {
         secondaryIsPlaceholder ? .primary : .secondary
     }
 
-    func splitViewController(_ svc: UISplitViewController,
-                             displayModeForExpandingToProposedDisplayMode proposedDisplayMode: UISplitViewController.DisplayMode) -> UISplitViewController.DisplayMode {
+    func splitViewController(
+        _ svc: UISplitViewController,
+        displayModeForExpandingToProposedDisplayMode proposedDisplayMode: UISplitViewController.DisplayMode
+    ) -> UISplitViewController.DisplayMode {
         .oneBesideSecondary
     }
 
@@ -215,12 +226,14 @@ final class SplitController: UISplitViewController, UISplitViewControllerDelegat
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        dismissingModal = false // An interactive dismissal can be cancelled.
+        dismissingModal = false  // An interactive dismissal can be cancelled.
     }
 
-    func splitViewController(_ splitViewController: UISplitViewController,
-                             collapseSecondary secondaryViewController: UIViewController,
-                             onto primaryViewController: UIViewController) -> Bool {
+    func splitViewController(
+        _ splitViewController: UISplitViewController,
+        collapseSecondary secondaryViewController: UIViewController,
+        onto primaryViewController: UIViewController
+    ) -> Bool {
         if let navigation = secondaryViewController as? UINavigationController {
             return navigation.viewControllers.count == 1 && navigation.viewControllers.first is SplitPlaceholderController
         }

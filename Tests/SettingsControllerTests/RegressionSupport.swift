@@ -1,6 +1,7 @@
-import XCTest
-import UIKit
 import SwiftUI
+import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -14,7 +15,7 @@ final class ControlledValue<Value: Sendable> {
         started = true
         let waiters = startWaiters
         startWaiters.removeAll()
-        waiters.forEach { $0.resume() }
+        for waiter in waiters { waiter.resume() }
         if let result { return try result.get() }
         return try await withCheckedThrowingContinuation { continuation = $0 }
     }
@@ -44,8 +45,14 @@ final class RegressionProvider: SettingsControllerDelegate {
     var dismissals = 0
     var themeUpdates = 0
 
-    func settingsCurrentUserInfo() async -> UserInfo? { userRequests += 1; return user }
-    func settingsIsPremiumActive() async -> Bool { premiumRequests += 1; return fallbackPremium }
+    func settingsCurrentUserInfo() async -> UserInfo? {
+        userRequests += 1
+        return user
+    }
+    func settingsIsPremiumActive() async -> Bool {
+        premiumRequests += 1
+        return fallbackPremium
+    }
     func settingsMailInfo() async -> SettingsMailInfo? {
         mailRequests += 1
         if let mailOperation { return await mailOperation() }
@@ -69,13 +76,15 @@ func mountedWindow(_ controller: UIViewController) -> UIWindow {
 
 @MainActor
 func premiumCard() -> PremiumCardPayload {
-    PremiumCardPayload(image: Image(systemName: "star.fill"), title: "Premium", tierTitle: "Plus", subtitle: "All features",
-                       buttonTitle: "Continue", premium: PremiumPayload(isPremium: false, color: .systemBlue))
+    PremiumCardPayload(
+        image: Image(systemName: "star.fill"), title: "Premium", tierTitle: "Plus", subtitle: "All features",
+        buttonTitle: "Continue", premium: PremiumPayload(isPremium: false, color: .systemBlue))
 }
 
 @MainActor
 func makeAbout() -> AboutAppController {
-    AboutAppController(isPremium: false, userID: nil, appID: "1",
-                       privacyURL: URL(string: "https://example.com/privacy")!,
-                       termsURL: URL(string: "https://example.com/terms")!)
+    AboutAppController(
+        isPremium: false, userID: nil, appID: "1",
+        privacyURL: URL(string: "https://example.com/privacy")!,
+        termsURL: URL(string: "https://example.com/terms")!)
 }

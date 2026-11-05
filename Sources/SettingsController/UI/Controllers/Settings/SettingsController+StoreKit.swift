@@ -1,52 +1,33 @@
 import StoreKit
 import UIKit
 
-@MainActor
-enum StoreProductLoader {
-    static func load(_ id: Int) async throws -> UIViewController? {
-#if !os(visionOS)
-        let controller = SKStoreProductViewController()
-        let loaded = try await controller.loadProduct(withParameters: [SKStoreProductParameterITunesItemIdentifier: id])
-        try Task.checkCancellation()
-        return loaded ? controller : nil
-#else
-        return nil
-#endif
-    }
-}
-
 extension SettingsController {
     /// Only navigation intent is revoked; catalog/image/state requests are independent.
     func cancelPendingStoreProduct() {
-        storeLifetime.invalidate()
-        storeProductTask?.cancel()
-        storeProductTask = nil
+        storeProduct.cancel()
+        setOpeningStoreApp(nil)
     }
 
     func openApp(_ id: Int, url: URL) {
-        let lifetime = storeLifetime
-        let request = lifetime.begin()
-        storeProductTask?.cancel()
+        // A second tap on the app whose page is loading must not restart the request.
+        guard !(storeProduct.isRunning && openingStoreAppID == id) else { return }
         let load = loadStoreProduct
         let open = openURL
-        storeProductTask = Task { @MainActor [weak self] in
-            defer { if lifetime.finish(request) { self?.storeProductTask = nil } }
+        setOpeningStoreApp(id)
+        storeProduct.start { [weak self] token in
+            defer { if token.finish() { self?.setOpeningStoreApp(nil) } }
             let destination: UIViewController?
             do {
                 destination = try await load(id)
             } catch {
-                guard !Task.isCancelled, !(error is CancellationError),
-                      (error as? URLError)?.code != .cancelled,
-                      lifetime.isCurrent(request) else { return }
+                guard token.isCurrent, !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
                 destination = nil
             }
-            guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else {
-                return
-            }
+            guard token.isCurrent, self?.settingsCanPresent == true else { return }
             if let destination {
-#if !os(visionOS)
+                #if !os(visionOS)
                 (destination as? SKStoreProductViewController)?.delegate = self
-#endif
+                #endif
                 self?.present(destination, animated: true)
             } else {
                 _ = await open(url)
@@ -56,17 +37,35 @@ extension SettingsController {
 
     func redeemCode() {
         cancelPendingStoreProduct()
-        SKPaymentQueue.default().presentCodeRedemptionSheet()
+        if #available(iOS 16.0, *), let scene = view.window?.windowScene {
+            Task { try? await AppStore.presentOfferCodeRedeemSheet(in: scene) }
+        } else {
+            SKPaymentQueue.default().presentCodeRedemptionSheet()
+        }
+    }
+
+    /// Shows progress on the row of the app whose App Store page is loading.
+    private func setOpeningStoreApp(_ id: Int?) {
+        guard openingStoreAppID != id else { return }
+        let changed = [openingStoreAppID, id].compactMap { $0 }
+        openingStoreAppID = id
+        guard isViewLoaded else { return }
+        let rows = (tableView.indexPathsForVisibleRows ?? []).filter { path in
+            guard case .app(.loaded(let app)) = displayRow(at: path) else { return false }
+            return changed.contains(app.id)
+        }
+        if !rows.isEmpty { UIView.performWithoutAnimation { tableView.reconfigureRows(at: rows) } }
     }
 
     func displayAppOverlayIfNeeded() {
-        guard !overlayAppViewDidShown, let appID = configuration.overlayAppID,
-              let scene = view.window?.windowScene else { return }
+        guard !didShowAppOverlay, let appID = configuration.overlayAppID,
+            let scene = view.window?.windowScene
+        else { return }
         let position: SKOverlay.Position = tabBarController == nil ? .bottom : .bottomRaised
         let overlay = SKOverlay(configuration: SKOverlay.AppConfiguration(appIdentifier: appID, position: position))
         overlay.delegate = self
         overlay.present(in: scene)
-        overlayAppViewDidShown = true
+        didShowAppOverlay = true
     }
 
     func dismissAppOverlayIfNeeded() {
@@ -96,10 +95,10 @@ extension SettingsController {
 
 extension SettingsController: @preconcurrency SKOverlayDelegate {
     public func storeOverlayDidFinishPresentation(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {
-#if !os(visionOS)
+        #if !os(visionOS)
         overlayFrame = transitionContext.endFrame
         updateOverlayInset()
-#endif
+        #endif
     }
 
     public func storeOverlayDidFinishDismissal(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {

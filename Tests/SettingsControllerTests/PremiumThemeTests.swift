@@ -1,5 +1,6 @@
-import XCTest
 import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -7,10 +8,11 @@ final class PremiumThemeTests: XCTestCase {
     func testAppearanceSelectionUpdatesExistingCardWithoutReopening() throws {
         let theme = TestTheme()
         let card = premiumCard()
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
-            SettingsSection(kind: .premiumCard(card)),
-            SettingsSection(kind: .rows([.defaultRow(.appearance(theme: theme, colors: TestColor.allCases))]))
-        ]))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .premiumCard(card)),
+                SettingsSection(kind: .rows([.defaultRow(.appearance(theme: theme, colors: TestColor.allCases))])),
+            ]))
         let navigation = UINavigationController(rootViewController: settings)
         settings.loadViewIfNeeded()
         settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: 0, section: 1))
@@ -26,13 +28,15 @@ final class PremiumThemeTests: XCTestCase {
     }
     func testNewColorSurvivesPremiumActivationAndRestoration() throws {
         let original = premiumCard()
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
-            SettingsSection(kind: .premiumCard(original))
-        ]))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .premiumCard(original))
+            ]))
         settings.updatePremiumColor(.systemGreen)
         settings.applyResolvedState(info: nil, premium: true, user: nil, includesAccount: true)
         guard case .rows(let rows) = settings.sections[0].kind,
-              case .defaultRow(.premium(let active)) = rows[0] else { return XCTFail("Expected active row") }
+            case .item(.defaultRow(.premium(let active))) = rows[0]
+        else { return XCTFail("Expected active row") }
         XCTAssertEqual(active.color, UIColor.systemGreen)
         settings.applyResolvedState(info: nil, premium: false, user: nil, includesAccount: true)
         guard case .premiumCard(let restored) = settings.sections[0].kind else { return XCTFail("Expected restored card") }
@@ -45,10 +49,9 @@ final class PremiumThemeTests: XCTestCase {
 }
 
 private final class TestTheme: ThemeStorage {
-    var appColor: UIColor = .blue
-    var appColorRawValue = "blue"
-    var autoTheme = true
-    var interfaceStyle = 1
+    var appColorID = "blue"
+    var followsSystemAppearance = true
+    var interfaceStyle = InterfaceStyle.light
 }
 private enum TestColor: String, CaseIterable, AppColorType {
     case red

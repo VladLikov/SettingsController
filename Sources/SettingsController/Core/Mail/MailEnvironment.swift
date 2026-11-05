@@ -26,12 +26,7 @@ struct MailEnvironment: Sendable {
         defer { device.isBatteryMonitoringEnabled = wasEnabled }
         let bundle = Bundle.main
         let locale = Locale.current
-        let region: String
-        if #available(iOS 16, *) {
-            region = locale.region?.identifier ?? "Unknown"
-        } else {
-            region = locale.regionCode ?? "Unknown"
-        }
+        let region = locale.regionIdentifier ?? "Unknown"
         return Self(
             appName: bundle.infoDictionary?["CFBundleDisplayName"] as? String
                 ?? bundle.infoDictionary?["CFBundleName"] as? String ?? "App",
@@ -49,5 +44,16 @@ struct MailEnvironment: Sendable {
             timeZone: TimeZone.current.identifier,
             timestamp: ISO8601DateFormatter().string(from: Date())
         )
+    }
+}
+
+extension Locale {
+    /// The region code, through the iOS 16 API where available.
+    var regionIdentifier: String? {
+        if #available(iOS 16, *) {
+            region?.identifier
+        } else {
+            regionCode
+        }
     }
 }

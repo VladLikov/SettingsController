@@ -1,43 +1,38 @@
-//
-//  PremiumPayload.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 20.05.2025.
-//
-
-import Foundation
 import UIKit
 
 public struct PremiumPayload {
     public private(set) var isPremium: Bool
     public private(set) var color: UIColor
-    public let destinationControllerType: UIViewController.Type?
-    public let action: PremiumAction?
-    public let destinationFactory: SettingsDestinationFactory?
+    /// Shown modally (full screen in compact width) or run when the user is not premium.
+    public let destination: SettingsDestination?
 
-    public typealias PremiumAction = (_ fromVC: UIViewController) -> Void
+    public typealias PremiumAction = @MainActor (_ fromVC: UIViewController) -> Void
 
-    public init(
-        isPremium: Bool,
-        color: UIColor,
-        destinationControllerType: UIViewController.Type? = nil,
-        action: PremiumAction? = nil
-    ) {
+    public init(isPremium: Bool, color: UIColor, destination: SettingsDestination? = nil) {
         self.isPremium = isPremium
         self.color = color
-        self.destinationControllerType = destinationControllerType
-        self.action = action
-        self.destinationFactory = nil
+        self.destination = destination
     }
 
+    @available(*, deprecated, message: "Use init(isPremium:color:destination:) with .controller or .action.")
+    public init(
+        isPremium: Bool, color: UIColor,
+        destinationControllerType: UIViewController.Type? = nil, action: PremiumAction? = nil
+    ) {
+        let destination: SettingsDestination? =
+            if let destinationControllerType {
+                .controller(destinationControllerType)
+            } else if let action {
+                .action { action($0.viewController) }
+            } else {
+                nil
+            }
+        self.init(isPremium: isPremium, color: color, destination: destination)
+    }
 
-    public init(isPremium: Bool, color: UIColor,
-                destinationFactory: @escaping SettingsDestinationFactory) {
-        self.isPremium = isPremium
-        self.color = color
-        self.destinationControllerType = nil
-        self.action = nil
-        self.destinationFactory = destinationFactory
+    @available(*, deprecated, message: "Use init(isPremium:color:destination:) with .factory(...).")
+    public init(isPremium: Bool, color: UIColor, destinationFactory: @escaping SettingsDestinationFactory) {
+        self.init(isPremium: isPremium, color: color, destination: .factory(destinationFactory))
     }
 
     func withColor(_ color: UIColor) -> Self {

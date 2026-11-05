@@ -1,19 +1,16 @@
 import UIKit
 
-public class SwitchCell: UITableViewCell {
-    private enum Metrics {
-        static let verticalPadding: CGFloat = 6
-    }
+class SwitchCell: UITableViewCell {
 
     private var valueChanged: ((Bool) -> Void)?
 
-    public lazy var switchControl: UISwitch = {
+    lazy var switchControl: UISwitch = {
         let control = UISwitch()
         control.onTintColor = tintColor
         return control
     }()
 
-    public override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupView()
     }
@@ -23,7 +20,7 @@ public class SwitchCell: UITableViewCell {
         setupView()
     }
 
-    public override func prepareForReuse() {
+    override func prepareForReuse() {
         super.prepareForReuse()
         contentConfiguration = nil
         valueChanged = nil
@@ -32,14 +29,13 @@ public class SwitchCell: UITableViewCell {
         switchControl.onTintColor = tintColor
     }
 
-    public func configure(title: String?, isOn: Bool, onTintColor: UIColor?,
-                          valueChanged: @escaping (Bool) -> Void) {
+    func configure(
+        title: String?, isOn: Bool, onTintColor: UIColor?,
+        valueChanged: @escaping (Bool) -> Void
+    ) {
         var configuration = defaultContentConfiguration()
         configuration.text = title
-        configuration.textProperties.numberOfLines = 0
-        configuration.textProperties.lineBreakMode = .byWordWrapping
-        configuration.directionalLayoutMargins.top = Metrics.verticalPadding
-        configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
+        configuration.applySettingsRowLayout()
         contentConfiguration = configuration
         switchControl.accessibilityLabel = title
         switchControl.isOn = isOn

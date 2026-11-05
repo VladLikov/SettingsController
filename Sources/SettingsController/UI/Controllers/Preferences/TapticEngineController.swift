@@ -1,207 +1,128 @@
-//
-//  TapticEngineController.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 06.10.2024.
-//
-
 import UIKit
 
-// MARK: - TapticEngineController
+/// Turns haptic feedback on or off and chooses its strength; selecting a strength plays a sample.
+final class TapticEngineController: UITableViewController {
 
-class TapticEngineController: UITableViewController {
-    
-    // MARK: Properties [Private]
-    
-    private let tapticArray: [TapticEngineStyle] = TapticEngineStyle.allCases
-        
-    private var taptic: TapticStorage
+    private let taptic: TapticStorage
     private weak var eventHandler: (any SettingsControllerEventHandler)?
 
-    // MARK: Life Cycle
-    
-    init(
-        tapticStorage: TapticStorage,
-        eventHandler: (any SettingsControllerEventHandler)?
-    ) {
-        self.taptic = tapticStorage
+    // The table renders this local copy, so a storage that ignores a write cannot desynchronize sections.
+    private var isEnabled: Bool
+    private var style: TapticStyle
+
+    private enum Section: Int {
+        case toggle, styles
+    }
+
+    init(tapticStorage: TapticStorage, eventHandler: (any SettingsControllerEventHandler)?) {
+        taptic = tapticStorage
         self.eventHandler = eventHandler
+        isEnabled = tapticStorage.isTapticEngineEnabled
+        style = tapticStorage.tapticStyle
         super.init(style: .insetGrouped)
     }
-    
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        normalizeTapticStyleIfNeeded()
-
         tableView.register(SwitchCell.self)
         tableView.register(UITableViewCell.self)
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = defaultRowEstimatedHeight
-        
+        tableView.estimatedRowHeight = SettingsMetrics.estimatedRowHeight
         navigationItem.largeTitleDisplayMode = .never
     }
-    
 }
 
 // MARK: - UITableViewDataSource
 
 extension TapticEngineController {
-        
+
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return taptic.tapticEngine ? 2 : 1
+        isEnabled ? 2 : 1
     }
-    
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
-        switch section {
-        case 0:
-            return 1
-            
-        case 1:
-            return tapticArray.count
-            
-        default:
-            return 0
+        switch Section(rawValue: section) {
+        case .toggle: 1
+        case .styles: TapticStyle.allCases.count
+        case nil: 0
         }
-
     }
-    
+
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        
-        if section == 1 {
-            return NSLocalizedString("Taptic Force", bundle: .module, comment: "Section heading for haptic feedback intensity.")
-        }
-        
-        return nil
-        
+        guard Section(rawValue: section) == .styles else { return nil }
+        return NSLocalizedString("Taptic Force", bundle: .module, comment: "Section heading for haptic feedback intensity.")
     }
-    
-    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        
-        if section == 0 {
-            return NSLocalizedString("Adds taptic feedback to various actions in the app.", bundle: .module, comment: "Footer explaining the haptic feedback switch.")
-        }
-        
-        return nil
-        
-    }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-                
-        let section = indexPath.section, row = indexPath.row
-        
-        if section == 0 && row == 0 {
-            
-            let cell = tableView.dequeueReusableCell(withClass: SwitchCell.self, for: indexPath)
 
+    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        guard Section(rawValue: section) == .toggle else { return nil }
+        return NSLocalizedString(
+            "Adds taptic feedback to various actions in the app.", bundle: .module, comment: "Footer explaining the haptic feedback switch."
+        )
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        switch Section(rawValue: indexPath.section) {
+        case .toggle:
+            let cell = tableView.dequeueReusableCell(withClass: SwitchCell.self, for: indexPath)
             cell.configure(
                 title: NSLocalizedString("Taptic Engine", bundle: .module, comment: "Settings row and switch label for haptic feedback."),
-                isOn: taptic.tapticEngine,
+                isOn: isEnabled,
                 onTintColor: view.tintColor
             ) { [weak self] isOn in
-                self?.tapticEngineAction(isOn: isOn)
+                self?.setEnabled(isOn)
             }
-
             return cell
-            
-        } else if section == 1 {
-            
+
+        case .styles:
             let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
-            cell.selectionStyle = .none
-
-            let tapticStyle = tapticArray[row]
-            let isSelected = row == taptic.tapticStyle
-
+            let rowStyle = TapticStyle.allCases[indexPath.row]
             var configuration = cell.defaultContentConfiguration()
-            configuration.text = tapticStyle.title
-            configuration.textProperties.numberOfLines = 0
-            configuration.textProperties.lineBreakMode = .byWordWrapping
-            configuration.directionalLayoutMargins.top = 6
-            configuration.directionalLayoutMargins.bottom = 6
+            configuration.text = rowStyle.title
+            configuration.applySettingsRowLayout()
             cell.contentConfiguration = configuration
-
-            cell.accessoryType = isSelected ? .checkmark : .none
-
+            cell.selectionStyle = .none
+            cell.accessoryType = rowStyle == style ? .checkmark : .none
             return cell
+
+        case nil:
+            preconditionFailure("Unexpected taptic settings indexPath: \(indexPath)")
         }
-        
-        preconditionFailure("Unexpected taptic settings indexPath: \(indexPath)")
-        
     }
-    
 }
 
 // MARK: - UITableViewDelegate
 
 extension TapticEngineController {
-        
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-        if indexPath.section == 1 {
-            
-            let oldIndexPath = IndexPath(row: selectedTapticStyleIndex, section: indexPath.section)
-
-            tableView.cellForRow(at: oldIndexPath)?.accessoryType = .none
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-            
-            taptic.tapticStyle = indexPath.row
-            eventHandler?.settingsDidUpdateTaptic(taptic)
-            
-#if !os(visionOS)
-            UISelectionFeedbackGenerator().selectionChanged()
-#endif
+        guard Section(rawValue: indexPath.section) == .styles else { return }
+        let selected = TapticStyle.allCases[indexPath.row]
+        if selected != style, let old = TapticStyle.allCases.firstIndex(of: style) {
+            tableView.cellForRow(at: IndexPath(row: old, section: indexPath.section))?.accessoryType = .none
         }
-        
-    }
-    
-}
-
-// MARK: - Actions
-
-extension TapticEngineController {
-        
-    private var selectedTapticStyleIndex: Int {
-        guard tapticArray.indices.contains(taptic.tapticStyle) else {
-            return TapticEngineStyle.medium.rawValue
-        }
-
-        return taptic.tapticStyle
-    }
-
-    private var defaultRowEstimatedHeight: CGFloat {
-        if #available(iOS 26, *) {
-            53
-        } else {
-            45
-        }
-    }
-
-    private func normalizeTapticStyleIfNeeded() {
-        guard tapticArray.indices.contains(taptic.tapticStyle) else {
-            taptic.tapticStyle = TapticEngineStyle.medium.rawValue
-            return
-        }
-    }
-
-    private func tapticEngineAction(isOn: Bool) {
-
-        taptic.tapticEngine = isOn
+        tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
+        style = selected
+        taptic.tapticStyle = selected
         eventHandler?.settingsDidUpdateTaptic(taptic)
-
-        let indexSet = IndexSet(integer: 1)
-
-        if isOn {
-            tableView.insertSections(indexSet, with: .fade)
-        } else {
-            tableView.deleteSections(indexSet, with: .fade)
-        }
-        
+        // Let the user feel the chosen strength, even when it was already selected.
+        SettingsHaptics(storage: taptic).preview(selected)
     }
-    
+
+    private func setEnabled(_ isOn: Bool) {
+        guard isOn != isEnabled else { return }
+        isEnabled = isOn
+        taptic.isTapticEngineEnabled = isOn
+        eventHandler?.settingsDidUpdateTaptic(taptic)
+        let sections = IndexSet(integer: Section.styles.rawValue)
+        if isOn {
+            tableView.insertSections(sections, with: .automatic)
+        } else {
+            tableView.deleteSections(sections, with: .automatic)
+        }
+    }
 }

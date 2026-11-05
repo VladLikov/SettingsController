@@ -1,11 +1,13 @@
-import UIKit
-import SwiftUI
 import SettingsController
+import SwiftUI
+import UIKit
 
 @main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
-    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession,
-                     options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+    func application(
+        _ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
         let configuration = UISceneConfiguration(name: "Example", sessionRole: connectingSceneSession.role)
         configuration.delegateClass = SceneDelegate.self
         return configuration
@@ -39,13 +41,16 @@ final class DemoStore: SettingsControllerDelegate {
     func settingsIsPremiumActive() async -> Bool { premium }
     func settingsMailInfo() async -> SettingsMailInfo? {
         if ProcessInfo.processInfo.arguments.contains("-demo-slow-provider") {
-            do { try await Task.sleep(nanoseconds: 30_000_000_000) }
-            catch { return nil }
+            do { try await Task.sleep(nanoseconds: 30_000_000_000) } catch { return nil }
         }
         return SettingsMailInfo(userID: userID, productID: premium ? "demo.annual" : nil, isPremium: premium)
     }
-    func settingsDidDismiss() { settings = nil; dismissalProbe = nil }
-    func settingsDidUpdateTheme(_ theme: ThemeStorage) { settings?.view.window?.tintColor = theme.appColor }
+    func settingsDidDismiss() {
+        settings = nil
+        dismissalProbe = nil
+    }
+    func settingsDidSelectAppColor(_ color: any AppColorType) { settings?.view.window?.tintColor = color.color }
+    func settingsDidUpdateTheme(_ theme: ThemeStorage) {}
     func settingsDidUpdateTaptic(_ taptic: TapticStorage) {}
 
     func logout() async {
@@ -59,32 +64,57 @@ final class DemoStore: SettingsControllerDelegate {
         // Literal QA copy/colors match the owner's App Lock reference, without modifying the real host.
         let appLockReference = ProcessInfo.processInfo.arguments.contains("-demo-applock-premium")
         let purpleReference = ProcessInfo.processInfo.arguments.contains("-demo-premium-reference-purple")
-        let premium = PremiumPayload(isPremium: premium, color: purpleReference ? .systemIndigo : (appLockReference ? AppColor.blue.color : .systemIndigo), destinationFactory: { [self] in
-            UINavigationController(rootViewController: PaywallController(store: self))
-        })
-        return SettingsConfiguration(title: "Settings", sections: [
-            SettingsSection(kind: .rows([.defaultRow(.user(name, destinationFactory: { [self] in ProfileController(store: self) }))])),
-            SettingsSection(kind: .premiumCard(PremiumCardPayload(image: Image(systemName: "sparkle"),
-                title: purpleReference ? "Ripples" : (appLockReference ? "App Lock" : "Premium"),
-                tierTitle: purpleReference ? "Plus" : (appLockReference ? "PRO" : nil),
-                subtitle: appLockReference ? "Unlock all features" : "All example features",
-                buttonTitle: purpleReference ? "Upgrade" : (appLockReference ? "Get PRO" : "Continue"), premium: premium))),
-            SettingsSection(title: "Preferences", kind: .rows([
-                .defaultRow(.language),
-                .defaultRow(.appearance(theme: theme)),
-                .row(SettingsRow(title: "Injected destination", icon: SettingsIcon(image: UIImage(systemName: "shippingbox"), color: .systemGreen),
-                    destinationFactory: { [self] in ProfileController(store: self) }))
-            ])),
-            SettingsSection(title: "Support", kind: .rows([
-                .defaultRow(.contactDeveloper(email: "support@example.com")),
-                .defaultRow(.about(appID: "6746766591", privacyURL: URL(string: "https://example.com/privacy")!, termsURL: URL(string: "https://example.com/terms")!)),
-                .row(SettingsRow(title: "Standalone mail", icon: SettingsIcon(image: UIImage(systemName: "envelope"), color: .systemBlue), action: { [self] _, _, presenter in
-                    // Standalone MailController holds its provider weakly; the dashboard retains DemoStore.
-                    let mail = MailController(type: .custom(placeholder: "Message", minCharactersCount: 1, navigationTitle: "Contact", subject: "Example"), email: "support@example.com", dataProvider: self)
-                    presenter.present(UINavigationController(rootViewController: mail), animated: true)
-                }))
-            ]))
-        ], eventHandler: self, dataProvider: self)
+        let premium = PremiumPayload(
+            isPremium: premium, color: purpleReference ? .systemIndigo : (appLockReference ? AppColor.blue.color : .systemIndigo),
+            destination: .factory { [self] in
+                UINavigationController(rootViewController: PaywallController(store: self))
+            })
+        return SettingsConfiguration(
+            title: "Settings",
+            sections: [
+                SettingsSection(
+                    kind: .rows([.defaultRow(.user(name: name, destination: .factory { [self] in ProfileController(store: self) }))])),
+                SettingsSection(
+                    kind: .premiumCard(
+                        PremiumCardPayload(
+                            image: Image(systemName: "sparkle"),
+                            title: purpleReference ? "Ripples" : (appLockReference ? "App Lock" : "Premium"),
+                            tierTitle: purpleReference ? "Plus" : (appLockReference ? "PRO" : nil),
+                            subtitle: appLockReference ? "Unlock all features" : "All example features",
+                            buttonTitle: purpleReference ? "Upgrade" : (appLockReference ? "Get PRO" : "Continue"), premium: premium))),
+                SettingsSection(
+                    title: "Preferences",
+                    kind: .rows([
+                        .defaultRow(.language),
+                        .defaultRow(.appearance(theme: theme)),
+                        .row(
+                            SettingsRow(
+                                title: "Injected destination",
+                                icon: SettingsIcon(image: UIImage(systemName: "shippingbox"), color: .systemGreen),
+                                destination: .factory { [self] in ProfileController(store: self) })),
+                    ])),
+                SettingsSection(
+                    title: "Support",
+                    kind: .rows([
+                        .defaultRow(.contactDeveloper(email: "support@example.com")),
+                        .defaultRow(
+                            .about(
+                                appID: "6746766591", privacyURL: URL(string: "https://example.com/privacy")!,
+                                termsURL: URL(string: "https://example.com/terms")!)),
+                        .row(
+                            SettingsRow(
+                                title: "Standalone mail", icon: SettingsIcon(image: UIImage(systemName: "envelope"), color: .systemBlue),
+                                destination: .action { [self] context in
+                                    let presenter = context.viewController
+                                    // Standalone MailController holds its provider weakly; the dashboard retains DemoStore.
+                                    let mail = MailController(
+                                        type: .custom(
+                                            placeholder: "Message", minCharactersCount: 1, navigationTitle: "Contact", subject: "Example"),
+                                        email: "support@example.com", dataProvider: self)
+                                    presenter.present(UINavigationController(rootViewController: mail), animated: true)
+                                })),
+                    ])),
+            ], eventHandler: self, dataProvider: self)
     }
 }
 
@@ -94,8 +124,9 @@ final class QADismissalProbe: NSObject, UIAdaptivePresentationControllerDelegate
     weak var settings: SettingsController?
     func presentationControllerWillDismiss(_ presentationController: UIPresentationController) {
         guard ProcessInfo.processInfo.arguments.contains("-qa-track-dismissal"),
-              let coordinator = presentationController.presentedViewController.transitionCoordinator,
-              coordinator.isInteractive else { return }
+            let coordinator = presentationController.presentedViewController.transitionCoordinator,
+            coordinator.isInteractive
+        else { return }
         coordinator.notifyWhenInteractionChanges { [weak self] context in
             self?.settings?.tableView.accessibilityValue = context.isCancelled ? "qa-cancelled" : "qa-completed"
         }
@@ -103,10 +134,9 @@ final class QADismissalProbe: NSObject, UIAdaptivePresentationControllerDelegate
 }
 
 final class DemoTheme: ThemeStorage {
-    var appColor: UIColor = .systemIndigo
-    var appColorRawValue = AppColor.allCases.first!.rawValue
-    var autoTheme = true
-    var interfaceStyle = UIUserInterfaceStyle.light.rawValue
+    var appColorID = AppColor.allCases.first!.rawValue
+    var followsSystemAppearance = true
+    var interfaceStyle = InterfaceStyle.light
 }
 
 @MainActor
@@ -119,10 +149,11 @@ final class DashboardController: UIViewController {
         // Optional sample-only QA entry point. The device still supplies real
         // geometry/reserved regions; this never simulates a fold or split state.
         guard !didOpenLaunchScenario,
-              ProcessInfo.processInfo.arguments.contains("-demo-open-settings") else { return }
+            ProcessInfo.processInfo.arguments.contains("-demo-open-settings")
+        else { return }
         didOpenLaunchScenario = true
         let configuration = store.configuration()
-        let root = SettingsController.getSplitPresentationSettingsController(configuration: configuration)
+        let root = SettingsController.makeSplitPresentation(configuration: configuration)
         store.settings = findSettings(in: root)
         root.modalPresentationStyle = .fullScreen
         present(root, animated: false) { [weak self, weak root] in
@@ -140,7 +171,8 @@ final class DashboardController: UIViewController {
                 }
             }
             guard ProcessInfo.processInfo.arguments.contains("-demo-select-appearance"),
-                  let settings = self.store.settings else { return }
+                let settings = self.store.settings
+            else { return }
             settings.loadViewIfNeeded()
             for (sectionIndex, section) in configuration.sections.enumerated() {
                 guard case .rows(let rows) = section.kind else { continue }
@@ -160,21 +192,23 @@ final class DashboardController: UIViewController {
         let stack = makeStack(in: view)
         stack.addArrangedSubview(makeButton("Open full screen", id: "open-fullscreen") { [weak self] in self?.open(sheet: false) })
         stack.addArrangedSubview(makeButton("Open sheet", id: "open-sheet") { [weak self] in self?.open(sheet: true) })
-        // Compile public models and cells through an ordinary import, not @testable.
-        _ = AppItem(id: 1, name: "Example", iconURL: URL(string: "https://example.com/icon.png")!, storeURL: URL(string: "https://apps.apple.com/app/id1")!)
-        _ = SettingsCell(style: .default, reuseIdentifier: nil)
-        _ = SwitchCell(style: .default, reuseIdentifier: nil)
-        _ = MailCell(style: .default, reuseIdentifier: nil)
+        // Compile the public 5.0 surface through an ordinary import, not @testable.
+        _ = SettingsRow(
+            title: "Example", icon: SettingsIcon(image: UIImage(systemName: "star.fill"), color: .systemBlue, padding: IconPadding()),
+            destination: .action { _ in })
+        _ = PremiumCard(title: "Example", tierTitle: "PRO", buttonTitle: "Go", color: .systemBlue, onTap: {})
+        _ = MailController(type: .custom(placeholder: "", minCharactersCount: 0, navigationTitle: "", subject: ""), email: "a@b.c")
     }
 
     private func open(sheet: Bool) {
         if sheet {
-            let root = SettingsController.getSplitPresentationSettingsController(configuration: store.configuration())
+            let root = SettingsController.makeSplitPresentation(configuration: store.configuration())
             store.settings = findSettings(in: root)
             root.modalPresentationStyle = .pageSheet
             present(root, animated: true) { [weak self, weak root] in
                 guard let self, let root,
-                      let settings = self.findSettings(in: root) else { return }
+                    let settings = self.findSettings(in: root)
+                else { return }
                 self.store.settings = settings
                 guard ProcessInfo.processInfo.arguments.contains("-qa-track-dismissal") else { return }
                 // Observe the final adaptive presentation controller and actual visible table.
@@ -196,7 +230,9 @@ final class DashboardController: UIViewController {
         if let settings = controller as? SettingsController { return settings }
         let children: [UIViewController]
         if let split = controller as? UISplitViewController {
-            children = split.style == .unspecified ? split.viewControllers
+            children =
+                split.style == .unspecified
+                ? split.viewControllers
                 : [split.viewController(for: .primary), split.viewController(for: .secondary)].compactMap { $0 }
         } else if let navigation = controller as? UINavigationController {
             children = navigation.viewControllers
@@ -213,28 +249,33 @@ final class DashboardController: UIViewController {
 @MainActor
 final class ProfileController: UIViewController {
     let store: DemoStore
-    init(store: DemoStore) { self.store = store; super.init(nibName: nil, bundle: nil) }
+    init(store: DemoStore) {
+        self.store = store
+        super.init(nibName: nil, bundle: nil)
+    }
     required init?(coder: NSCoder) { fatalError("Unused") }
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Profile"
         view.backgroundColor = .systemBackground
         let stack = makeStack(in: view)
-        stack.addArrangedSubview(makeButton("Rename to Updated User", id: "rename") { [weak self] in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                store.name = "Updated User"
-                await store.settings?.refreshState()
-                returnToSettingsIfCompact()
-            }
-        })
-        stack.addArrangedSubview(makeButton("Log out", id: "logout") { [weak self] in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                await store.logout()
-                returnToSettingsIfCompact()
-            }
-        })
+        stack.addArrangedSubview(
+            makeButton("Rename to Updated User", id: "rename") { [weak self] in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    store.name = "Updated User"
+                    await store.settings?.refreshState()
+                    returnToSettingsIfCompact()
+                }
+            })
+        stack.addArrangedSubview(
+            makeButton("Log out", id: "logout") { [weak self] in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    await store.logout()
+                    returnToSettingsIfCompact()
+                }
+            })
     }
     private func returnToSettingsIfCompact() {
         if let split = splitViewController, split.style != .unspecified {
@@ -249,7 +290,10 @@ final class ProfileController: UIViewController {
 @MainActor
 final class PaywallController: UIViewController {
     let store: DemoStore
-    init(store: DemoStore) { self.store = store; super.init(nibName: nil, bundle: nil) }
+    init(store: DemoStore) {
+        self.store = store
+        super.init(nibName: nil, bundle: nil)
+    }
     required init?(coder: NSCoder) { fatalError("Unused") }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -295,7 +339,7 @@ private func makeStack(in view: UIView) -> UIStackView {
     NSLayoutConstraint.activate([
         stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 24),
         stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24),
-        stack.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor)
+        stack.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
     ])
     return stack
 }

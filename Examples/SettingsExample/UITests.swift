@@ -1,5 +1,5 @@
-import XCTest
 import UIKit
+import XCTest
 
 @MainActor
 final class SettingsExampleUITests: XCTestCase {
@@ -71,7 +71,7 @@ final class SettingsExampleUITests: XCTestCase {
         try app.performAccessibilityAudit { issue in
             print("Accessibility audit: \(issue.compactDescription) — \(issue.detailedDescription)")
             print(issue.element?.debugDescription ?? "No associated element")
-            return false // Diagnostic logging only; never suppress an issue.
+            return false  // Diagnostic logging only; never suppress an issue.
         }
         attach(app, name: afterScrolling ? "settings-accessibility-audit-scrolled" : "settings-accessibility-audit")
     }
@@ -180,7 +180,11 @@ final class SettingsExampleUITests: XCTestCase {
     }
 
     func testDarkLargeTextAndRTLLayout() {
-        let app = launch(["-demo-applock-premium", "-demo-dark", "-demo-rtl", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"], language: "ar")
+        let app = launch(
+            [
+                "-demo-applock-premium", "-demo-dark", "-demo-rtl", "-UIPreferredContentSizeCategoryName",
+                "UICTContentSizeCategoryAccessibilityXXXL",
+            ], language: "ar")
         app.buttons["open-fullscreen"].tap()
         XCTAssertTrue(app.cells["Demo User"].firstMatch.waitForExistence(timeout: 10))
         attach(app, name: "dark-rtl-large-text")
@@ -235,7 +239,12 @@ final class SettingsExampleUITests: XCTestCase {
         let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unlock all features")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
         XCTAssertTrue(card.label.contains("Ripples Plus"))
-        XCTAssertEqual(card.frame.height, 72, accuracy: 2)
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            XCTAssertEqual(card.frame.height, 72, accuracy: 2)
+        } else {
+            // The iPad settings column is too narrow for the one-row pill, so the card stacks by design.
+            XCTAssertGreaterThan(card.frame.height, 74)
+        }
         XCTAssertFalse(app.staticTexts["Unlock all features"].exists)
         attach(app, name: "premium-pill-purple-reference")
     }

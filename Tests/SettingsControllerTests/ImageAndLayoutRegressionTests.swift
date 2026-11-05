@@ -1,5 +1,6 @@
-import XCTest
 import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -9,7 +10,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         controller.view = EmptyStateView(title: "Select", subtitle: "Detail")
         controller.additionalSafeAreaInsets = UIEdgeInsets(top: 40, left: 80, bottom: 60, right: 50)
         let window = mountedWindow(controller)
-        defer { window.isHidden = true; window.rootViewController = nil }
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         let scroll = try XCTUnwrap(controller.view.subviews.first as? UIScrollView)
         controller.view.layoutIfNeeded()
         XCTAssertEqual(scroll.frame, controller.view.bounds)
@@ -29,7 +33,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
                 XCTAssertFalse(palette.middle.isEqual(palette.end))
                 XCTAssertFalse(palette.controlTint.isEqual(palette.middle))
                 XCTAssertFalse(palette.controlTint.isEqual(palette.end))
-                var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+                var r: CGFloat = 0
+                var g: CGFloat = 0
+                var b: CGFloat = 0
+                var a: CGFloat = 0
                 XCTAssertTrue(palette.legacyControlTint.getRed(&r, green: &g, blue: &b, alpha: &a))
                 let channels = [r, g, b].map { value -> Double in
                     let c = Double(value)
@@ -48,8 +55,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             XCTAssertTrue(dark.controlTint.isEqual(dark.legacyControlTint))
             XCTAssertFalse(light.controlTint.isEqual(light.legacyControlTint))
             for style in [UIUserInterfaceStyle.light, .dark] {
-                let traits = UITraitCollection(traitsFrom: [UITraitCollection(userInterfaceStyle: style),
-                    UITraitCollection(accessibilityContrast: .high)])
+                let traits = UITraitCollection(traitsFrom: [
+                    UITraitCollection(userInterfaceStyle: style),
+                    UITraitCollection(accessibilityContrast: .high),
+                ])
                 let increased = PremiumCardPalette(color: color, traits: traits)
                 XCTAssertTrue(increased.controlTint.isEqual(increased.legacyControlTint))
             }
@@ -59,8 +68,8 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
     func testNilAndZeroInsetDoNotCollide() throws {
         SettingsIconGenerator.removeAllCachedImages()
         let image = UIImage(systemName: "square.fill")!
-        let nilInset = SettingsIcon(image: image, color: .red, inset: nil, cacheIdentifier: "same")
-        let zeroInset = SettingsIcon(image: image, color: .red, inset: Inset(0), cacheIdentifier: "same")
+        let nilInset = SettingsIcon(image: image, color: .red, padding: nil, cacheIdentifier: "same")
+        let zeroInset = SettingsIcon(image: image, color: .red, padding: IconPadding(0), cacheIdentifier: "same")
         let a = try XCTUnwrap(nilInset.generateSettingsImage())
         let b = try XCTUnwrap(zeroInset.generateSettingsImage())
         XCTAssertFalse(a === b)
@@ -73,15 +82,16 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         let icon = SettingsIcon(image: UIImage(systemName: "star"), color: .blue)
         XCTAssertNil(icon.generateSettingsImage(size: CGSize(width: CGFloat.infinity, height: 30)))
         XCTAssertNil(icon.generateSettingsImage(cornerRadius: .nan))
-        let invalid = SettingsIcon(image: UIImage(systemName: "star"), color: .blue, inset: Inset(.infinity))
+        let invalid = SettingsIcon(image: UIImage(systemName: "star"), color: .blue, padding: IconPadding(.infinity))
         XCTAssertNil(invalid.generateSettingsImage())
     }
 
     func testLargeSourceProducesDestinationSizedBitmap() throws {
         let source = UIGraphicsImageRenderer(size: CGSize(width: 1024, height: 2048)).image { context in
-            UIColor.black.setFill(); context.fill(CGRect(x: 0, y: 0, width: 1024, height: 2048))
+            UIColor.black.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 1024, height: 2048))
         }
-        let icon = SettingsIcon(image: source, color: .blue, inset: Inset(20))
+        let icon = SettingsIcon(image: source, color: .blue, padding: IconPadding(20))
         let traits = UITraitCollection(displayScale: 2)
         let result = try XCTUnwrap(icon.generateSettingsImage(traitCollection: traits))
         XCTAssertEqual(result.cgImage?.width, 60)
@@ -105,20 +115,32 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             XCTAssertEqual(parent.children.count, 1)
             XCTAssertEqual(cell.contentView.constraints.count, 4)
         }
-        let size = cell.systemLayoutSizeFitting(CGSize(width: 320, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
+        let size = cell.systemLayoutSizeFitting(
+            CGSize(width: 320, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
         XCTAssertGreaterThanOrEqual(size.height, 72)
         cell.prepareForReuse()
         XCTAssertTrue(parent.children.isEmpty)
         XCTAssertTrue(cell.contentView.constraints.isEmpty)
     }
 
-    func testAutomaticAppearanceExplanationBelongsToSwitchSection() {
+    func testAutomaticAppearanceExplanationBelongsToSwitchSection() throws {
         let theme = RegressionTheme()
         let controller = AppearanceController(themeStorage: theme, colors: SameColor.allCases, eventHandler: nil)
-        controller.loadViewIfNeeded()
+        let window = mountedWindow(controller)
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         XCTAssertEqual(controller.numberOfSections(in: controller.tableView), 2)
         XCTAssertNotNil(controller.tableView(controller.tableView, titleForFooterInSection: 1))
-        theme.autoTheme = false
+        let toggle = try XCTUnwrap(controller.tableView.cellForRow(at: IndexPath(row: 0, section: 1)) as? SwitchCell)
+        toggle.switchControl.isOn = false
+        for target in toggle.switchControl.allTargets {
+            for action in toggle.switchControl.actions(forTarget: target, forControlEvent: .valueChanged) ?? [] {
+                _ = (target as NSObject).perform(NSSelectorFromString(action), with: toggle.switchControl)
+            }
+        }
+        XCTAssertFalse(theme.followsSystemAppearance)
         XCTAssertEqual(controller.numberOfSections(in: controller.tableView), 3)
         XCTAssertNotNil(controller.tableView(controller.tableView, titleForFooterInSection: 1))
         XCTAssertNil(controller.tableView(controller.tableView, titleForFooterInSection: 2))
@@ -127,11 +149,11 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
     func testRemovedSavedColorDoesNotPreventSelection() {
         let theme = RegressionTheme()
         let provider = RegressionProvider()
-        theme.appColorRawValue = "deleted"
+        theme.appColorID = "deleted"
         let controller = AppearanceController(themeStorage: theme, colors: SameColor.allCases, eventHandler: provider)
         controller.loadViewIfNeeded()
         controller.tableView(controller.tableView, didSelectRowAt: IndexPath(row: 1, section: 0))
-        XCTAssertEqual(theme.appColorRawValue, "second")
+        XCTAssertEqual(theme.appColorID, "second")
         XCTAssertEqual(provider.themeUpdates, 1)
         let first = controller.tableView(controller.tableView, cellForRowAt: IndexPath(row: 0, section: 0))
         let second = controller.tableView(controller.tableView, cellForRowAt: IndexPath(row: 1, section: 0))
@@ -158,8 +180,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertEqual(consumers, 2)
         first.cancel()
         await FixtureServer.shared.release(url)
-        do { _ = try await first.value; XCTFail("Cancelled waiter must not receive an image") }
-        catch { XCTAssertTrue(error is CancellationError) }
+        do {
+            _ = try await first.value
+            XCTFail("Cancelled waiter must not receive an image")
+        } catch { XCTAssertTrue(error is CancellationError) }
         let image = try await second.value
         XCTAssertNotNil(image.cgImage)
         let requests = await FixtureServer.shared.requestCount(url)
@@ -182,8 +206,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         let active = await loader.activeRequestCount
         XCTAssertEqual(active, 0)
         await FixtureServer.shared.release(url)
-        do { _ = try await first.value; XCTFail("Cancelled consumer received image") }
-        catch { XCTAssertTrue(error is CancellationError) }
+        do {
+            _ = try await first.value
+            XCTFail("Cancelled consumer received image")
+        } catch { XCTAssertTrue(error is CancellationError) }
         let image = try await loader.image(from: url, maxPixelSize: 30, scale: 2)
         XCTAssertNotNil(image.cgImage)
         let requests = await FixtureServer.shared.requestCount(url)
@@ -204,8 +230,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertEqual(requests, 2)
         let bad = URL(string: "https://fixture.example/\(UUID().uuidString).png")!
         await FixtureServer.shared.register(bad, data: Data(), status: 500)
-        do { _ = try await loader.image(from: bad, maxPixelSize: 20, scale: 1); XCTFail("Expected error") }
-        catch { XCTAssertEqual((error as? URLError)?.code, .badServerResponse) }
+        do {
+            _ = try await loader.image(from: bad, maxPixelSize: 20, scale: 1)
+            XCTFail("Expected error")
+        } catch { XCTAssertEqual((error as? URLError)?.code, .badServerResponse) }
         await FixtureServer.shared.register(bad, data: try pngData())
         let retried = try await loader.image(from: bad, maxPixelSize: 20, scale: 1)
         XCTAssertNotNil(retried.cgImage)
@@ -213,17 +241,17 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
 
     private func pngData() throws -> Data {
         let image = UIGraphicsImageRenderer(size: CGSize(width: 100, height: 100)).image { context in
-            UIColor.blue.setFill(); context.fill(CGRect(x: 0, y: 0, width: 100, height: 100))
+            UIColor.blue.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 100, height: 100))
         }
         return try XCTUnwrap(image.pngData())
     }
 }
 
 private final class RegressionTheme: ThemeStorage {
-    var appColor: UIColor = .blue
-    var appColorRawValue = "first"
-    var autoTheme = true
-    var interfaceStyle = 1
+    var appColorID = "first"
+    var followsSystemAppearance = true
+    var interfaceStyle = InterfaceStyle.light
 }
 
 private enum SameColor: String, CaseIterable, AppColorType {

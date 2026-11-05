@@ -1,10 +1,3 @@
-//
-//  DeviceModel.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 07.05.2026.
-//
-
 import Foundation
 
 enum DeviceModel {
@@ -37,6 +30,6 @@ enum DeviceModel {
         "iPhone18,1": "iPhone 17 Pro",
         "iPhone18,2": "iPhone 17 Pro Max",
         "iPhone18,3": "iPhone 17",
-        "iPhone18,4": "iPhone Air"
+        "iPhone18,4": "iPhone Air",
     ]
 }

@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -17,11 +18,12 @@ final class SettingsConfigurationTests: XCTestCase {
     }
 
     func testAboutRowDoesNotRequireUserID() {
-        let row = SettingsRowItem.defaultRow(.about(
-            appID: "123",
-            privacyURL: URL(string: "https://example.com/privacy")!,
-            termsURL: URL(string: "https://example.com/terms")!
-        ))
+        let row = SettingsRowItem.defaultRow(
+            .about(
+                appID: "123",
+                privacyURL: URL(string: "https://example.com/privacy")!,
+                termsURL: URL(string: "https://example.com/terms")!
+            ))
 
         if case .defaultRow(.about(let appID, _, _)) = row {
             XCTAssertEqual(appID, "123")

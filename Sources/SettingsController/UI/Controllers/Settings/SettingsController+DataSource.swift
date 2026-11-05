@@ -1,10 +1,3 @@
-//
-//  SettingsController+DataSource.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 12.09.2024.
-//
-
 import UIKit
 
 // MARK: - UITableViewDataSource
@@ -17,12 +10,8 @@ extension SettingsController {
 
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch sections[section].kind {
-        case .rows(let rows):
-            return rows.count
-        case .ourApps(_, let limit, _):
-            return max(0, limit)
-        case .premiumCard:
-            return 1
+        case .rows(let rows): rows.count
+        case .premiumCard: 1
         }
     }
 
@@ -31,36 +20,18 @@ extension SettingsController {
     }
 
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let section = indexPath.section
-
-        switch sections[section].kind {
+        switch sections[indexPath.section].kind {
         case .rows(let rows):
             switch rows[indexPath.row] {
-            case .row(let row):
-                let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
-                cell.configure(title: row.title, icon: row.icon, detail: row.detail)
-                return cell
-
-            case .defaultRow(let defaultRow):
-                switch defaultRow {
-                case .user(let name, let image, _), .userFactory(let name, let image, _):
-                    let cell = tableView.dequeueReusableCell(withClass: UserCell.self, for: indexPath)
-                    cell.configure(title: name, avatar: image)
-                    return cell
-                default: break
-                }
-
-                let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
-                let detail = defaultRow.premiumStatusTitle
-                cell.configure(title: defaultRow.title, icon: defaultRow.icon, detail: detail)
-                return cell
-
+            case .item(let item):
+                return makeCell(for: item, accessory: rows[indexPath.row].accessory, in: tableView, at: indexPath)
             case .app(let appRow):
-                return makeAppCell(for: tableView, at: indexPath, appRow: appRow)
+                let cell = tableView.dequeueReusableCell(withClass: AppCell.self, for: indexPath)
+                cell.configure(with: appRow, isOpening: isOpeningStoreProduct(for: appRow))
+                cell.isAccessibilityElement = !isRedundantPlaceholder(at: indexPath)
+                cell.accessibilityElementsHidden = isRedundantPlaceholder(at: indexPath)
+                return cell
             }
-
-        case .ourApps:
-            return makeAppCell(for: tableView, at: indexPath, appRow: .placeholder)
 
         case .premiumCard(let payload):
             let cell = tableView.dequeueReusableCell(withClass: PremiumCell.self, for: indexPath)
@@ -73,20 +44,42 @@ extension SettingsController {
         }
     }
 
-    private func makeAppCell(
-        for tableView: UITableView,
-        at indexPath: IndexPath,
-        appRow: AppStoreAppRowState
+    /// VoiceOver reads one "Loading…" per catalog, not one per placeholder.
+    private func isRedundantPlaceholder(at indexPath: IndexPath) -> Bool {
+        guard indexPath.row > 0, case .app(.placeholder) = displayRow(at: indexPath) else { return false }
+        return true
+    }
+
+    private func isOpeningStoreProduct(for row: AppStoreAppRowState) -> Bool {
+        guard case .loaded(let app) = row else { return false }
+        return openingStoreAppID == app.id
+    }
+
+    private func makeCell(
+        for item: SettingsRowItem, accessory: RowAccessory, in tableView: UITableView, at indexPath: IndexPath
     ) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withClass: AppCell.self, for: indexPath)
-        cell.configure(with: appRow)
-        return cell
+        switch item {
+        case .row(let row):
+            let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
+            cell.configure(title: row.title, icon: row.icon, detail: row.detail, accessory: accessory)
+            return cell
+
+        case .defaultRow(.user(let name, let avatar, _)):
+            let cell = tableView.dequeueReusableCell(withClass: UserCell.self, for: indexPath)
+            cell.configure(title: name, avatar: avatar, accessory: accessory)
+            return cell
+
+        case .defaultRow(let row):
+            let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
+            cell.configure(title: row.title, icon: row.icon, detail: row.premiumStatusTitle, accessory: accessory)
+            return cell
+        }
     }
 }
 
-private extension SettingsRowItem.DefaultRow {
+extension SettingsRowItem.DefaultRow {
 
-    var premiumStatusTitle: String? {
+    fileprivate var premiumStatusTitle: String? {
         guard case .premium(let payload) = self else { return nil }
 
         return payload.isPremium

@@ -1,18 +1,14 @@
-//
-//  SettingsIcon.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 12.09.2024.
-//
-
-import UIKit
 import SafeSFSymbols
+import UIKit
 
 public struct SettingsIcon {
 
     public let image: UIImage?
     public let color: UIColor
-    public let inset: Inset?
+    public let padding: IconPadding?
+
+    @available(*, deprecated, renamed: "padding")
+    public var inset: IconPadding? { padding }
 
     @MainActor
     fileprivate static let tileCache: NSCache<NSString, UIImage> = {
@@ -27,9 +23,9 @@ public struct SettingsIcon {
 
     public func generateImage() -> UIImage? {
         guard let image else { return nil }
-        guard let inset else { return image }
+        guard let padding else { return image }
 
-        return image.padded(by: inset.edgeInsets, renderingMode: .alwaysTemplate)
+        return image.padded(by: padding.edgeInsets, renderingMode: .alwaysTemplate)
     }
 
     @MainActor
@@ -39,15 +35,18 @@ public struct SettingsIcon {
         traitCollection: UITraitCollection = .current
     ) -> UIImage? {
         guard size.width.isFinite, size.height.isFinite, cornerRadius.isFinite,
-              size.width > 0, size.height > 0, cornerRadius >= 0 else {
+            size.width > 0, size.height > 0, cornerRadius >= 0
+        else {
             return nil
         }
 
-        guard let cacheKey = tileCacheKey(
-            size: size,
-            cornerRadius: cornerRadius,
-            traitCollection: traitCollection
-        ) else {
+        guard
+            let cacheKey = tileCacheKey(
+                size: size,
+                cornerRadius: cornerRadius,
+                traitCollection: traitCollection
+            )
+        else {
             return renderSettingsTileImage(size: size, cornerRadius: cornerRadius, traitCollection: traitCollection)
         }
 
@@ -55,34 +54,49 @@ public struct SettingsIcon {
             return cached
         }
 
-        guard let rendered = renderSettingsTileImage(
-            size: size,
-            cornerRadius: cornerRadius,
-            traitCollection: traitCollection
-        ) else {
+        guard
+            let rendered = renderSettingsTileImage(
+                size: size,
+                cornerRadius: cornerRadius,
+                traitCollection: traitCollection
+            )
+        else {
             return nil
         }
 
+        #if DEBUG
+        AutomaticIconIdentityMonitor.record(glyphKey: cacheKey as String)
+        #endif
         Self.tileCache.setObject(rendered, forKey: cacheKey, cost: (rendered.cgImage?.bytesPerRow ?? 0) * (rendered.cgImage?.height ?? 0))
         return rendered
     }
 
     /// Without an explicit ID, copies of this definition share a unique cache identity.
     /// Reuse an explicit ID only for identical pixels; change its revision when pixels change.
-    public init(image: UIImage?, color: UIColor, inset: Inset? = nil, cacheIdentifier: String? = nil) {
+    public init(image: UIImage?, color: UIColor, padding: IconPadding? = nil, cacheIdentifier: String? = nil) {
         self.image = image
         self.color = color
-        self.inset = inset
+        self.padding = padding
         self.symbol = nil
         self.cacheIdentifier = cacheIdentifier ?? "image:\(UUID().uuidString)"
     }
 
-    public init(symbol: SafeSFSymbol, color: UIColor, inset: Inset? = Inset()) {
+    public init(symbol: SafeSFSymbol, color: UIColor, padding: IconPadding? = IconPadding()) {
         self.image = UIImage(symbol)
         self.color = color
-        self.inset = inset
+        self.padding = padding
         self.symbol = symbol
         self.cacheIdentifier = "sf:\(symbol.name)"
+    }
+
+    @available(*, deprecated, renamed: "init(image:color:padding:cacheIdentifier:)")
+    public init(image: UIImage?, color: UIColor, inset: IconPadding?, cacheIdentifier: String? = nil) {
+        self.init(image: image, color: color, padding: inset, cacheIdentifier: cacheIdentifier)
+    }
+
+    @available(*, deprecated, renamed: "init(symbol:color:padding:)")
+    public init(symbol: SafeSFSymbol, color: UIColor, inset: IconPadding?) {
+        self.init(symbol: symbol, color: color, padding: inset)
     }
 
     @MainActor
@@ -123,7 +137,7 @@ public enum SettingsIconGenerator {
     public static func generate(
         systemName: String,
         backgroundColor: UIColor,
-        inset: Inset? = Inset(),
+        padding: IconPadding? = IconPadding(),
         size: CGSize = defaultSize,
         cornerRadius: CGFloat = defaultCornerRadius,
         traitCollection: UITraitCollection = .current
@@ -131,7 +145,7 @@ public enum SettingsIconGenerator {
         generate(
             image: UIImage(systemName: systemName),
             backgroundColor: backgroundColor,
-            inset: inset,
+            padding: padding,
             cacheIdentifier: "sf:\(systemName)",
             size: size,
             cornerRadius: cornerRadius,
@@ -143,13 +157,13 @@ public enum SettingsIconGenerator {
     public static func generate(
         symbol: SafeSFSymbol,
         backgroundColor: UIColor,
-        inset: Inset? = Inset(),
+        padding: IconPadding? = IconPadding(),
         size: CGSize = defaultSize,
         cornerRadius: CGFloat = defaultCornerRadius,
         traitCollection: UITraitCollection = .current
     ) -> UIImage? {
         generate(
-            SettingsIcon(symbol: symbol, color: backgroundColor, inset: inset),
+            SettingsIcon(symbol: symbol, color: backgroundColor, padding: padding),
             size: size,
             cornerRadius: cornerRadius,
             traitCollection: traitCollection
@@ -160,7 +174,7 @@ public enum SettingsIconGenerator {
     public static func generate(
         image: UIImage?,
         backgroundColor: UIColor,
-        inset: Inset? = nil,
+        padding: IconPadding? = nil,
         cacheIdentifier: String? = nil,
         size: CGSize = defaultSize,
         cornerRadius: CGFloat = defaultCornerRadius,
@@ -170,7 +184,7 @@ public enum SettingsIconGenerator {
             SettingsIcon(
                 image: image,
                 color: backgroundColor,
-                inset: inset,
+                padding: padding,
                 cacheIdentifier: cacheIdentifier
             ),
             size: size,
@@ -185,16 +199,17 @@ public enum SettingsIconGenerator {
     }
 }
 
-private extension SettingsIcon {
+extension SettingsIcon {
 
     @MainActor
-    func renderSettingsTileImage(
+    fileprivate func renderSettingsTileImage(
         size: CGSize,
         cornerRadius: CGFloat,
         traitCollection: UITraitCollection
     ) -> UIImage? {
         guard let glyph = image, glyph.size.width > 0, glyph.size.height > 0,
-              let target = glyphRect(for: glyph, in: CGRect(origin: .zero, size: size)) else { return nil }
+            let target = glyphRect(for: glyph, in: CGRect(origin: .zero, size: size))
+        else { return nil }
 
         let resolvedColor = color.resolvedColor(with: traitCollection)
         let format = UIGraphicsImageRendererFormat.default()
@@ -215,22 +230,24 @@ private extension SettingsIcon {
         }
     }
 
-    func glyphRect(for glyph: UIImage, in bounds: CGRect) -> CGRect? {
-        let padding = inset?.value ?? 0
+    fileprivate func glyphRect(for glyph: UIImage, in bounds: CGRect) -> CGRect? {
+        let padding = self.padding?.value ?? 0
         guard padding.isFinite, padding >= 0 else { return nil }
-        let virtualSize = CGSize(width: glyph.size.width + padding * 2,
-                                 height: glyph.size.height + padding * 2)
+        let virtualSize = CGSize(
+            width: glyph.size.width + padding * 2,
+            height: glyph.size.height + padding * 2)
         guard virtualSize.width.isFinite, virtualSize.height.isFinite else { return nil }
-        let maxSize = inset == nil ? bounds.size.applyingScale(0.7) : bounds.size
+        let maxSize = self.padding == nil ? bounds.size.applyingScale(0.7) : bounds.size
         let fitted = virtualSize.aspectFit(in: maxSize)
         let scale = fitted.width / virtualSize.width
-        return CGRect(x: bounds.midX - fitted.width / 2 + padding * scale,
-                      y: bounds.midY - fitted.height / 2 + padding * scale,
-                      width: glyph.size.width * scale, height: glyph.size.height * scale)
+        return CGRect(
+            x: bounds.midX - fitted.width / 2 + padding * scale,
+            y: bounds.midY - fitted.height / 2 + padding * scale,
+            width: glyph.size.width * scale, height: glyph.size.height * scale)
     }
 
     @MainActor
-    func tileCacheKey(
+    fileprivate func tileCacheKey(
         size: CGSize,
         cornerRadius: CGFloat,
         traitCollection: UITraitCollection
@@ -238,7 +255,7 @@ private extension SettingsIcon {
         guard image != nil, let glyphKey = cacheIdentifier else { return nil }
         let colorKey = color.resolvedColor(with: traitCollection).rgbaCacheKey
         let scale = max(traitCollection.displayScale, 1)
-        let insetValue = inset?.value ?? 0
+        let paddingValue = padding?.value ?? 0
 
         return [
             glyphKey,
@@ -247,23 +264,24 @@ private extension SettingsIcon {
             size.height.cacheKeyComponent,
             cornerRadius.cacheKeyComponent,
             scale.cacheKeyComponent,
-            inset == nil ? "inset:none" : "inset:" + insetValue.cacheKeyComponent,
-            "\(traitCollection.userInterfaceStyle.rawValue)"
+            padding == nil ? "inset:none" : "inset:" + paddingValue.cacheKeyComponent,
+            "\(traitCollection.userInterfaceStyle.rawValue)",
         ].joined(separator: "|") as NSString
     }
 }
 
-private extension CGSize {
+extension CGSize {
 
-    func applyingScale(_ scale: CGFloat) -> CGSize {
+    fileprivate func applyingScale(_ scale: CGFloat) -> CGSize {
         CGSize(width: width * scale, height: height * scale)
     }
 
-    func aspectFit(in boundingSize: CGSize) -> CGSize {
+    fileprivate func aspectFit(in boundingSize: CGSize) -> CGSize {
         guard width > 0,
-              height > 0,
-              boundingSize.width > 0,
-              boundingSize.height > 0 else {
+            height > 0,
+            boundingSize.width > 0,
+            boundingSize.height > 0
+        else {
             return .zero
         }
 
@@ -272,13 +290,14 @@ private extension CGSize {
     }
 }
 
-private extension UIImage {
+extension UIImage {
 
-    func padded(by insets: UIEdgeInsets, renderingMode: UIImage.RenderingMode? = nil) -> UIImage? {
+    fileprivate func padded(by insets: UIEdgeInsets, renderingMode: UIImage.RenderingMode? = nil) -> UIImage? {
         guard insets.top >= 0,
-              insets.left >= 0,
-              insets.bottom >= 0,
-              insets.right >= 0 else {
+            insets.left >= 0,
+            insets.bottom >= 0,
+            insets.right >= 0
+        else {
             return nil
         }
 
@@ -307,9 +326,9 @@ private extension UIImage {
     }
 }
 
-private extension UIColor {
+extension UIColor {
 
-    var rgbaCacheKey: String {
+    fileprivate var rgbaCacheKey: String {
         var red: CGFloat = 0
         var green: CGFloat = 0
         var blue: CGFloat = 0
@@ -323,14 +342,37 @@ private extension UIColor {
             red.cacheKeyComponent,
             green.cacheKeyComponent,
             blue.cacheKeyComponent,
-            alpha.cacheKeyComponent
+            alpha.cacheKeyComponent,
         ].joined(separator: ",")
     }
 }
 
-private extension CGFloat {
+extension CGFloat {
 
-    var cacheKeyComponent: String {
+    fileprivate var cacheKeyComponent: String {
         String(format: "%.4f", Double(self))
     }
 }
+
+#if DEBUG
+import os
+
+/// Icons built with `SettingsIcon(image:)` and no `cacheIdentifier` get a unique cache identity.
+/// Creating such icons repeatedly, e.g. in a computed property, renders and caches duplicates.
+@MainActor
+enum AutomaticIconIdentityMonitor {
+    private static var identities = Set<Substring>()
+    private static var didWarn = false
+    static let threshold = 40
+
+    static func record(glyphKey: String) {
+        guard !didWarn, glyphKey.hasPrefix("image:"), let identity = glyphKey.split(separator: "|").first else { return }
+        identities.insert(identity)
+        guard identities.count > threshold else { return }
+        didWarn = true
+        Logger(subsystem: "SettingsController", category: "SettingsIcon").warning(
+            "More than \(threshold) SettingsIcon(image:) values without cacheIdentifier were rendered. Create icons once or pass a stable cacheIdentifier to avoid duplicate rendering."
+        )
+    }
+}
+#endif

@@ -1,13 +1,15 @@
-import XCTest
 import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
 final class StateRegressionTests: XCTestCase {
     func testStaticRowsNeverRequestAccountOrUser() async {
         let provider = RegressionProvider()
-        let settings = SettingsController(configuration: SettingsConfiguration(
-            sections: [SettingsSection(kind: .rows([.defaultRow(.language)]))], dataProvider: provider))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(
+                sections: [SettingsSection(kind: .rows([.defaultRow(.language)]))], dataProvider: provider))
         await settings.refreshState()
         XCTAssertEqual(provider.mailRequests, 0)
         XCTAssertEqual(provider.premiumRequests, 0)
@@ -18,12 +20,14 @@ final class StateRegressionTests: XCTestCase {
         let provider = RegressionProvider()
         provider.fallbackPremium = true
         let card = premiumCard()
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .premiumCard(card))], dataProvider: provider))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [SettingsSection(kind: .premiumCard(card))], dataProvider: provider))
         provider.info = SettingsMailInfo(userID: "first", isPremium: true)
         await settings.refreshState()
         XCTAssertTrue(settings.isPremium)
         guard case .rows(let rows) = settings.sections[0].kind,
-              case .defaultRow(.premium(let active)) = rows[0] else { return XCTFail("Expected Active row") }
+            case .item(.defaultRow(.premium(let active))) = rows[0]
+        else { return XCTFail("Expected Active row") }
         XCTAssertTrue(active.isPremium)
         provider.info = SettingsMailInfo(userID: "second", isPremium: false)
         await settings.refreshState()
@@ -41,13 +45,18 @@ final class StateRegressionTests: XCTestCase {
         let provider = RegressionProvider()
         provider.info = SettingsMailInfo(isPremium: true)
         let payload = PremiumPayload(isPremium: false, color: .blue)
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .rows([
-            .defaultRow(.premium(payload)), .defaultRow(.premium(payload))
-        ]))], dataProvider: provider))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(
+                sections: [
+                    SettingsSection(
+                        kind: .rows([
+                            .defaultRow(.premium(payload)), .defaultRow(.premium(payload)),
+                        ]))
+                ], dataProvider: provider))
         await settings.refreshState()
         guard case .rows(let rows) = settings.sections[0].kind else { return XCTFail("Expected rows") }
         for row in rows {
-            guard case .defaultRow(.premium(let premium)) = row else { return XCTFail("Expected premium") }
+            guard case .item(.defaultRow(.premium(let premium))) = row else { return XCTFail("Expected premium") }
             XCTAssertTrue(premium.isPremium)
         }
         XCTAssertEqual(provider.mailRequests, 1)
@@ -56,9 +65,14 @@ final class StateRegressionTests: XCTestCase {
     func testNilProfilePreservesSnapshotAndExplicitGuestClearsAvatar() async {
         let provider = RegressionProvider()
         let avatar = UIImage(systemName: "person.fill")!
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .rows([
-            .defaultRow(.user("Initial", avatar, UIViewController.self))
-        ]))], dataProvider: provider))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(
+                sections: [
+                    SettingsSection(
+                        kind: .rows([
+                            .defaultRow(.user(name: "Initial", avatar: avatar, destination: .controller(UIViewController.self)))
+                        ]))
+                ], dataProvider: provider))
         provider.user = UserInfo(name: "Updated", avatar: avatar)
         await settings.refreshState()
         provider.user = nil
@@ -73,14 +87,16 @@ final class StateRegressionTests: XCTestCase {
     }
 
     func testLatestRefreshWinsWhenOldProviderIgnoresCancellation() async throws {
-        let first = ControlledValue<SettingsMailInfo?>(), second = ControlledValue<SettingsMailInfo?>()
+        let first = ControlledValue<SettingsMailInfo?>()
+        let second = ControlledValue<SettingsMailInfo?>()
         let provider = RegressionProvider()
         var request = 0
         provider.mailOperation = {
             request += 1
             return try? await (request == 1 ? first : second).value()
         }
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .premiumCard(premiumCard()))], dataProvider: provider))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [SettingsSection(kind: .premiumCard(premiumCard()))], dataProvider: provider))
         let old = try XCTUnwrap(settings.startStateRefresh())
         await first.waitUntilStarted()
         let latest = try XCTUnwrap(settings.startStateRefresh())
@@ -95,11 +111,16 @@ final class StateRegressionTests: XCTestCase {
     }
 
     func testOldCompletionCannotClearNewTaskHandle() async throws {
-        let first = ControlledValue<SettingsMailInfo?>(), second = ControlledValue<SettingsMailInfo?>()
+        let first = ControlledValue<SettingsMailInfo?>()
+        let second = ControlledValue<SettingsMailInfo?>()
         let provider = RegressionProvider()
         var request = 0
-        provider.mailOperation = { request += 1; return try? await (request == 1 ? first : second).value() }
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .premiumCard(premiumCard()))], dataProvider: provider))
+        provider.mailOperation = {
+            request += 1
+            return try? await (request == 1 ? first : second).value()
+        }
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [SettingsSection(kind: .premiumCard(premiumCard()))], dataProvider: provider))
         let old = try XCTUnwrap(settings.startStateRefresh())
         await first.waitUntilStarted()
         let latest = try XCTUnwrap(settings.startStateRefresh())
@@ -126,8 +147,9 @@ final class StateRegressionTests: XCTestCase {
         delayedProvider.mailOperation = { try? await gate.value() }
         let freshProvider = RegressionProvider()
         freshProvider.info = SettingsMailInfo(userID: "fresh", isPremium: true)
-        let settings = SettingsController(configuration: SettingsConfiguration(
-            sections: [SettingsSection(kind: .premiumCard(premiumCard()))], dataProvider: freshProvider))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(
+                sections: [SettingsSection(kind: .premiumCard(premiumCard()))], dataProvider: freshProvider))
         let about = makeAbout()
         // Finish view setup before attaching a controlled provider, so UIKit
         // cannot start an untracked second account request while this test waits.
@@ -163,5 +185,71 @@ final class StateRegressionTests: XCTestCase {
         settings.beginPresentation()
         settings.reportDismissal()
         XCTAssertEqual(provider.dismissals, 2)
+    }
+}
+
+@MainActor
+final class StateRefreshConcurrencyTests: XCTestCase {
+    func testProfileIsRequestedWhileTheAccountRequestIsPending() async throws {
+        let mail = ControlledValue<SettingsMailInfo?>()
+        let provider = RegressionProvider()
+        provider.user = UserInfo(name: "Profile")
+        provider.mailOperation = { try? await mail.value() ?? nil }
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(
+                sections: [
+                    SettingsSection(kind: .rows([.defaultRow(.user(name: "Initial", destination: .controller(UIViewController.self)))])),
+                    SettingsSection(kind: .premiumCard(premiumCard())),
+                ], dataProvider: provider))
+        let task = try XCTUnwrap(settings.startStateRefresh())
+        await mail.waitUntilStarted()
+        for _ in 0..<20 where provider.userRequests == 0 { await Task.yield() }
+        XCTAssertEqual(provider.userRequests, 1, "The profile must not wait for the account request")
+        mail.complete(.success(SettingsMailInfo(userID: "u", isPremium: true)))
+        await task.value
+        XCTAssertEqual(settings.currentUser?.name, "Profile")
+        XCTAssertTrue(settings.isPremium)
+    }
+}
+
+@MainActor
+final class SettingsSectionRendererTests: XCTestCase {
+    private let definitions = [
+        SettingsSection(kind: .ourApps(developerID: "d", limit: 3, excludeAppID: "0")),
+        SettingsSection(kind: .premiumCard(premiumCard())),
+        SettingsSection(kind: .rows([.defaultRow(.user(name: "Initial", destination: .controller(UIViewController.self)))])),
+    ]
+
+    private func state(_ catalog: AppCatalogState, premium: Bool = false, user: UserInfo? = nil) -> SettingsRenderState {
+        SettingsRenderState(catalogStates: [0: catalog], isPremium: premium, premiumColorOverride: nil, currentUser: user)
+    }
+
+    func testEmptyCatalogIsHiddenAndIDsKeepConfigurationIndexes() {
+        let rendered = SettingsSectionRenderer.render(definitions, state: state(.empty))
+        XCTAssertEqual(rendered.ids, [1, 2])
+    }
+
+    func testLoadingCatalogUsesTheLastKnownCountForPlaceholders() {
+        var loading = state(.loading)
+        loading.placeholderCount = { _ in 2 }
+        let rendered = SettingsSectionRenderer.render(definitions, state: loading)
+        guard case .rows(let rows) = rendered.sections[0].kind else { return XCTFail("Expected rows") }
+        XCTAssertEqual(rows.count, 2)
+    }
+
+    func testActivePremiumReplacesTheCardAndUserRowShowsTheProfile() {
+        let rendered = SettingsSectionRenderer.render(definitions, state: state(.failed, premium: true, user: UserInfo(name: "New")))
+        guard case .rows(let premiumRows) = rendered.sections[1].kind, case .item(.defaultRow(.premium(let payload))) = premiumRows[0]
+        else {
+            return XCTFail("Expected an active premium row")
+        }
+        XCTAssertTrue(payload.isPremium)
+        guard case .rows(let userRows) = rendered.sections[2].kind, case .item(.defaultRow(.user(let name, _, _))) = userRows[0] else {
+            return XCTFail("Expected the user row")
+        }
+        XCTAssertEqual(name, "New")
+        guard case .rows(let catalogRows) = rendered.sections[0].kind, case .app(.failed) = catalogRows[0] else {
+            return XCTFail("Expected the retry row")
+        }
     }
 }

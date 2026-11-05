@@ -1,20 +1,6 @@
-//
-//  AppCell.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 29.04.2025.
-//
-
 import UIKit
 
 final class AppCell: UITableViewCell {
-
-    private enum Metrics {
-        static let iconSize = CGSize(width: 30, height: 30)
-        static let iconCornerRadius: CGFloat = 7.5
-        static let imageToTextPadding: CGFloat = 15
-        static let verticalPadding: CGFloat = 6
-    }
 
     private var iconTask: Task<Void, Never>?
     private var representedIconURL: URL?
@@ -26,14 +12,17 @@ final class AppCell: UITableViewCell {
     private var iconRequest = UUID()
     private static let placeholders = NSCache<NSString, UIImage>()
     private func makePlaceholder() -> UIImage {
-        let key = "\(traitCollection.userInterfaceStyle.rawValue):\(traitCollection.accessibilityContrast.rawValue):\(traitCollection.displayScale)" as NSString
+        let key =
+            "\(traitCollection.userInterfaceStyle.rawValue):\(traitCollection.accessibilityContrast.rawValue):\(traitCollection.displayScale)"
+            as NSString
         if let image = Self.placeholders.object(forKey: key) { return image }
         Self.placeholders.countLimit = 12
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = max(traitCollection.displayScale, 1)
-        let image = UIGraphicsImageRenderer(size: Metrics.iconSize, format: format).image { _ in
+        let image = UIGraphicsImageRenderer(size: SettingsMetrics.iconSize, format: format).image { _ in
             UIColor.secondarySystemBackground.resolvedColor(with: traitCollection).setFill()
-            UIBezierPath(roundedRect: CGRect(origin: .zero, size: Metrics.iconSize), cornerRadius: Metrics.iconCornerRadius).fill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: SettingsMetrics.iconSize), cornerRadius: SettingsMetrics.iconCornerRadius)
+                .fill()
         }
         Self.placeholders.setObject(image, forKey: key)
         return image
@@ -44,9 +33,9 @@ final class AppCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
-        accessoryType = .disclosureIndicator
         if #available(iOS 17, *) {
-            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (cell: AppCell, previous: UITraitCollection) in
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) {
+                (cell: AppCell, previous: UITraitCollection) in
                 cell.refreshAppearance(previous)
             }
         }
@@ -63,7 +52,10 @@ final class AppCell: UITableViewCell {
     }
 
     private func refreshAppearance(_ previous: UITraitCollection?) {
-        if isShowingPlaceholder { currentIcon = makePlaceholder(); updateContentConfiguration() }
+        if isShowingPlaceholder {
+            currentIcon = makePlaceholder()
+            updateContentConfiguration()
+        }
         if previous?.displayScale != traitCollection.displayScale, let url = representedIconURL {
             iconTask?.cancel()
             load(icon: url)
@@ -79,7 +71,9 @@ final class AppCell: UITableViewCell {
         iconRequest = UUID()
         currentTitle = nil
         currentIcon = nil
-        accessoryType = .disclosureIndicator
+        accessoryType = .none
+        accessoryView = nil
+        accessibilityValue = nil
         contentConfiguration = nil
     }
 
@@ -91,13 +85,15 @@ final class AppCell: UITableViewCell {
 // MARK: - Configure
 
 extension AppCell {
-    
-    public func configure(with row: AppStoreAppRowState) {
+
+    /// `isOpening` shows progress while the App Store page for this app loads.
+    func configure(with row: AppStoreAppRowState, isOpening: Bool = false) {
+        defer { applyAccessory(for: row, isOpening: isOpening) }
 
         if case .loaded(let item) = row, representedIconURL == item.iconURL,
-           representedScale == max(traitCollection.displayScale, 1), !isShowingPlaceholder || iconTask != nil {
+            representedScale == max(traitCollection.displayScale, 1), !isShowingPlaceholder || iconTask != nil
+        {
             currentTitle = item.name
-            accessoryType = .disclosureIndicator
             updateContentConfiguration()
             return
         }
@@ -111,19 +107,32 @@ extension AppCell {
         switch row {
         case .placeholder:
             currentTitle = NSLocalizedString("Loading…", bundle: .module, comment: "Placeholder while the developer app catalog loads.")
-            accessoryType = .none
 
         case .failed:
-            currentTitle = NSLocalizedString("Failed to load. Tap to retry.", bundle: .module, comment: "Developer app catalog error row; tapping retries the same catalog request.")
-            accessoryType = .none
+            currentTitle = NSLocalizedString(
+                "Failed to load. Tap to retry.", bundle: .module,
+                comment: "Developer app catalog error row; tapping retries the same catalog request.")
 
         case .loaded(let item):
             currentTitle = item.name
-            accessoryType = .disclosureIndicator
             load(icon: item.iconURL)
         }
 
         updateContentConfiguration()
+    }
+
+    private func applyAccessory(for row: AppStoreAppRowState, isOpening: Bool) {
+        guard isOpening else {
+            DisplayRow.app(row).accessory.apply(to: self)
+            accessibilityValue = nil
+            return
+        }
+        let indicator = (accessoryView as? UIActivityIndicatorView) ?? UIActivityIndicatorView(style: .medium)
+        indicator.isAccessibilityElement = false
+        indicator.startAnimating()
+        accessoryType = .none
+        accessoryView = indicator
+        accessibilityValue = NSLocalizedString("Loading…", bundle: .module, comment: "Placeholder while the developer app catalog loads.")
     }
 
     private func load(icon url: URL) {
@@ -134,33 +143,29 @@ extension AppCell {
         let scale = max(traitCollection.displayScale, 1)
         representedScale = scale
 
-        iconTask = Task { [weak self] in
+        iconTask = Task { @MainActor [weak self] in
             do {
                 let image = try await RemoteImageLoader.shared.image(
                     from: url,
-                    maxPixelSize: Metrics.iconSize.width,
+                    maxPixelSize: SettingsMetrics.iconSize.width,
                     scale: scale
                 )
 
                 guard !Task.isCancelled else { return }
 
-                await MainActor.run { [weak self] in
-                    guard let self, iconRequest == request, representedIconURL == url else { return }
-                    iconTask = nil
-                    isShowingPlaceholder = false
-                    currentIcon = image
-                    updateContentConfiguration()
-                }
+                guard let self, iconRequest == request, representedIconURL == url else { return }
+                iconTask = nil
+                isShowingPlaceholder = false
+                currentIcon = image
+                updateContentConfiguration()
             } catch is CancellationError {
                 return
             } catch {
-                await MainActor.run { [weak self] in
-                    guard !Task.isCancelled, let self, iconRequest == request, representedIconURL == url else { return }
-                    iconTask = nil
-                    isShowingPlaceholder = true
-                    currentIcon = makePlaceholder()
-                    updateContentConfiguration()
-                }
+                guard !Task.isCancelled, let self, iconRequest == request, representedIconURL == url else { return }
+                iconTask = nil
+                isShowingPlaceholder = true
+                currentIcon = makePlaceholder()
+                updateContentConfiguration()
             }
         }
     }
@@ -169,15 +174,8 @@ extension AppCell {
         var configuration = defaultContentConfiguration()
         configuration.text = currentTitle
         configuration.textProperties.color = .label
-        configuration.textProperties.numberOfLines = 0
-        configuration.textProperties.lineBreakMode = .byWordWrapping
-        configuration.directionalLayoutMargins.top = Metrics.verticalPadding
-        configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
-        configuration.image = currentIcon
-        configuration.imageProperties.maximumSize = Metrics.iconSize
-        configuration.imageProperties.reservedLayoutSize = Metrics.iconSize
-        configuration.imageProperties.cornerRadius = Metrics.iconCornerRadius
-        configuration.imageToTextPadding = Metrics.imageToTextPadding
+        configuration.applySettingsRowLayout()
+        configuration.applySettingsIcon(currentIcon)
         contentConfiguration = configuration
     }
 }

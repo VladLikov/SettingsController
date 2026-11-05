@@ -26,7 +26,7 @@ final class EmptyStateView: UIView {
         let stack = UIStackView(arrangedSubviews: [header, footer])
         stack.axis = .vertical
         stack.spacing = 8
-        [scroll, content, stack].forEach { $0.translatesAutoresizingMaskIntoConstraints = false }
+        for view in [scroll, content, stack] { view.translatesAutoresizingMaskIntoConstraints = false }
         addSubview(scroll)
         scroll.addSubview(content)
         content.addSubview(stack)
@@ -48,7 +48,7 @@ final class EmptyStateView: UIView {
             stack.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -24),
             stack.topAnchor.constraint(greaterThanOrEqualTo: content.topAnchor, constant: 24),
             stack.bottomAnchor.constraint(lessThanOrEqualTo: content.bottomAnchor, constant: -24),
-            stack.centerYAnchor.constraint(equalTo: content.centerYAnchor)
+            stack.centerYAnchor.constraint(equalTo: content.centerYAnchor),
         ])
     }
 

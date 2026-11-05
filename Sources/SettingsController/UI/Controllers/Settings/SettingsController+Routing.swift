@@ -1,13 +1,6 @@
-//
-//  SettingsController+Routing.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 12.09.2024.
-//
-
-import UIKit
 import AlertKit
 import SafeSFSymbols
+import UIKit
 
 // MARK: - Routing
 
@@ -28,7 +21,8 @@ extension SettingsController {
         if let split = splitViewController as? SplitController, split.style != .unspecified {
             split.showSettingsDetail(viewController)
         } else if let split = splitViewController, !split.isCollapsed {
-            let destination = (viewController as? UINavigationController)
+            let destination =
+                (viewController as? UINavigationController)
                 ?? UINavigationController(rootViewController: viewController)
             split.showDetailViewController(destination, sender: self)
         } else if viewController is UINavigationController {
@@ -42,25 +36,20 @@ extension SettingsController {
 
     func presentPremium(_ payload: PremiumPayload) {
         if isPremium {
-            let style: AlertViewStyle
-
-#if os(visionOS)
-            style = .iOS17AppleMusic
-#else
-            style = .iOS16AppleMusic
-#endif
-
             AlertKitAPI.present(
-                title: NSLocalizedString("Premium is active", bundle: .module, comment: "Confirmation shown when an already-premium user taps the premium action."),
+                title: NSLocalizedString(
+                    "Premium is active", bundle: .module,
+                    comment: "Confirmation shown when an already-premium user taps the premium action."),
                 icon: .custom(UIImage(.star.fill)),
-                style: style,
-                haptic: .success
+                style: .settingsConfirmation,
+                haptic: haptics.alertHaptic
             )
 
-        } else if payload.destinationFactory != nil || payload.destinationControllerType != nil {
-            guard presentedViewController == nil else { return }
-            let destination = payload.destinationFactory?() ?? payload.destinationControllerType?.init()
-            guard let viewController = destination else { return }
+        } else if case .action(let action) = payload.destination {
+            cancelPendingStoreProduct()
+            action(SettingsActionContext(viewController: self))
+        } else if let destination = payload.destination {
+            guard presentedViewController == nil, let viewController = destination.makeViewController() else { return }
             cancelPendingStoreProduct()
             if traitCollection.horizontalSizeClass == .compact {
                 viewController.modalPresentationStyle = .fullScreen
@@ -70,15 +59,13 @@ extension SettingsController {
                 viewController.presentationController?.delegate = self
             }
 
-        } else if let action = payload.action {
-            cancelPendingStoreProduct()
-            action(self)
         }
     }
 
     func openLanguageSettings() {
         guard languageSettingsTask == nil,
-              let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            let url = URL(string: UIApplication.openSettingsURLString)
+        else { return }
         cancelPendingStoreProduct()
         let open = openURL
         languageSettingsTask = Task { @MainActor [weak self] in
@@ -87,10 +74,16 @@ extension SettingsController {
             self?.languageSettingsTask = nil
             guard !success, let self, settingsCanPresent else { return }
             let alert = UIAlertController(
-                title: NSLocalizedString("Unable to open Settings", bundle: .module, comment: "Alert title when opening the host app page in system Settings fails."),
+                title: NSLocalizedString(
+                    "Unable to open Settings", bundle: .module,
+                    comment: "Alert title when opening the host app page in system Settings fails."),
                 message: nil, preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."), style: .default))
+            alert.addAction(
+                UIAlertAction(
+                    title: NSLocalizedString(
+                        "OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."),
+                    style: .default))
             present(alert, animated: true)
         }
     }
@@ -101,7 +94,7 @@ extension SettingsController {
         let mailController = MailController(
             type: .supportRequest,
             email: email,
-            isPremium: cachedPremiumStatus,
+            isPremium: isPremium,
             productID: configuration.productID,
             dataProvider: configuration.dataProvider
         )
@@ -122,47 +115,58 @@ extension SettingsController {
     }
 
     func rateApp(_ appID: String) {
-        if let url = URL(string: "itms-apps://itunes.apple.com/app/id\(appID)?action=write-review") {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(url)
-        }
+        openExternal(
+            Self.storeURL(scheme: "itms-apps", path: "/app/id\(appID)", query: [URLQueryItem(name: "action", value: "write-review")]),
+            fallback: Self.storeURL(scheme: "https", path: "/app/id\(appID)", query: [URLQueryItem(name: "action", value: "write-review")]))
     }
 
     func moreApps(_ developerID: String) {
-        if let url = URL(string: "itms-apps://itunes.apple.com/developer/id\(developerID)") {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(url)
-        }
+        openExternal(
+            Self.storeURL(scheme: "itms-apps", path: "/developer/id\(developerID)"),
+            fallback: Self.storeURL(scheme: "https", path: "/developer/id\(developerID)"))
     }
 
-    func openTelegramChannel(_ channelUsername: String) {
-        guard let appURL = URL(string: "tg://resolve?domain=\(channelUsername)"),
-              let webURL = URL(string: "https://t.me/\(channelUsername)") else {
-            return
-        }
-
-        if UIApplication.shared.canOpenURL(appURL) {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(appURL)
-        } else {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(webURL)
-        }
+    func openTelegramChannel(_ channel: String) {
+        var app = URLComponents()
+        app.scheme = "tg"
+        app.host = "resolve"
+        app.queryItems = [URLQueryItem(name: "domain", value: channel)]
+        openExternal(app.url, fallback: Self.webURL(host: "t.me", path: "/\(channel)"))
     }
 
     func openVKGroup(_ groupID: String) {
-        guard let appURL = URL(string: "vk://vk.com/club\(groupID)"),
-              let webURL = URL(string: "https://vk.com/club\(groupID)") else {
-            return
-        }
+        openExternal(
+            Self.webURL(scheme: "vk", host: "vk.com", path: "/club\(groupID)"),
+            fallback: Self.webURL(host: "vk.com", path: "/club\(groupID)"))
+    }
 
-        if UIApplication.shared.canOpenURL(appURL) {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(appURL)
-        } else {
-            cancelPendingStoreProduct()
-            UIApplication.shared.open(webURL)
+    /// Opens the app link, or the web link when the app is not installed. No Info.plist query schemes are needed.
+    func openExternal(_ primary: URL?, fallback: URL?) {
+        guard let target = primary ?? fallback else { return }
+        cancelPendingStoreProduct()
+        let open = openURL
+        Task { @MainActor in
+            if await open(target) { return }
+            if let fallback, fallback != target { _ = await open(fallback) }
         }
+    }
+
+    private static func storeURL(scheme: String, path: String, query: [URLQueryItem]? = nil) -> URL? {
+        var components = URLComponents()
+        components.scheme = scheme
+        components.host = scheme == "https" ? "apps.apple.com" : "itunes.apple.com"
+        components.path = path
+        components.queryItems = query
+        return components.url
+    }
+
+    /// Builds a URL from an unescaped path, so configured IDs with spaces or slashes cannot break it.
+    private static func webURL(scheme: String = "https", host: String, path: String) -> URL? {
+        var components = URLComponents()
+        components.scheme = scheme
+        components.host = host
+        components.path = path
+        return components.url
     }
 }
 

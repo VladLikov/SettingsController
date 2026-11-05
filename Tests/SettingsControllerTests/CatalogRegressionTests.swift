@@ -1,6 +1,7 @@
-import XCTest
 import Foundation
 import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -8,9 +9,10 @@ final class CatalogRegressionTests: XCTestCase {
     func testSupersededCatalogResponseCannotReplaceRetryResult() async throws {
         let old = ControlledValue<[AppItem]>()
         let fresh = ControlledValue<[AppItem]>()
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
-            SettingsSection(kind: .ourApps(developerID: "dev", limit: 1, excludeAppID: "0"))
-        ]))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .ourApps(developerID: "dev", limit: 1, excludeAppID: "0"))
+            ]))
         settings.fetchApps = { _, _, _ in try await old.value() }
         settings.loadViewIfNeeded()
         let oldTask = try XCTUnwrap(settings.appLoadTasks[0])
@@ -19,7 +21,9 @@ final class CatalogRegressionTests: XCTestCase {
         settings.loadOurApps(for: 0)
         let freshTask = try XCTUnwrap(settings.appLoadTasks[0])
         await fresh.waitUntilStarted()
-        let item = AppItem(id: 42, name: "Fresh", iconURL: URL(string: "https://example.com/icon.png")!, storeURL: URL(string: "https://apps.apple.com/app/id42")!)
+        let item = AppItem(
+            id: 42, name: "Fresh", iconURL: URL(string: "https://example.com/icon.png")!,
+            storeURL: URL(string: "https://apps.apple.com/app/id42")!)
         fresh.complete(.success([item]))
         await freshTask.value
         old.complete(.success([]))
@@ -30,12 +34,16 @@ final class CatalogRegressionTests: XCTestCase {
     }
 
     func testNonpositiveLimitsHideSectionAndNeverFetch() async {
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
-            SettingsSection(kind: .ourApps(developerID: "dev", limit: -1, excludeAppID: "1")),
-            SettingsSection(kind: .ourApps(developerID: "dev", limit: 0, excludeAppID: "1")),
-            SettingsSection(kind: .rows([.defaultRow(.language)]))
-        ]))
-        settings.fetchApps = { _, _, _ in XCTFail("Should not fetch"); return [] }
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .ourApps(developerID: "dev", limit: -1, excludeAppID: "1")),
+                SettingsSection(kind: .ourApps(developerID: "dev", limit: 0, excludeAppID: "1")),
+                SettingsSection(kind: .rows([.defaultRow(.language)])),
+            ]))
+        settings.fetchApps = { _, _, _ in
+            XCTFail("Should not fetch")
+            return []
+        }
         settings.loadViewIfNeeded()
         XCTAssertEqual(settings.visibleSectionIDs, [2])
         XCTAssertTrue(settings.appLoadTasks.isEmpty)
@@ -46,33 +54,40 @@ final class CatalogRegressionTests: XCTestCase {
     }
 
     func testEmptyEarlierSectionDoesNotRedirectLaterResult() async throws {
-        let first = ControlledValue<[AppItem]>(), second = ControlledValue<[AppItem]>()
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
-            SettingsSection(kind: .ourApps(developerID: "first", limit: 1, excludeAppID: "0")),
-            SettingsSection(kind: .ourApps(developerID: "second", limit: 1, excludeAppID: "0"))
-        ]))
+        let first = ControlledValue<[AppItem]>()
+        let second = ControlledValue<[AppItem]>()
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .ourApps(developerID: "first", limit: 1, excludeAppID: "0")),
+                SettingsSection(kind: .ourApps(developerID: "second", limit: 1, excludeAppID: "0")),
+            ]))
         settings.fetchApps = { developer, _, _ in try await (developer == "first" ? first : second).value() }
         settings.loadViewIfNeeded()
-        let a = try XCTUnwrap(settings.appLoadTasks[0]), b = try XCTUnwrap(settings.appLoadTasks[1])
+        let a = try XCTUnwrap(settings.appLoadTasks[0])
+        let b = try XCTUnwrap(settings.appLoadTasks[1])
         await first.waitUntilStarted()
         await second.waitUntilStarted()
         first.complete(.success([]))
         await a.value
         XCTAssertEqual(settings.visibleSectionIDs, [1])
-        let item = AppItem(id: 2, name: "Second", iconURL: URL(string: "https://example.com/i.png")!, storeURL: URL(string: "https://apps.apple.com/app/id2")!)
+        let item = AppItem(
+            id: 2, name: "Second", iconURL: URL(string: "https://example.com/i.png")!,
+            storeURL: URL(string: "https://apps.apple.com/app/id2")!)
         second.complete(.success([item]))
         await b.value
         XCTAssertEqual(settings.catalogStates[1], .loaded([item]))
         XCTAssertEqual(settings.visibleSectionIDs, [1])
         guard case .rows(let rows) = settings.sections[0].kind,
-              case .app(.loaded(let rendered)) = rows[0] else { return XCTFail("Expected the second catalog") }
+            case .app(.loaded(let rendered)) = rows[0]
+        else { return XCTFail("Expected the second catalog") }
         XCTAssertEqual(rendered.id, 2)
     }
 
     func testFailureRetryPreservesOriginalSource() async throws {
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
-            SettingsSection(kind: .ourApps(developerID: "original", limit: 3, excludeAppID: "exclude"))
-        ]))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .ourApps(developerID: "original", limit: 3, excludeAppID: "exclude"))
+            ]))
         let recorder = CatalogRecorder()
         settings.fetchApps = { developer, limit, excluded in
             await recorder.record(developer, limit, excluded)
@@ -91,7 +106,8 @@ final class CatalogRegressionTests: XCTestCase {
     func testLoaderFiltersMalformedRowsExcludesCurrentAppAndLimits() async throws {
         let developer = UUID().uuidString
         let url = lookupURL(developer)
-        let json = #"{"results":[{"kind":"artist"},{"kind":"software","trackId":1,"trackName":"Current","artworkUrl100":"https://example.com/1.png","trackViewUrl":"https://apps.apple.com/app/id1"},{"kind":"software","trackId":2,"trackName":"Second","artworkUrl100":"https://example.com/2.png","trackViewUrl":"https://apps.apple.com/app/id2"},{"kind":"software","trackId":3,"trackName":"Bad","artworkUrl100":"file:///tmp/a","trackViewUrl":"https://apps.apple.com/app/id3"},{"kind":"software","trackId":4,"trackName":"Fourth","artworkUrl100":"https://example.com/4.png","trackViewUrl":"https://apps.apple.com/app/id4"}]}"#
+        let json =
+            #"{"results":[{"kind":"artist"},{"kind":"software","trackId":1,"trackName":"Current","artworkUrl100":"https://example.com/1.png","trackViewUrl":"https://apps.apple.com/app/id1"},{"kind":"software","trackId":2,"trackName":"Second","artworkUrl100":"https://example.com/2.png","trackViewUrl":"https://apps.apple.com/app/id2"},{"kind":"software","trackId":3,"trackName":"Bad","artworkUrl100":"file:///tmp/a","trackViewUrl":"https://apps.apple.com/app/id3"},{"kind":"software","trackId":4,"trackName":"Fourth","artworkUrl100":"https://example.com/4.png","trackViewUrl":"https://apps.apple.com/app/id4"}]}"#
         await FixtureServer.shared.register(url, data: Data(json.utf8))
         let session = fixtureSession()
         defer { session.invalidateAndCancel() }
@@ -102,8 +118,10 @@ final class CatalogRegressionTests: XCTestCase {
     }
 
     func testConcurrentCatalogsShareRequestButKeepDifferentProjectionAndCancellation() async throws {
-        let developer = UUID().uuidString, url = lookupURL(developer)
-        let json = #"{"results":[{"kind":"software","trackId":1,"trackName":"One","artworkUrl100":"https://example.com/1","trackViewUrl":"https://apps.apple.com/app/id1"},{"kind":"software","trackId":2,"trackName":"Two","artworkUrl100":"https://example.com/2","trackViewUrl":"https://apps.apple.com/app/id2"}]}"#
+        let developer = UUID().uuidString
+        let url = lookupURL(developer)
+        let json =
+            #"{"results":[{"kind":"software","trackId":1,"trackName":"One","artworkUrl100":"https://example.com/1","trackViewUrl":"https://apps.apple.com/app/id1"},{"kind":"software","trackId":2,"trackName":"Two","artworkUrl100":"https://example.com/2","trackViewUrl":"https://apps.apple.com/app/id2"}]}"#
         await FixtureServer.shared.register(url, data: Data(json.utf8), hold: true)
         let session = fixtureSession()
         defer { session.invalidateAndCancel() }
@@ -118,8 +136,10 @@ final class CatalogRegressionTests: XCTestCase {
         XCTAssertEqual(consumers, 2)
         first.cancel()
         await FixtureServer.shared.release(url)
-        do { _ = try await first.value; XCTFail("Cancelled catalog returned") }
-        catch { XCTAssertTrue(error is CancellationError) }
+        do {
+            _ = try await first.value
+            XCTFail("Cancelled catalog returned")
+        } catch { XCTAssertTrue(error is CancellationError) }
         let result = try await second.value
         XCTAssertEqual(result.map(\.id), [2])
         let count = await FixtureServer.shared.requestCount(url)
@@ -136,8 +156,11 @@ final class CatalogRegressionTests: XCTestCase {
                 _ = try await AppStoreAppsLoader.fetch(developerId: developer, limit: 1, session: session)
                 XCTFail("Expected failure")
             } catch {
-                if status == 500 { XCTAssertEqual((error as? URLError)?.code, .badServerResponse) }
-                else { XCTAssertTrue(error is DecodingError) }
+                if status == 500 {
+                    XCTAssertEqual((error as? URLError)?.code, .badServerResponse)
+                } else {
+                    XCTAssertTrue(error is DecodingError)
+                }
             }
         }
     }
@@ -164,7 +187,10 @@ func fixtureSession() -> URLSession {
 
 actor FixtureServer {
     static let shared = FixtureServer()
-    struct Response: Sendable { let data: Data; let status: Int }
+    struct Response: Sendable {
+        let data: Data
+        let status: Int
+    }
     private struct Entry {
         let response: Response
         var released: Bool
@@ -184,7 +210,7 @@ actor FixtureServer {
         let observers = entry.observers
         entry.observers.removeAll()
         entries[url] = entry
-        observers.forEach { $0.resume() }
+        for observer in observers { observer.resume() }
         if entry.released { return entry.response }
         return await withCheckedContinuation { entries[url]?.pending.append($0) }
     }
@@ -200,7 +226,7 @@ actor FixtureServer {
         let pending = entry.pending
         entry.pending.removeAll()
         entries[url] = entry
-        pending.forEach { $0.resume(returning: entry.response) }
+        for continuation in pending { continuation.resume(returning: entry.response) }
     }
 
     func requestCount(_ url: URL) -> Int { entries[url]?.requests.count ?? 0 }
@@ -243,7 +269,10 @@ private final class FixtureURLProtocol: URLProtocol {
             guard !Task.isCancelled, let url = request.url else { return }
             delivery.deliver(result, url: url)
         }
-        lock.withLock { self.delivery = delivery; work = task }
+        lock.withLock {
+            self.delivery = delivery
+            work = task
+        }
     }
     override func stopLoading() {
         let pending = lock.withLock {
@@ -254,5 +283,47 @@ private final class FixtureURLProtocol: URLProtocol {
         }
         pending.1?.cancel()
         pending.0?.cancel()
+    }
+}
+
+@MainActor
+final class CatalogMemoryCacheTests: XCTestCase {
+    private let key = CatalogMemoryCache.Key(developerID: "cache-test", limit: 3, excludedAppID: "9")
+    private let app = AppItem(
+        id: 1, name: "Cached", iconURL: URL(string: "https://example.com/i.png")!,
+        storeURL: URL(string: "https://apps.apple.com/app/id1")!)
+
+    override func tearDown() {
+        CatalogMemoryCache.shared.removeAll()
+        CatalogMemoryCache.shared.now = { Date() }
+    }
+
+    func testFreshCacheShowsTheCatalogWithoutLoadingState() {
+        CatalogMemoryCache.shared.store([app], for: key)
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .ourApps(developerID: "cache-test", limit: 3, excludeAppID: "9"))
+            ]))
+        settings.fetchApps = { _, _, _ in
+            XCTFail("A fresh cache must not refetch")
+            return []
+        }
+        settings.loadViewIfNeeded()
+        XCTAssertEqual(settings.catalogStates[0], .loaded([app]))
+        XCTAssertNil(settings.appLoadTasks[0])
+    }
+
+    func testStaleCacheRefetchesButSizesPlaceholdersByTheLastCount() {
+        let start = Date()
+        CatalogMemoryCache.shared.now = { start }
+        CatalogMemoryCache.shared.store([app], for: key)
+        CatalogMemoryCache.shared.now = { start.addingTimeInterval(AppStoreAppsLoader.memoryCacheLifetime + 1) }
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .ourApps(developerID: "cache-test", limit: 3, excludeAppID: "9"))
+            ]))
+        XCTAssertEqual(settings.catalogStates[0], .loading)
+        guard case .rows(let rows) = settings.sections[0].kind else { return XCTFail("Expected placeholder rows") }
+        XCTAssertEqual(rows.count, 1, "Placeholders match the last received count, not the limit")
     }
 }

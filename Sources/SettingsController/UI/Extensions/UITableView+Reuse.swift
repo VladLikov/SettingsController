@@ -1,10 +1,3 @@
-//
-//  UITableView+Reuse.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 05.05.2026.
-//
-
 import UIKit
 
 extension UITableView {
@@ -17,10 +10,12 @@ extension UITableView {
         withClass cellClass: Cell.Type,
         for indexPath: IndexPath
     ) -> Cell {
-        guard let cell = dequeueReusableCell(
-            withIdentifier: cellClass.reuseIdentifier,
-            for: indexPath
-        ) as? Cell else {
+        guard
+            let cell = dequeueReusableCell(
+                withIdentifier: cellClass.reuseIdentifier,
+                for: indexPath
+            ) as? Cell
+        else {
             preconditionFailure("Unable to dequeue \(cellClass) with identifier \(Cell.reuseIdentifier)")
         }
 
@@ -28,10 +23,9 @@ extension UITableView {
     }
 }
 
-private extension UITableViewCell {
+extension UITableViewCell {
 
-    static var reuseIdentifier: String {
+    fileprivate static var reuseIdentifier: String {
         String(describing: Self.self)
     }
 }
-
