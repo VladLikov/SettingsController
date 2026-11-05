@@ -94,6 +94,7 @@ public final class SettingsController: UITableViewController {
         navigationItem.largeTitleDisplayMode = .automatic
         navigationController?.navigationBar.prefersLargeTitles = true
         clearsSelectionOnViewWillAppear = true
+        observeTextSizeChanges()
         resumeCatalogLoads()
     }
 
@@ -248,17 +249,44 @@ public final class SettingsController: UITableViewController {
         rebuildSections(reload: false)
         guard isViewLoaded else { return }
         // An active entitlement renders the card as a premium row whose icon uses the same color.
+        reconfigureVisiblePremiumRows(includingActiveRows: true)
+    }
+
+    func reconfigureVisiblePremiumRows(includingActiveRows: Bool) {
         let rows = (tableView.indexPathsForVisibleRows ?? []).filter { path in
             switch sections[path.section].kind {
             case .premiumCard: return true
             case .rows(let items):
-                guard items.indices.contains(path.row), case .defaultRow(.premium) = items[path.row] else { return false }
+                guard includingActiveRows, items.indices.contains(path.row), case .defaultRow(.premium) = items[path.row] else {
+                    return false
+                }
                 return true
             case .ourApps: return false
             }
         }
         if !rows.isEmpty {
             UIView.performWithoutAnimation { tableView.reconfigureRows(at: rows) }
+        }
+    }
+
+    /// Text size and Bold Text change the card's measured size; re-measure the visible card.
+    private func observeTextSizeChanges() {
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitPreferredContentSizeCategory.self, UITraitLegibilityWeight.self]) {
+                (controller: SettingsController, _: UITraitCollection) in
+                controller.reconfigureVisiblePremiumRows(includingActiveRows: false)
+            }
+        }
+    }
+
+    @available(iOS, introduced: 8, deprecated: 17)
+    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17), isViewLoaded,
+            previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory
+                || previousTraitCollection?.legibilityWeight != traitCollection.legibilityWeight
+        {
+            reconfigureVisiblePremiumRows(includingActiveRows: false)
         }
     }
 

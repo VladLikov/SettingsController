@@ -6,11 +6,16 @@ enum SettingsSignposts {
     static let signposter = OSSignposter(subsystem: "SettingsController", category: .pointsOfInterest)
 }
 
-/// Counts real SwiftUI measurement passes of the premium card. Tests use it to verify sizing work.
+/// Counts premium card sizing work. Tests use it to verify that self-sizing reuses cached measurements.
 @MainActor
 enum PremiumCardSizingStatistics {
+    /// Calls of `PremiumCell.systemLayoutSizeFitting`.
+    private(set) static var cellSizingCount = 0
+    /// Real SwiftUI measurement passes performed by `PremiumCardMeasurer`.
     private(set) static var measurementCount = 0
     private(set) static var measurementDuration: Double = 0
+
+    static func recordCellSizing() { cellSizingCount += 1 }
 
     static func recordMeasurement(duration: Double) {
         measurementCount += 1
@@ -18,6 +23,7 @@ enum PremiumCardSizingStatistics {
     }
 
     static func reset() {
+        cellSizingCount = 0
         measurementCount = 0
         measurementDuration = 0
     }

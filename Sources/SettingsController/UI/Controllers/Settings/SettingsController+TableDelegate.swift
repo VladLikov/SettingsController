@@ -23,8 +23,9 @@ extension SettingsController {
             default: break
             }
 
-        case .premiumCard:
-            return 72
+        case .premiumCard(let payload):
+            // The last measured height avoids a second self-sizing pass caused by a wrong estimate.
+            return PremiumCardMeasurer.estimatedHeight(for: payload, traits: traitCollection) ?? PremiumCardMetrics.minimumHeight
 
         default:
             break

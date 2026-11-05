@@ -6,18 +6,42 @@ final class PremiumCell: UITableViewCell {
     private weak var hostingParent: UIViewController?
     private var hostConstraints: [NSLayoutConstraint] = []
 
+    private var payload: PremiumCardPayload?
+    private var onTap: (() -> Void)?
+    private var layout: PremiumCardLayout = .automatic
+    private var usesLegacyHosting = false
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         backgroundColor = .clear
         selectionStyle = .none
+        if #available(iOS 17, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self]) {
+                (cell: PremiumCell, _: UITraitCollection) in cell.applyCard()
+            }
+        }
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    @available(iOS, introduced: 8, deprecated: 17)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #unavailable(iOS 17),
+            previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle
+                || previousTraitCollection?.accessibilityContrast != traitCollection.accessibilityContrast
+        {
+            applyCard()
+        }
+    }
 
     override func prepareForReuse() {
         super.prepareForReuse()
         detachHost(discard: true)
         hostingParent = nil
+        payload = nil
+        onTap = nil
+        layout = .automatic
         contentConfiguration = nil
         backgroundConfiguration = nil
         accessoryType = .none
@@ -33,16 +57,32 @@ final class PremiumCell: UITableViewCell {
         payload: PremiumCardPayload, parent: UIViewController,
         forceLegacyHosting: Bool = false, onTap: @escaping () -> Void
     ) {
-        let card = PremiumCard(
-            image: payload.image, title: payload.title, tierTitle: payload.tierTitle, subtitle: payload.subtitle,
-            buttonTitle: payload.buttonTitle, color: payload.premium.color, onTap: onTap)
+        self.payload = payload
+        self.onTap = onTap
         if #available(iOS 16, *), !forceLegacyHosting {
+            usesLegacyHosting = false
             detachHost(discard: true)
             hostingParent = nil
+            // Reuse the last measured arrangement; sizing corrects it if the width changed.
+            layout = PremiumCardMeasurer.lastLayout(for: payload, traits: traitCollection) ?? .automatic
+        } else {
+            usesLegacyHosting = true
+            hostingParent = parent
+            layout = .automatic
+        }
+        applyCard()
+    }
+
+    /// Renders the card with the measured layout and a palette resolved from the cell's own traits.
+    private func applyCard() {
+        guard let payload, let onTap else { return }
+        let palette = PremiumCardPalette.cached(color: payload.premium.color, traits: traitCollection)
+        let card = PremiumCard(payload: payload, layout: layout, palette: palette, onTap: onTap)
+        if #available(iOS 16, *), !usesLegacyHosting {
             contentConfiguration = UIHostingConfiguration { card }.margins(.all, 0)
         } else {
             contentConfiguration = nil
-            hostingParent = parent
+            guard let parent = hostingParent else { return }
             if let host { host.rootView = card } else { host = UIHostingController(rootView: card) }
             attachHost(to: parent)
             host?.view.invalidateIntrinsicContentSize()
@@ -55,20 +95,21 @@ final class PremiumCell: UITableViewCell {
         withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
         verticalFittingPriority: UILayoutPriority
     ) -> CGSize {
-        let signpostState = SettingsSignposts.signposter.beginInterval("PremiumCell sizing")
-        let start = CACurrentMediaTime()
-        defer {
-            SettingsSignposts.signposter.endInterval("PremiumCell sizing", signpostState)
-            PremiumCardSizingStatistics.recordMeasurement(duration: CACurrentMediaTime() - start)
-        }
-        guard let host else {
+        guard let payload else {
             return super.systemLayoutSizeFitting(
                 targetSize, withHorizontalFittingPriority: horizontalFittingPriority,
                 verticalFittingPriority: verticalFittingPriority)
         }
+        let signpost = SettingsSignposts.signposter.beginInterval("PremiumCell sizing")
+        defer { SettingsSignposts.signposter.endInterval("PremiumCell sizing", signpost) }
+        PremiumCardSizingStatistics.recordCellSizing()
         let width = max(targetSize.width, 1)
-        let fitted = host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
-        return CGSize(width: width, height: ceil(fitted.height))
+        let resolution = PremiumCardMeasurer.resolve(payload, width: width, traits: traitCollection)
+        if resolution.layout != layout {
+            layout = resolution.layout
+            applyCard()
+        }
+        return CGSize(width: width, height: resolution.height)
     }
 
     private func attachHost(to parent: UIViewController) {

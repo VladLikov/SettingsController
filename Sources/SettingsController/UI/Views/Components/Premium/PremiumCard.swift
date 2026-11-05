@@ -1,5 +1,13 @@
 import SwiftUI
 
+/// How the card arranges its heading and call to action.
+enum PremiumCardLayout: Equatable {
+    /// Chooses with `ViewThatFits`; used by hosts that embed the public view directly.
+    case automatic
+    case horizontal
+    case stacked
+}
+
 public struct PremiumCard: View {
     public let image: Image
     public let title: String
@@ -8,6 +16,11 @@ public struct PremiumCard: View {
     public let buttonTitle: String
     public let color: UIColor
     public let onTap: () -> Void
+    let layout: PremiumCardLayout
+    /// A precomputed palette for the current appearance; resolved from the environment when nil.
+    let palette: PremiumCardPalette?
+    /// Renders only the padded content so the measurer sizes it with the real environment.
+    var isMeasurement = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
@@ -30,6 +43,21 @@ public struct PremiumCard: View {
         self.buttonTitle = buttonTitle
         self.color = color
         self.onTap = onTap
+        self.layout = .automatic
+        self.palette = nil
+    }
+
+    /// Library cells pass a measured layout and a cached palette, so sizing never tries both arrangements.
+    init(payload: PremiumCardPayload, layout: PremiumCardLayout, palette: PremiumCardPalette?, onTap: @escaping () -> Void) {
+        image = payload.image
+        title = payload.title
+        tierTitle = payload.tierTitle
+        subtitle = payload.subtitle
+        buttonTitle = payload.buttonTitle
+        color = payload.premium.color
+        self.onTap = onTap
+        self.layout = layout
+        self.palette = palette
     }
 
     var displayTitle: String {
@@ -49,16 +77,17 @@ public struct PremiumCard: View {
     }
 
     public var body: some View {
-        let traits = UITraitCollection(traitsFrom: [
-            UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light),
-            UITraitCollection(accessibilityContrast: colorSchemeContrast == .increased ? .high : .normal),
-        ])
-        let palette = PremiumCardPalette(color: color, traits: traits)
-        content(palette)
-            .padding(.leading, 24)
-            .padding(.trailing, 20)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+        let palette = palette ?? PremiumCardPalette.cached(color: color, traits: environmentTraits)
+        if isMeasurement {
+            paddedContent(palette)
+        } else {
+            card(palette)
+        }
+    }
+
+    private func card(_ palette: PremiumCardPalette) -> some View {
+        paddedContent(palette)
+            .frame(maxWidth: .infinity, minHeight: PremiumCardMetrics.minimumHeight, alignment: .leading)
             .background {
                 RoundedRectangle(cornerRadius: 36, style: .continuous)
                     .fill(
@@ -78,8 +107,35 @@ public struct PremiumCard: View {
             .accessibilityAction(.default) { onTap() }
     }
 
+    private var environmentTraits: UITraitCollection {
+        UITraitCollection(traitsFrom: [
+            UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light),
+            UITraitCollection(accessibilityContrast: colorSchemeContrast == .increased ? .high : .normal),
+        ])
+    }
+
+    /// The card content with its insets, without the background or the full-width frame.
+    private func paddedContent(_ palette: PremiumCardPalette) -> some View {
+        content(palette)
+            .padding(.leading, PremiumCardMetrics.leadingPadding)
+            .padding(.trailing, PremiumCardMetrics.trailingPadding)
+            .padding(.vertical, PremiumCardMetrics.verticalPadding)
+    }
+
     @ViewBuilder
     private func content(_ palette: PremiumCardPalette) -> some View {
+        switch layout {
+        case .horizontal:
+            horizontalContent(palette, allowsWrapping: false)
+        case .stacked:
+            stackedContent(palette)
+        case .automatic:
+            automaticContent(palette)
+        }
+    }
+
+    @ViewBuilder
+    private func automaticContent(_ palette: PremiumCardPalette) -> some View {
         if dynamicTypeSize.isAccessibilitySize {
             stackedContent(palette)
         } else if #available(iOS 16.0, *) {
@@ -143,6 +199,13 @@ public struct PremiumCard: View {
 
 }
 
+enum PremiumCardMetrics {
+    static let minimumHeight: CGFloat = 72
+    static let leadingPadding: CGFloat = 24
+    static let trailingPadding: CGFloat = 20
+    static let verticalPadding: CGFloat = 14
+}
+
 /// Three related hues make the reference pill's gradient pronounced without animating it.
 struct PremiumCardPalette {
     let base: UIColor
@@ -151,6 +214,25 @@ struct PremiumCardPalette {
     let text = UIColor.white
     let controlTint: UIColor
     let legacyControlTint: UIColor
+
+    private struct CacheKey: Hashable {
+        let color: UIColor
+        let style: UIUserInterfaceStyle
+        let contrast: UIAccessibilityContrast
+    }
+
+    @MainActor private static var cache: [CacheKey: PremiumCardPalette] = [:]
+
+    /// The palette only depends on the accent color, light or dark style and contrast; reuse it across layouts.
+    @MainActor
+    static func cached(color: UIColor, traits: UITraitCollection) -> PremiumCardPalette {
+        let key = CacheKey(color: color, style: traits.userInterfaceStyle, contrast: traits.accessibilityContrast)
+        if let palette = cache[key] { return palette }
+        if cache.count >= 32 { cache.removeAll() }
+        let palette = PremiumCardPalette(color: color, traits: traits)
+        cache[key] = palette
+        return palette
+    }
 
     init(color: UIColor, traits: UITraitCollection) {
         let resolved = color.resolvedColor(with: traits)
