@@ -22,7 +22,8 @@ Source-breaking release. See [Migration to 5.0](Documentation/MIGRATION-5.0.md);
 ### Fixed
 - The star icon of an active premium row updates when the accent color changes.
 - In an expanded split, action rows no longer take the selection from the row whose screen is shown; loading placeholders are not highlightable.
-- Every row that opens a screen ignores taps during a navigation transition.
+- Every row that opens a screen cannot be pushed twice by a quick second tap.
+- The stacked premium card (narrow iPad columns, accessibility text sizes) places its CTA at the trailing edge, as the one-row card does; at the leading edge the glass CTA failed the accessibility contrast audit. This also affected 4.0.8.
 
 ### UX and accessibility
 - Progress on an app row while its App Store page loads; repeated taps do not restart it.

@@ -239,7 +239,12 @@ final class SettingsExampleUITests: XCTestCase {
         let card = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Unlock all features")).firstMatch
         XCTAssertTrue(card.waitForExistence(timeout: 10))
         XCTAssertTrue(card.label.contains("Ripples Plus"))
-        XCTAssertEqual(card.frame.height, 72, accuracy: 2)
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            XCTAssertEqual(card.frame.height, 72, accuracy: 2)
+        } else {
+            // The iPad settings column is too narrow for the one-row pill, so the card stacks by design.
+            XCTAssertGreaterThan(card.frame.height, 74)
+        }
         XCTAssertFalse(app.staticTexts["Unlock all features"].exists)
         attach(app, name: "premium-pill-purple-reference")
     }

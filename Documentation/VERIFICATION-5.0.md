@@ -44,6 +44,12 @@ Only system animations remain: table section updates with `.automatic` and the e
 
 The three new strings were reviewed in context for all 51 locales: the counter reads as "characters still missing" rather than "characters required", "Discard Message" uses each language's delete wording instead of "reject" or "ignore", and verbs and nouns match the existing Copy Message, Message and Cancel translations. They are marked `translated` in the catalog.
 
+## GitHub CI findings
+
+The first CI run of this branch failed two iPad example UI tests that fail identically on the 4.0.8 code: the premium card height assertion expected the one-row pill, but the iPad settings column (288 pt) stacks the card by design; and the accessibility audit reported a contrast failure for the stacked card. Experiments isolated the cause to the glass CTA at the leading edge, over the darker start of the gradient. The stacked CTA is now trailing-aligned like the one-row card, and the height test expects a stacked card on iPad. One iPhone test failed because the example app stopped before its first interaction on the runner; it passes locally.
+
+After the fix: example UI tests on iPad 16 passed and 1 skipped (phone-only), on iPhone 17 passed.
+
 ## Not verified
 
 - iPhone 12 mini Release Time Profiler for PremiumCell (target at or below 3 ms).

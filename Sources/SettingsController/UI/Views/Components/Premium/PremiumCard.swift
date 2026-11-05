@@ -159,7 +159,9 @@ public struct PremiumCard: View {
     private func stackedContent(_ palette: PremiumCardPalette) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             heading.allowsHitTesting(false)
-            callToAction(palette)
+            // Trailing, as in the horizontal layout: the glass CTA keeps its contrast over the lighter end
+            // of the gradient. Over the darker leading edge it fails the accessibility contrast audit.
+            callToAction(palette).frame(maxWidth: .infinity, alignment: .trailing)
         }
     }
 
