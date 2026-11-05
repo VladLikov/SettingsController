@@ -55,6 +55,12 @@ final class PremiumCell: UITableViewCell {
         withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
         verticalFittingPriority: UILayoutPriority
     ) -> CGSize {
+        let signpostState = SettingsSignposts.signposter.beginInterval("PremiumCell sizing")
+        let start = CACurrentMediaTime()
+        defer {
+            SettingsSignposts.signposter.endInterval("PremiumCell sizing", signpostState)
+            PremiumCardSizingStatistics.recordMeasurement(duration: CACurrentMediaTime() - start)
+        }
         guard let host else {
             return super.systemLayoutSizeFitting(
                 targetSize, withHorizontalFittingPriority: horizontalFittingPriority,
