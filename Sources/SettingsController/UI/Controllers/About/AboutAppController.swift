@@ -14,7 +14,7 @@ import UIKit
 
 final class AboutAppController: UITableViewController {
 
-    private enum AboutSection {
+    enum AboutSection {
         case build
         case links
         case device
@@ -49,7 +49,7 @@ final class AboutAppController: UITableViewController {
         }
     }
 
-    private enum AboutAction {
+    enum AboutAction {
         case none
         case copyUserID
         case checkForUpdate
@@ -57,7 +57,7 @@ final class AboutAppController: UITableViewController {
         case terms
     }
 
-    private struct AboutItem {
+    struct AboutItem {
         let title: String
         let subtitle: String?
         let value: String?
@@ -74,15 +74,8 @@ final class AboutAppController: UITableViewController {
         }
     }
 
-    private enum Metrics {
-        static let iconSize = CGSize(width: 30, height: 30)
-        static let iconCornerRadius: CGFloat = 7.5
-        static let imageToTextPadding: CGFloat = 15
-        static let verticalPadding: CGFloat = 6
-    }
-
-    private var data: [(section: AboutSection, items: [AboutItem])] = []
-    private(set) var checkUpdateTask: Task<Void, Never>?
+    var data: [(section: AboutSection, items: [AboutItem])] = []
+    var checkUpdateTask: Task<Void, Never>?
 
     private(set) var isPremium: Bool
     private(set) var userID: String?
@@ -93,12 +86,12 @@ final class AboutAppController: UITableViewController {
     var currentOSVersion: @MainActor () -> String = { UIDevice.current.systemVersion }
     var onAccountUpdate: (@MainActor (SettingsMailInfo?, Bool) -> Void)?
     private(set) var accountTask: Task<Void, Never>?
-    private let accountLifetime = RequestLifetime()
-    private let updateLifetime = RequestLifetime()
-    private var accountResolved = false
-    private let appID: String
-    private let privacyURL: URL
-    private let termsURL: URL
+    let accountLifetime = RequestLifetime()
+    let updateLifetime = RequestLifetime()
+    var accountResolved = false
+    let appID: String
+    let privacyURL: URL
+    let termsURL: URL
 
     init(isPremium: Bool, userID: String?, appID: String, privacyURL: URL, termsURL: URL) {
         self.isPremium = isPremium
@@ -216,185 +209,6 @@ final class AboutAppController: UITableViewController {
     }
 }
 
-// MARK: - Data
-
-extension AboutAppController {
-
-    fileprivate static func icon(_ systemName: String, color: UIColor = .systemGray, inset: Inset? = Inset()) -> SettingsIcon {
-        SettingsIcon(
-            image: UIImage(systemName: systemName),
-            color: color,
-            inset: inset,
-            cacheIdentifier: "sf:\(systemName)"
-        )
-    }
-
-    fileprivate func refreshVisibleRows() {
-        guard isViewLoaded else { return }
-        guard tableView.window != nil else {
-            tableView.reloadData()
-            return
-        }
-        guard let paths = tableView.indexPathsForVisibleRows, !paths.isEmpty else { return }
-        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
-    }
-
-    fileprivate func refreshUpdateRow() {
-        guard isViewLoaded else { return }
-        guard tableView.window != nil else {
-            tableView.reloadData()
-            return
-        }
-        let paths = data.enumerated().flatMap { section, group in
-            group.items.enumerated().compactMap { row, item in
-                item.action == .checkForUpdate ? IndexPath(row: row, section: section) : nil
-            }
-        }
-        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
-    }
-
-    private func accountItems() -> [AboutItem] {
-        [
-            .init(
-                title: NSLocalizedString(
-                    "User ID", bundle: .module, comment: "Diagnostic label for the current account identifier supplied by the host app."),
-                subtitle: userID ?? "-",
-                value: nil,
-                icon: Self.icon("person.fill"),
-                action: userID == nil ? .none : .copyUserID
-            ),
-            .init(
-                title: NSLocalizedString("Premium", bundle: .module, comment: "Title of the premium settings row."),
-                subtitle: nil,
-                value: isPremium ? "true" : "false",
-                icon: Self.icon("star.fill"),
-                action: .none
-            ),
-        ]
-    }
-
-    fileprivate func setupData() {
-
-        let bundle = Bundle.main
-
-        let appVersion = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
-        let build = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "-"
-
-        let fullVersion = "\(appVersion) (\(build))"
-        let bundleID = bundle.bundleIdentifier ?? "-"
-        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
-        let deviceModel = DeviceModel.supportDescription
-        let systemLanguage = Locale.preferredLanguages.first ?? "-"
-        let appLanguage = Bundle.main.preferredLocalizations.first ?? "-"
-
-        let region = Locale.current.regionCode ?? "-"
-
-        data = [
-            (
-                .build,
-                [
-                    .init(
-                        title: NSLocalizedString("Bundle ID", bundle: .module, comment: ""),
-                        subtitle: bundleID,
-                        value: nil,
-                        icon: Self.icon("info.circle.fill"),
-                        action: .none
-                    ),
-                    .init(
-                        title: NSLocalizedString(
-                            "App Version", bundle: .module, comment: "Diagnostic label for the installed app version and build."),
-                        subtitle: nil,
-                        value: fullVersion,
-                        icon: Self.icon("doc.fill"),
-                        action: .none
-                    ),
-                    .init(
-                        title: NSLocalizedString(
-                            "Check for Update", bundle: .module, comment: "Action that checks the App Store for a newer app version."),
-                        subtitle: nil,
-                        value: nil,
-                        icon: nil,
-                        action: .checkForUpdate
-                    ),
-                ]
-            ),
-            (
-                .links,
-                [
-                    .init(
-                        title: NSLocalizedString("Privacy Policy", bundle: .module, comment: ""),
-                        subtitle: nil,
-                        value: nil,
-                        icon: Self.icon("hand.raised.fill"),
-                        action: .privacyPolicy
-                    ),
-                    .init(
-                        title: NSLocalizedString("Terms of Use", bundle: .module, comment: ""),
-                        subtitle: nil,
-                        value: nil,
-                        icon: Self.icon("doc.text.fill"),
-                        action: .terms
-                    ),
-                ]
-            ),
-            (
-                .device,
-                [
-                    .init(
-                        title: NSLocalizedString(
-                            "OS Version", bundle: .module, comment: "Diagnostic label for the operating system version."),
-                        subtitle: osVersion,
-                        value: nil,
-                        icon: Self.icon("gearshape.fill"),
-                        action: .none
-                    ),
-                    .init(
-                        title: NSLocalizedString(
-                            "Device Model", bundle: .module,
-                            comment: "Diagnostic label for the hardware model, without a user-assigned device name."),
-                        subtitle: deviceModel,
-                        value: nil,
-                        icon: Self.icon("iphone"),
-                        action: .none
-                    ),
-                ]
-            ),
-            (.account, accountItems()),
-            (
-                .locale,
-                [
-                    .init(
-                        title: NSLocalizedString(
-                            "Preferred Language", bundle: .module,
-                            comment:
-                                "About diagnostic label for the first public Locale.preferredLanguages value; not an independently read global system language."
-                        ),
-                        subtitle: nil,
-                        value: systemLanguage,
-                        icon: Self.icon("keyboard.fill"),
-                        action: .none
-                    ),
-                    .init(
-                        title: NSLocalizedString(
-                            "App Language", bundle: .module, comment: "Diagnostic label for the language selected by the app bundle."),
-                        subtitle: nil,
-                        value: appLanguage,
-                        icon: Self.icon("at"),
-                        action: .none
-                    ),
-                    .init(
-                        title: NSLocalizedString("App Region", bundle: .module, comment: "Diagnostic label for the current locale region."),
-                        subtitle: nil,
-                        value: region.lowercased(),
-                        icon: Self.icon("globe"),
-                        action: .none
-                    ),
-                ]
-            ),
-        ]
-    }
-}
-
 // MARK: - UITableViewDataSource
 
 extension AboutAppController {
@@ -435,33 +249,20 @@ extension AboutAppController {
             : UIListContentConfiguration.subtitleCell()
 
         if let icon = item.icon {
-            config.image = icon.generateSettingsImage(
-                size: Metrics.iconSize,
-                cornerRadius: Metrics.iconCornerRadius,
-                traitCollection: traitCollection
-            )
-            config.imageProperties.maximumSize = Metrics.iconSize
-            config.imageProperties.reservedLayoutSize = Metrics.iconSize
-            config.imageProperties.cornerRadius = Metrics.iconCornerRadius
+            config.applySettingsIcon(icon.generateSettingsImage(traitCollection: traitCollection))
         } else {
             config.image = nil
             config.imageProperties.reservedLayoutSize = .zero
+            config.imageToTextPadding = SettingsMetrics.imageToTextPadding
         }
-
-        config.imageToTextPadding = Metrics.imageToTextPadding
-        config.directionalLayoutMargins.top = Metrics.verticalPadding
-        config.directionalLayoutMargins.bottom = Metrics.verticalPadding
+        config.applySettingsRowLayout()
 
         config.text = item.title
         config.textProperties.color = item.action == .checkForUpdate ? view.tintColor : .label
-        config.textProperties.numberOfLines = 0
-        config.textProperties.lineBreakMode = .byWordWrapping
 
         let isChecking = item.action == .checkForUpdate && checkUpdateTask != nil
         config.secondaryText = isChecking ? nil : item.subtitle ?? item.value
         config.secondaryTextProperties.color = .secondaryLabel
-        config.secondaryTextProperties.numberOfLines = 0
-        config.secondaryTextProperties.lineBreakMode = .byWordWrapping
 
         cell.accessoryType = accessoryType(for: item)
         if isChecking {
@@ -498,10 +299,10 @@ extension AboutAppController {
 
         switch item.action {
         case .privacyPolicy:
-            pushSafari(with: privacyURL)
+            presentSafari(with: privacyURL)
 
         case .terms:
-            pushSafari(with: termsURL)
+            presentSafari(with: termsURL)
 
         case .copyUserID:
             if let userID {
@@ -542,7 +343,7 @@ extension AboutAppController {
         return components.url
     }
 
-    private func pushSafari(with url: URL) {
+    private func presentSafari(with url: URL) {
         guard let url = Self.validatedWebURL(url) else {
             let alert = UIAlertController(
                 title: NSLocalizedString(
@@ -558,89 +359,5 @@ extension AboutAppController {
             return
         }
         present(SFSafariViewController(url: url), animated: true)
-    }
-}
-
-extension AboutAppController {
-    func checkForUpdate() {
-        guard checkUpdateTask == nil else { return }
-        let lifetime = updateLifetime
-        let request = lifetime.begin()
-        let lookup = loadUpdate
-        let appID = appID
-        let version = currentVersion()
-        let osVersion = currentOSVersion()
-        checkUpdateTask = Task { @MainActor [weak self] in
-            defer {
-                if lifetime.finish(request) {
-                    self?.checkUpdateTask = nil
-                    self?.refreshUpdateRow()
-                }
-            }
-            do {
-                guard let version, let update = try await lookup(appID) else { throw URLError(.cannotParseResponse) }
-                guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else { return }
-                if AppUpdateLookup.compare(version, update.version) != .orderedAscending {
-                    self?.showUpdateMessage(
-                        NSLocalizedString(
-                            "Latest version is installed", bundle: .module,
-                            comment: "Update check result when no newer version is available."))
-                } else if AppUpdateLookup.compare(osVersion, update.minimumOSVersion) == .orderedAscending {
-                    self?.showUpdateMessage(
-                        NSLocalizedString(
-                            "Update requires a newer iOS version", bundle: .module,
-                            comment: "About alert explaining that the available version cannot run on the current operating system."))
-                } else {
-                    self?.showAvailableUpdate(update)
-                }
-            } catch {
-                guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled,
-                    lifetime.isCurrent(request), self?.settingsCanPresent == true
-                else { return }
-                self?.showUpdateMessage(
-                    NSLocalizedString(
-                        "Unable to check for updates", bundle: .module,
-                        comment: "About alert title when retrieving App Store update information fails."))
-            }
-        }
-        refreshUpdateRow()
-    }
-
-    private func showUpdateMessage(_ title: String) {
-        let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
-        alert.addAction(
-            UIAlertAction(
-                title: NSLocalizedString(
-                    "OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."),
-                style: .default))
-        present(alert, animated: true)
-    }
-
-    private func showAvailableUpdate(_ update: AppUpdate) {
-        let alert = UIAlertController(
-            title: NSLocalizedString(
-                "Update available", bundle: .module,
-                comment: "About alert title when the App Store version is newer than the installed version."),
-            message: String(
-                format: NSLocalizedString(
-                    "Version %@ is available.", bundle: .module,
-                    comment: "Available-update alert message. %@ is the App Store version number, for example 4.0.1."), update.version),
-            preferredStyle: .alert
-        )
-        alert.addAction(
-            UIAlertAction(
-                title: NSLocalizedString(
-                    "Not Now", bundle: .module, comment: "Dismiss the optional available-update alert without opening the App Store."),
-                style: .cancel))
-        let open = openURL
-        let action = UIAlertAction(
-            title: NSLocalizedString(
-                "Update", bundle: .module, comment: "Action opening the App Store page from the available-update alert."), style: .default
-        ) { _ in
-            Task { @MainActor in _ = await open(update.url) }
-        }
-        alert.addAction(action)
-        alert.preferredAction = action
-        present(alert, animated: true)
     }
 }

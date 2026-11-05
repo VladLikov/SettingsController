@@ -88,68 +88,27 @@ private struct LookupResponse: Decodable {
     }
 }
 
-// Shares only requests currently in flight. No TTL or stale response cache is added.
+/// Shares catalog requests currently in flight. No TTL or stale response cache is added here.
 actor CatalogRequestLoader {
     static let shared = CatalogRequestLoader()
-    private struct Key: Hashable {
+    private struct Key: Hashable, Sendable {
         let session: ObjectIdentifier
         let url: URL
     }
-    private struct Flight {
-        let id: UUID
-        let task: Task<Data, Error>
-        var consumers: Set<UUID>
-    }
-    private var flights: [Key: Flight] = [:]
-    var activeConsumerCount: Int { flights.values.reduce(0) { $0 + $1.consumers.count } }
+    private let flights = InFlightDeduplicator<Key, Data>()
+    var activeConsumerCount: Int { get async { await flights.activeConsumerCount } }
 
     func data(for request: URLRequest, session: URLSession) async throws -> Data {
         try Task.checkCancellation()
         guard let url = request.url else { throw URLError(.badURL) }
-        let key = Key(session: ObjectIdentifier(session), url: url)
-        let consumer = UUID()
-        let flight: Flight
-        if var existing = flights[key] {
-            existing.consumers.insert(consumer)
-            flights[key] = existing
-            flight = existing
-        } else {
-            let task = Task {
-                let (data, response) = try await session.data(for: request)
-                try Task.checkCancellation()
-                if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
-                    throw URLError(.badServerResponse)
-                }
-                return data
+        return try await flights.value(for: Key(session: ObjectIdentifier(session), url: url)) {
+            let (data, response) = try await session.data(for: request)
+            try Task.checkCancellation()
+            if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
+                throw URLError(.badServerResponse)
             }
-            flight = Flight(id: UUID(), task: task, consumers: [consumer])
-            flights[key] = flight
-        }
-        return try await withTaskCancellationHandler {
-            do {
-                let data = try await flight.task.value
-                if flights[key]?.id == flight.id { flights[key] = nil }
-                try Task.checkCancellation()
-                return data
-            } catch {
-                if flights[key]?.id == flight.id { flights[key] = nil }
-                if Task.isCancelled { throw CancellationError() }
-                throw error
-            }
-        } onCancel: {
-            Task { await self.release(key, flightID: flight.id, consumer: consumer) }
-        }
-    }
-
-    private func release(_ key: Key, flightID: UUID, consumer: UUID) {
-        guard var flight = flights[key], flight.id == flightID else { return }
-        flight.consumers.remove(consumer)
-        if flight.consumers.isEmpty {
-            flights[key] = nil
-            flight.task.cancel()
-        } else {
-            flights[key] = flight
-        }
+            return data
+        }.value
     }
 }
 

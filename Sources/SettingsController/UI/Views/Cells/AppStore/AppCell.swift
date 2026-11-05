@@ -9,13 +9,6 @@ import UIKit
 
 final class AppCell: UITableViewCell {
 
-    private enum Metrics {
-        static let iconSize = CGSize(width: 30, height: 30)
-        static let iconCornerRadius: CGFloat = 7.5
-        static let imageToTextPadding: CGFloat = 15
-        static let verticalPadding: CGFloat = 6
-    }
-
     private var iconTask: Task<Void, Never>?
     private var representedIconURL: URL?
     private var currentTitle: String?
@@ -33,9 +26,10 @@ final class AppCell: UITableViewCell {
         Self.placeholders.countLimit = 12
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = max(traitCollection.displayScale, 1)
-        let image = UIGraphicsImageRenderer(size: Metrics.iconSize, format: format).image { _ in
+        let image = UIGraphicsImageRenderer(size: SettingsMetrics.iconSize, format: format).image { _ in
             UIColor.secondarySystemBackground.resolvedColor(with: traitCollection).setFill()
-            UIBezierPath(roundedRect: CGRect(origin: .zero, size: Metrics.iconSize), cornerRadius: Metrics.iconCornerRadius).fill()
+            UIBezierPath(roundedRect: CGRect(origin: .zero, size: SettingsMetrics.iconSize), cornerRadius: SettingsMetrics.iconCornerRadius)
+                .fill()
         }
         Self.placeholders.setObject(image, forKey: key)
         return image
@@ -147,7 +141,7 @@ extension AppCell {
             do {
                 let image = try await RemoteImageLoader.shared.image(
                     from: url,
-                    maxPixelSize: Metrics.iconSize.width,
+                    maxPixelSize: SettingsMetrics.iconSize.width,
                     scale: scale
                 )
 
@@ -174,15 +168,8 @@ extension AppCell {
         var configuration = defaultContentConfiguration()
         configuration.text = currentTitle
         configuration.textProperties.color = .label
-        configuration.textProperties.numberOfLines = 0
-        configuration.textProperties.lineBreakMode = .byWordWrapping
-        configuration.directionalLayoutMargins.top = Metrics.verticalPadding
-        configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
-        configuration.image = currentIcon
-        configuration.imageProperties.maximumSize = Metrics.iconSize
-        configuration.imageProperties.reservedLayoutSize = Metrics.iconSize
-        configuration.imageProperties.cornerRadius = Metrics.iconCornerRadius
-        configuration.imageToTextPadding = Metrics.imageToTextPadding
+        configuration.applySettingsRowLayout()
+        configuration.applySettingsIcon(currentIcon)
         contentConfiguration = configuration
     }
 }

@@ -1,20 +1,6 @@
 import StoreKit
 import UIKit
 
-@MainActor
-enum StoreProductLoader {
-    static func load(_ id: Int) async throws -> UIViewController? {
-        #if !os(visionOS)
-        let controller = SKStoreProductViewController()
-        let loaded = try await controller.loadProduct(withParameters: [SKStoreProductParameterITunesItemIdentifier: id])
-        try Task.checkCancellation()
-        return loaded ? controller : nil
-        #else
-        return nil
-        #endif
-    }
-}
-
 extension SettingsController {
     /// Only navigation intent is revoked; catalog/image/state requests are independent.
     func cancelPendingStoreProduct() {
@@ -61,14 +47,14 @@ extension SettingsController {
     }
 
     func displayAppOverlayIfNeeded() {
-        guard !overlayAppViewDidShown, let appID = configuration.overlayAppID,
+        guard !didShowAppOverlay, let appID = configuration.overlayAppID,
             let scene = view.window?.windowScene
         else { return }
         let position: SKOverlay.Position = tabBarController == nil ? .bottom : .bottomRaised
         let overlay = SKOverlay(configuration: SKOverlay.AppConfiguration(appIdentifier: appID, position: position))
         overlay.delegate = self
         overlay.present(in: scene)
-        overlayAppViewDidShown = true
+        didShowAppOverlay = true
     }
 
     func dismissAppOverlayIfNeeded() {

@@ -1,9 +1,6 @@
 import UIKit
 
 public class SwitchCell: UITableViewCell {
-    private enum Metrics {
-        static let verticalPadding: CGFloat = 6
-    }
 
     private var valueChanged: ((Bool) -> Void)?
 
@@ -38,10 +35,7 @@ public class SwitchCell: UITableViewCell {
     ) {
         var configuration = defaultContentConfiguration()
         configuration.text = title
-        configuration.textProperties.numberOfLines = 0
-        configuration.textProperties.lineBreakMode = .byWordWrapping
-        configuration.directionalLayoutMargins.top = Metrics.verticalPadding
-        configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
+        configuration.applySettingsRowLayout()
         contentConfiguration = configuration
         switchControl.accessibilityLabel = title
         switchControl.isOn = isOn

@@ -9,12 +9,6 @@ import UIKit
 
 class ColorCell: UITableViewCell {
 
-    private enum Metrics {
-        static let swatchSize = CGSize(width: 30, height: 30)
-        static let imageToTextPadding: CGFloat = 15
-        static let verticalPadding: CGFloat = 6
-    }
-
     private var currentTitle: String?
     private var currentColor: UIColor?
 
@@ -59,26 +53,21 @@ class ColorCell: UITableViewCell {
         var configuration = defaultContentConfiguration()
         configuration.text = currentTitle
         configuration.textProperties.color = .label
-        configuration.textProperties.numberOfLines = 0
-        configuration.textProperties.lineBreakMode = .byWordWrapping
-        configuration.directionalLayoutMargins.top = Metrics.verticalPadding
-        configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
-        configuration.image = currentColor.map {
-            Self.makeSwatchImage(color: $0.resolvedColor(with: traitCollection), scale: traitCollection.displayScale)
-        }
-        configuration.imageProperties.maximumSize = Metrics.swatchSize
-        configuration.imageProperties.reservedLayoutSize = Metrics.swatchSize
-        configuration.imageToTextPadding = Metrics.imageToTextPadding
+        configuration.applySettingsRowLayout()
+        configuration.applySettingsIcon(
+            currentColor.map {
+                Self.makeSwatchImage(color: $0.resolvedColor(with: traitCollection), scale: traitCollection.displayScale)
+            }, cornerRadius: nil)
         contentConfiguration = configuration
     }
 
     private static func makeSwatchImage(color: UIColor, scale: CGFloat) -> UIImage {
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = max(1, scale)
-        let renderer = UIGraphicsImageRenderer(size: Metrics.swatchSize, format: format)
+        let renderer = UIGraphicsImageRenderer(size: SettingsMetrics.iconSize, format: format)
         return renderer.image { _ in
             color.setFill()
-            UIBezierPath(ovalIn: CGRect(origin: .zero, size: Metrics.swatchSize)).fill()
+            UIBezierPath(ovalIn: CGRect(origin: .zero, size: SettingsMetrics.iconSize)).fill()
         }
     }
 }

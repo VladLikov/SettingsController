@@ -1,7 +1,6 @@
 import UIKit
 
 extension SettingsController {
-    var cachedPremiumStatus: Bool { isPremium }
 
     /// Call after purchases, restores, account changes and profile edits, including on iPad.
     /// Cancelling the caller also cancels its request. The latest refresh wins.

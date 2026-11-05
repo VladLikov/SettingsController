@@ -13,7 +13,7 @@ class TapticEngineController: UITableViewController {
 
     // MARK: Properties [Private]
 
-    private let tapticArray: [TapticEngineStyle] = TapticEngineStyle.allCases
+    private let styles: [TapticEngineStyle] = TapticEngineStyle.allCases
 
     private var taptic: TapticStorage
     private weak var eventHandler: (any SettingsControllerEventHandler)?
@@ -42,7 +42,7 @@ class TapticEngineController: UITableViewController {
         tableView.register(SwitchCell.self)
         tableView.register(UITableViewCell.self)
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = defaultRowEstimatedHeight
+        tableView.estimatedRowHeight = SettingsMetrics.estimatedRowHeight
 
         navigationItem.largeTitleDisplayMode = .never
     }
@@ -64,7 +64,7 @@ extension TapticEngineController {
             return 1
 
         case 1:
-            return tapticArray.count
+            return styles.count
 
         default:
             return 0
@@ -118,15 +118,12 @@ extension TapticEngineController {
             let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
             cell.selectionStyle = .none
 
-            let tapticStyle = tapticArray[row]
+            let tapticStyle = styles[row]
             let isSelected = row == taptic.tapticStyle
 
             var configuration = cell.defaultContentConfiguration()
             configuration.text = tapticStyle.title
-            configuration.textProperties.numberOfLines = 0
-            configuration.textProperties.lineBreakMode = .byWordWrapping
-            configuration.directionalLayoutMargins.top = 6
-            configuration.directionalLayoutMargins.bottom = 6
+            configuration.applySettingsRowLayout()
             cell.contentConfiguration = configuration
 
             cell.accessoryType = isSelected ? .checkmark : .none
@@ -170,23 +167,15 @@ extension TapticEngineController {
 extension TapticEngineController {
 
     private var selectedTapticStyleIndex: Int {
-        guard tapticArray.indices.contains(taptic.tapticStyle) else {
+        guard styles.indices.contains(taptic.tapticStyle) else {
             return TapticEngineStyle.medium.rawValue
         }
 
         return taptic.tapticStyle
     }
 
-    private var defaultRowEstimatedHeight: CGFloat {
-        if #available(iOS 26, *) {
-            53
-        } else {
-            45
-        }
-    }
-
     private func normalizeTapticStyleIfNeeded() {
-        guard tapticArray.indices.contains(taptic.tapticStyle) else {
+        guard styles.indices.contains(taptic.tapticStyle) else {
             taptic.tapticStyle = TapticEngineStyle.medium.rawValue
             return
         }

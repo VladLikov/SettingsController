@@ -15,7 +15,7 @@ extension SettingsController {
         switch sections[indexPath.section].kind {
         case .rows(let rows):
             switch rows[indexPath.row] {
-            case .defaultRow(.user), .defaultRow(.userFactory): return userRowHeight
+            case .defaultRow(.user), .defaultRow(.userFactory): return SettingsMetrics.estimatedUserRowHeight
             default: break
             }
 
@@ -27,23 +27,7 @@ extension SettingsController {
             break
         }
 
-        return defaultRowEstimatedHeight
-    }
-
-    var defaultRowEstimatedHeight: CGFloat {
-        if #available(iOS 26, *) {
-            53
-        } else {
-            45
-        }
-    }
-
-    private var userRowHeight: CGFloat {
-        if #available(iOS 26, *) {
-            73
-        } else {
-            65
-        }
+        return SettingsMetrics.estimatedRowHeight
     }
 
     public override func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {

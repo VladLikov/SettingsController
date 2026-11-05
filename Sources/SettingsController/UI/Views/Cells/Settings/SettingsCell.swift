@@ -11,13 +11,6 @@ import UIKit
 
 public final class SettingsCell: UITableViewCell {
 
-    private enum Metrics {
-        static let iconSize = CGSize(width: 30, height: 30)
-        static let iconCornerRadius: CGFloat = 7.5
-        static let imageToTextPadding: CGFloat = 15
-        static let verticalPadding: CGFloat = 6
-    }
-
     private var currentTitle: String?
     private var currentDetail: String?
     private var currentIcon: UIImage?
@@ -94,19 +87,10 @@ extension SettingsCell {
 
         configuration.text = currentTitle
         configuration.textProperties.color = .label
-        configuration.textProperties.numberOfLines = 0
-        configuration.textProperties.lineBreakMode = .byWordWrapping
         configuration.secondaryText = currentDetail
         configuration.secondaryTextProperties.color = .secondaryLabel
-        configuration.secondaryTextProperties.numberOfLines = 0
-        configuration.secondaryTextProperties.lineBreakMode = .byWordWrapping
-        configuration.directionalLayoutMargins.top = Metrics.verticalPadding
-        configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
-        configuration.image = currentIcon
-        configuration.imageProperties.maximumSize = Metrics.iconSize
-        configuration.imageProperties.reservedLayoutSize = Metrics.iconSize
-        configuration.imageProperties.cornerRadius = Metrics.iconCornerRadius
-        configuration.imageToTextPadding = Metrics.imageToTextPadding
+        configuration.applySettingsRowLayout()
+        configuration.applySettingsIcon(currentIcon)
         contentConfiguration = configuration
     }
 

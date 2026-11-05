@@ -44,7 +44,7 @@ class AppearanceController: UITableViewController {
         normalizeInterfaceStyleIfNeeded()
 
         tableView?.rowHeight = UITableView.automaticDimension
-        tableView?.estimatedRowHeight = defaultRowEstimatedHeight
+        tableView?.estimatedRowHeight = SettingsMetrics.estimatedRowHeight
 
         tableView?.register(SwitchCell.self)
         tableView?.register(ColorCell.self)
@@ -137,10 +137,7 @@ extension AppearanceController {
                     NSLocalizedString("Light Theme", bundle: .module, comment: "Option selecting light interface appearance."),
                     NSLocalizedString("Dark Theme", bundle: .module, comment: "Option selecting dark interface appearance."),
                 ][row]
-            configuration.textProperties.numberOfLines = 0
-            configuration.textProperties.lineBreakMode = .byWordWrapping
-            configuration.directionalLayoutMargins.top = 6
-            configuration.directionalLayoutMargins.bottom = 6
+            configuration.applySettingsRowLayout()
             cell.contentConfiguration = configuration
 
             let isSelected = row == selectedInterfaceStyleIndex
@@ -216,14 +213,6 @@ extension AppearanceController {
 
     private var selectedInterfaceStyleIndex: Int {
         min(max(theme.interfaceStyle - 1, 0), 1)
-    }
-
-    private var defaultRowEstimatedHeight: CGFloat {
-        if #available(iOS 26, *) {
-            53
-        } else {
-            45
-        }
     }
 
     private func normalizeInterfaceStyleIfNeeded() {

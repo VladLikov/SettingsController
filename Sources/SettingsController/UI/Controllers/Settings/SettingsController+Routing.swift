@@ -111,7 +111,7 @@ extension SettingsController {
         let mailController = MailController(
             type: .supportRequest,
             email: email,
-            isPremium: cachedPremiumStatus,
+            isPremium: isPremium,
             productID: configuration.productID,
             dataProvider: configuration.dataProvider
         )

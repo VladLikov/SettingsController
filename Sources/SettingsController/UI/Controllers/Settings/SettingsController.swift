@@ -58,7 +58,7 @@ public final class SettingsController: UITableViewController {
     weak var presentationRoot: UIViewController?
     private var didReportDismissal = false
     private var finishingModal = false
-    var overlayAppViewDidShown = false
+    var didShowAppOverlay = false
     var overlayFrame: CGRect?
     var selectionBeforeTap: IndexPath?
     private var lastOverlayGeometry: OverlayGeometry?
@@ -101,8 +101,8 @@ public final class SettingsController: UITableViewController {
         tableView.register(AppCell.self)
         tableView.register(PremiumCell.self)
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = defaultRowEstimatedHeight
-        tableView.separatorInset.left = 63
+        tableView.estimatedRowHeight = SettingsMetrics.estimatedRowHeight
+        tableView.separatorInset.left = SettingsMetrics.separatorInset
         tableView.contentInset.top = configuration.insets?.top ?? 0
         tableView.contentInset.bottom = baseBottomInset
         navigationItem.largeTitleDisplayMode = .automatic
@@ -181,7 +181,7 @@ public final class SettingsController: UITableViewController {
     func beginPresentation() {
         didReportDismissal = false
         needsStateRefresh = true
-        overlayAppViewDidShown = false
+        didShowAppOverlay = false
     }
 
     func reportDismissal() {

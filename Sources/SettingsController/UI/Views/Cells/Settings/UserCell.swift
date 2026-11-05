@@ -44,7 +44,7 @@ class UserCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         setupView()
-        setConstraints()
+        setupConstraints()
     }
 
     required init?(coder: NSCoder) {
@@ -76,7 +76,7 @@ class UserCell: UITableViewCell {
 
     // MARK: Set Constraints
 
-    private func setConstraints() {
+    private func setupConstraints() {
 
         NSLayoutConstraint.activate([
             userImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
