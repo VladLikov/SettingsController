@@ -68,6 +68,7 @@ public final class SettingsController: UITableViewController {
     var didShowAppOverlay = false
     var overlayFrame: CGRect?
     var selectionBeforeTap: IndexPath?
+    var openingStoreAppID: Int?
     lazy var haptics = SettingsHaptics.from(configuration.sections)
     private var lastOverlayGeometry: OverlayGeometry?
     var baseBottomInset: CGFloat { configuration.insets?.bottom ?? 0 }

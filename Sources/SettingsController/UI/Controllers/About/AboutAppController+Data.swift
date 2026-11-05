@@ -51,7 +51,9 @@ extension AboutAppController {
             .init(
                 title: NSLocalizedString("Premium", bundle: .module, comment: "Title of the premium settings row."),
                 subtitle: nil,
-                value: isPremium ? "true" : "false",
+                value: isPremium
+                    ? NSLocalizedString("Active", bundle: .module, comment: "Status displayed for an active premium entitlement.")
+                    : NSLocalizedString("Not active", bundle: .module, comment: "Status displayed when premium is inactive."),
                 icon: Self.icon("star.fill"),
                 action: .none
             ),

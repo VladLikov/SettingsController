@@ -280,6 +280,29 @@ extension AboutAppController {
 
 extension AboutAppController {
 
+    /// Every diagnostic value can be copied for support, not only the User ID.
+    override func tableView(
+        _ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        let item = data[indexPath.section].items[indexPath.row]
+        guard let text = item.subtitle ?? item.value, !text.isEmpty, text != "-" else { return nil }
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            UIMenu(children: [
+                UIAction(
+                    title: NSLocalizedString(
+                        "Copy", bundle: .module, comment: "Context menu action copying a diagnostic value from About."),
+                    image: UIImage(systemName: "doc.on.doc")
+                ) { _ in
+                    UIPasteboard.general.string = text
+                    UIAccessibility.post(
+                        notification: .announcement,
+                        argument: NSLocalizedString(
+                            "Copied", bundle: .module, comment: "Confirmation after the user explicitly copies an identifier."))
+                }
+            ])
+        }
+    }
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 

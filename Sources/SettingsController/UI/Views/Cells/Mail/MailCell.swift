@@ -60,6 +60,18 @@ class MailCell: UITableViewCell {
         return label
     }()
 
+    /// How many more characters the message needs; empty once it can be sent.
+    private lazy var requirementLabel: UILabel = {
+        let label = UILabel()
+        label.font = .preferredFont(forTextStyle: .footnote)
+        label.adjustsFontForContentSizeCategory = true
+        label.textColor = .secondaryLabel
+        label.textAlignment = .natural
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
     // MARK: Life Cycle
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -93,6 +105,27 @@ extension MailCell {
 
         textView.becomeFirstResponder()
     }
+
+    /// Returns true when the requirement line appeared or disappeared, which changes the row height.
+    @discardableResult
+    func showMissingCharacters(_ count: Int) -> Bool {
+        let wasVisible = requirementLabel.text != nil
+        requirementLabel.text =
+            count > 0
+            ? String(
+                format: NSLocalizedString(
+                    "Characters needed: %ld", bundle: .module,
+                    comment: "Mail form hint below the message. %ld is how many more characters are needed before Send is enabled."),
+                count)
+            : nil
+        return wasVisible != (requirementLabel.text != nil)
+    }
+
+    /// The caret in the coordinate space of `view`, to keep it visible while the row grows.
+    func caretRect(in view: UIView) -> CGRect? {
+        guard textView.isFirstResponder, let position = textView.selectedTextRange?.end else { return nil }
+        return textView.convert(textView.caretRect(for: position), to: view)
+    }
 }
 
 // MARK: - Setup View
@@ -105,6 +138,7 @@ extension MailCell {
 
         contentView.addSubview(textView)
         contentView.addSubview(placeholderLabel)
+        contentView.addSubview(requirementLabel)
     }
 }
 
@@ -119,10 +153,12 @@ extension MailCell {
                 equalTo: contentView.topAnchor,
                 constant: 8
             ),
-            textView.bottomAnchor.constraint(
-                equalTo: contentView.bottomAnchor,
-                constant: -8
-            ),
+            textView.bottomAnchor.constraint(equalTo: requirementLabel.topAnchor),
+            requirementLabel.leadingAnchor.constraint(
+                equalTo: textView.leadingAnchor, constant: textView.textContainer.lineFragmentPadding),
+            requirementLabel.trailingAnchor.constraint(
+                equalTo: textView.trailingAnchor, constant: -textView.textContainer.lineFragmentPadding),
+            requirementLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
             textView.leadingAnchor.constraint(
                 equalTo: contentView.leadingAnchor,
                 constant: 12

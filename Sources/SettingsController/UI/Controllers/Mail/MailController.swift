@@ -52,6 +52,10 @@ public class MailController: UITableViewController {
         return button
     }()
 
+    private lazy var closeButton = UIBarButtonItem(
+        systemItem: .close,
+        primaryAction: .init { [weak self] _ in self?.closeRequested() })
+
     // MARK: Life Cycle
 
     public init(
@@ -122,13 +126,6 @@ extension MailController {
 
         navigationItem.largeTitleDisplayMode = .never
 
-        let closeButton = UIBarButtonItem(
-            systemItem: .close,
-            primaryAction: .init { [weak self] _ in
-                self?.cancelMailPreparation()
-                self?.dismiss(animated: true)
-            })
-
         closeButton.accessibilityIdentifier = "settings.mail.close"
         navigationItem.leftBarButtonItem = closeButton
         navigationItem.rightBarButtonItem = sendButton
@@ -159,6 +156,7 @@ extension MailController {
 
         cell.delegate = self
         cell.configure(type: type, text: currentText)
+        cell.showMissingCharacters(type.missingCharacters(in: currentText))
 
         return cell
     }
@@ -176,11 +174,17 @@ extension MailController: MailCellDelegate {
         currentText = text
 
         sendButton.isEnabled = !isPreparingMail && type.allowsSending(text)
+        updateDiscardProtection()
 
-        if needsHeightUpdate {
+        let requirementChanged = cell.showMissingCharacters(type.missingCharacters(in: text))
+        if needsHeightUpdate || requirementChanged {
             UIView.performWithoutAnimation {
                 tableView.beginUpdates()
                 tableView.endUpdates()
+            }
+            // The row grows with the text; keep the caret above the keyboard.
+            if let caret = cell.caretRect(in: tableView) {
+                tableView.scrollRectToVisible(caret.insetBy(dx: 0, dy: -8), animated: false)
             }
         }
     }
@@ -226,7 +230,9 @@ extension MailController {
             if let url = draft.url { opened = await open(url) } else { opened = false }
             guard token.isCurrent else { return }
             self?.finishMailPreparation(token)
-            if !opened {
+            if opened {
+                self?.closeAfterOpeningMail()
+            } else {
                 self?.pendingMailFallback = draft
                 self?.presentPendingMailFallbackIfPossible()
             }
@@ -302,5 +308,67 @@ extension MailController {
                     "Cancel", bundle: .module, comment: "Cancel action dismissing the mail recovery alert without changing the message."),
                 style: .cancel))
         present(alert, animated: true)
+    }
+}
+
+// MARK: - Unsaved message protection
+
+extension MailController: UIAdaptivePresentationControllerDelegate {
+    private var hasUnsentText: Bool {
+        !currentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// A typed message blocks the swipe-down dismissal; the attempt asks before discarding it.
+    func updateDiscardProtection() {
+        let container = navigationController ?? self
+        container.isModalInPresentation = hasUnsentText
+        if hasUnsentText, container.presentationController?.delegate == nil {
+            container.presentationController?.delegate = self
+        }
+    }
+
+    public func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
+        confirmDiscard()
+    }
+
+    func closeRequested() {
+        guard hasUnsentText else { return close() }
+        confirmDiscard()
+    }
+
+    private func confirmDiscard() {
+        guard presentedViewController == nil else { return }
+        let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        sheet.addAction(
+            UIAlertAction(
+                title: NSLocalizedString(
+                    "Discard Message", bundle: .module,
+                    comment: "Destructive action that closes the support form and deletes the typed message."),
+                style: .destructive
+            ) { [weak self] _ in self?.close() })
+        sheet.addAction(
+            UIAlertAction(
+                title: NSLocalizedString(
+                    "Cancel", bundle: .module,
+                    comment: "Cancel action dismissing the mail recovery alert without changing the message."),
+                style: .cancel))
+        sheet.popoverPresentationController?.barButtonItem = closeButton
+        present(sheet, animated: true)
+    }
+
+    private func close() {
+        cancelMailPreparation()
+        (navigationController ?? self).isModalInPresentation = false
+        dismiss(animated: true)
+    }
+
+    /// After the mail app opened the draft, the form has done its job.
+    func closeAfterOpeningMail() {
+        let container = navigationController ?? self
+        // Only a form presented modally as its own screen closes itself; a pushed form stays for the host.
+        guard container.presentingViewController != nil, navigationController.map({ $0.viewControllers.first === self }) ?? true
+        else { return }
+        container.isModalInPresentation = false
+        container.dismiss(animated: true)
     }
 }

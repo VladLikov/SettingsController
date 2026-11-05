@@ -14,12 +14,13 @@ class UserCell: UITableViewCell {
     // MARK: Properties
 
     private static let userImageViewSize: CGFloat = 45
+    private var representedAvatar: UIImage?
 
     private lazy var userImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.tintColor = .white
-        imageView.backgroundColor = .gray
+        imageView.backgroundColor = .systemGray
         imageView.contentMode = .scaleAspectFill
         imageView.layer.cornerRadius = round(Self.userImageViewSize / 2.0)
         imageView.layer.masksToBounds = true
@@ -53,10 +54,34 @@ class UserCell: UITableViewCell {
 
     // MARK: Configure
 
-    public func configure(title: String, avatar: UIImage?) {
+    func configure(title: String, avatar: UIImage?, accessory: RowAccessory = .disclosure) {
         accessibilityLabel = title
-        userLabel.text = title
-        userImageView.image = avatar
+        accessory.apply(to: self)
+        let changed = userLabel.text != nil && (userLabel.text != title || representedAvatar !== avatar)
+        let update = { [self] in
+            userLabel.text = title
+            representedAvatar = avatar
+            if let avatar {
+                userImageView.image = avatar
+                userImageView.contentMode = .scaleAspectFill
+            } else {
+                // Without a photo, show a neutral person glyph rather than an empty circle.
+                userImageView.image = UIImage(systemName: "person.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 22))
+                userImageView.contentMode = .center
+            }
+        }
+        if changed, window != nil, !UIAccessibility.isReduceMotionEnabled {
+            UIView.transition(
+                with: contentView, duration: 0.2, options: [.transitionCrossDissolve, .allowUserInteraction], animations: update)
+        } else {
+            update()
+        }
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        userLabel.text = nil
+        representedAvatar = nil
     }
 
     // MARK: Setup View

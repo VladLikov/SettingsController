@@ -5,12 +5,17 @@ extension SettingsController {
     /// Only navigation intent is revoked; catalog/image/state requests are independent.
     func cancelPendingStoreProduct() {
         storeProduct.cancel()
+        setOpeningStoreApp(nil)
     }
 
     func openApp(_ id: Int, url: URL) {
+        // A second tap on the app whose page is loading must not restart the request.
+        guard !(storeProduct.isRunning && openingStoreAppID == id) else { return }
         let load = loadStoreProduct
         let open = openURL
+        setOpeningStoreApp(id)
         storeProduct.start { [weak self] token in
+            defer { if token.finish() { self?.setOpeningStoreApp(nil) } }
             let destination: UIViewController?
             do {
                 destination = try await load(id)
@@ -32,7 +37,24 @@ extension SettingsController {
 
     func redeemCode() {
         cancelPendingStoreProduct()
-        SKPaymentQueue.default().presentCodeRedemptionSheet()
+        if #available(iOS 16.0, *), let scene = view.window?.windowScene {
+            Task { try? await AppStore.presentOfferCodeRedeemSheet(in: scene) }
+        } else {
+            SKPaymentQueue.default().presentCodeRedemptionSheet()
+        }
+    }
+
+    /// Shows progress on the row of the app whose App Store page is loading.
+    private func setOpeningStoreApp(_ id: Int?) {
+        guard openingStoreAppID != id else { return }
+        let changed = [openingStoreAppID, id].compactMap { $0 }
+        openingStoreAppID = id
+        guard isViewLoaded else { return }
+        let rows = (tableView.indexPathsForVisibleRows ?? []).filter { path in
+            guard case .app(.loaded(let app)) = displayRow(at: path) else { return false }
+            return changed.contains(app.id)
+        }
+        if !rows.isEmpty { UIView.performWithoutAnimation { tableView.reconfigureRows(at: rows) } }
     }
 
     func displayAppOverlayIfNeeded() {

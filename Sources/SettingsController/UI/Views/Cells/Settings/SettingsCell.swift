@@ -68,9 +68,8 @@ final class SettingsCell: UITableViewCell {
 
 extension SettingsCell {
 
-    func configure(title: String?, icon: SettingsIcon?, detail: String? = nil) {
-        accessoryType = .disclosureIndicator
-        accessoryView = nil
+    func configure(title: String?, icon: SettingsIcon?, detail: String? = nil, accessory: RowAccessory = .disclosure) {
+        accessory.apply(to: self)
         selectionStyle = .default
         currentTitle = title
         currentDetail = detail

@@ -24,10 +24,12 @@ extension SettingsController {
         case .rows(let rows):
             switch rows[indexPath.row] {
             case .item(let item):
-                return makeCell(for: item, in: tableView, at: indexPath)
+                return makeCell(for: item, accessory: rows[indexPath.row].accessory, in: tableView, at: indexPath)
             case .app(let appRow):
                 let cell = tableView.dequeueReusableCell(withClass: AppCell.self, for: indexPath)
-                cell.configure(with: appRow)
+                cell.configure(with: appRow, isOpening: isOpeningStoreProduct(for: appRow))
+                cell.isAccessibilityElement = !isRedundantPlaceholder(at: indexPath)
+                cell.accessibilityElementsHidden = isRedundantPlaceholder(at: indexPath)
                 return cell
             }
 
@@ -42,21 +44,34 @@ extension SettingsController {
         }
     }
 
-    private func makeCell(for item: SettingsRowItem, in tableView: UITableView, at indexPath: IndexPath) -> UITableViewCell {
+    /// VoiceOver reads one "Loading…" per catalog, not one per placeholder.
+    private func isRedundantPlaceholder(at indexPath: IndexPath) -> Bool {
+        guard indexPath.row > 0, case .app(.placeholder) = displayRow(at: indexPath) else { return false }
+        return true
+    }
+
+    private func isOpeningStoreProduct(for row: AppStoreAppRowState) -> Bool {
+        guard case .loaded(let app) = row else { return false }
+        return openingStoreAppID == app.id
+    }
+
+    private func makeCell(
+        for item: SettingsRowItem, accessory: RowAccessory, in tableView: UITableView, at indexPath: IndexPath
+    ) -> UITableViewCell {
         switch item {
         case .row(let row):
             let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
-            cell.configure(title: row.title, icon: row.icon, detail: row.detail)
+            cell.configure(title: row.title, icon: row.icon, detail: row.detail, accessory: accessory)
             return cell
 
         case .defaultRow(.user(let name, let avatar, _)):
             let cell = tableView.dequeueReusableCell(withClass: UserCell.self, for: indexPath)
-            cell.configure(title: name, avatar: avatar)
+            cell.configure(title: name, avatar: avatar, accessory: accessory)
             return cell
 
         case .defaultRow(let row):
             let cell = tableView.dequeueReusableCell(withClass: SettingsCell.self, for: indexPath)
-            cell.configure(title: row.title, icon: row.icon, detail: row.premiumStatusTitle)
+            cell.configure(title: row.title, icon: row.icon, detail: row.premiumStatusTitle, accessory: accessory)
             return cell
         }
     }
