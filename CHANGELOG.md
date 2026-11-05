@@ -1,6 +1,6 @@
 # Changelog
 
-## 5.0.0 — Unreleased
+## 5.0.0 — 2026-11-06
 
 Source-breaking release. See [Migration to 5.0](Documentation/MIGRATION-5.0.md); most 4.x initializers remain as deprecated wrappers.
 
