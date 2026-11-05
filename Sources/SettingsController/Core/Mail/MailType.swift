@@ -51,10 +51,13 @@ public enum MailType: Equatable {
     public var subject: String {
         switch self {
         case .supportRequest:
-            return NSLocalizedString("Support Request", bundle: .module, comment: "")
+            return NSLocalizedString(
+                "Support Request", bundle: .module, comment: "Not translated: support email subject suffix read by the developer.")
 
         case .languageRequest:
-            return NSLocalizedString("Language Request", bundle: .module, comment: "")
+            return NSLocalizedString(
+                "Language Request", bundle: .module, comment: "Not translated: language request email subject suffix read by the developer."
+            )
 
         case .custom(_, _, _, let subject):
             return subject

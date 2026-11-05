@@ -1,10 +1,3 @@
-//
-//  AppCell.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 29.04.2025.
-//
-
 import UIKit
 
 final class AppCell: UITableViewCell {

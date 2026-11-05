@@ -1,10 +1,3 @@
-//
-//  SettingsInsets.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 20.05.2025.
-//
-
 import Foundation
 
 public struct SettingsInsets {

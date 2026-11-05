@@ -63,9 +63,16 @@ extension SettingsController {
         }
     }
 
-    /// Shows a destination screen, ignoring taps while a navigation transition is running.
+    /// False after a destination was pushed above the list, so a quick second tap cannot push it twice.
+    /// The presentation transition of the settings screen itself does not block selection.
+    var canShowDestination: Bool {
+        guard let navigationController else { return true }
+        return navigationController.topViewController === self
+    }
+
+    /// Shows a destination screen unless one was just pushed above the list.
     func show(_ makeViewController: () -> UIViewController?, title: String?) {
-        guard navigationController?.transitionCoordinator == nil, let viewController = makeViewController() else { return }
+        guard canShowDestination, let viewController = makeViewController() else { return }
         pushViewController(viewController, navigationTitle: title)
     }
 
@@ -131,7 +138,7 @@ extension SettingsController {
             redeemCode()
 
         case .about(let appID, let privacyURL, let termsURL):
-            guard navigationController?.transitionCoordinator == nil else { return }
+            guard canShowDestination else { return }
             pushAboutController(appID: appID, privacyURL: privacyURL, termsURL: termsURL, navigationTitle: row.title)
         }
     }

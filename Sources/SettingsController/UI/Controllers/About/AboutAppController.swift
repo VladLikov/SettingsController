@@ -1,10 +1,3 @@
-//
-//  AboutAppController.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 16.04.2026.
-//
-
 import AlertKit
 import SafariServices
 import SafeSFSymbols

@@ -1,10 +1,3 @@
-//
-//  RemoteImageLoader.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 05.05.2026.
-//
-
 import Foundation
 import ImageIO
 import UIKit

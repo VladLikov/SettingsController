@@ -1,10 +1,3 @@
-//
-//  UITableView+Reuse.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 05.05.2026.
-//
-
 import UIKit
 
 extension UITableView {

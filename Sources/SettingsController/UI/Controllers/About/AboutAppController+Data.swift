@@ -81,7 +81,8 @@ extension AboutAppController {
                 .build,
                 [
                     .init(
-                        title: NSLocalizedString("Bundle ID", bundle: .module, comment: ""),
+                        title: NSLocalizedString(
+                            "Bundle ID", bundle: .module, comment: "Not translated: technical diagnostic label in About."),
                         subtitle: bundleID,
                         value: nil,
                         icon: Self.icon("info.circle.fill"),
@@ -109,14 +110,18 @@ extension AboutAppController {
                 .links,
                 [
                     .init(
-                        title: NSLocalizedString("Privacy Policy", bundle: .module, comment: ""),
+                        title: NSLocalizedString(
+                            "Privacy Policy", bundle: .module,
+                            comment: "Not translated in the catalog: link title to the host-provided policy page."),
                         subtitle: nil,
                         value: nil,
                         icon: Self.icon("hand.raised.fill"),
                         action: .privacyPolicy
                     ),
                     .init(
-                        title: NSLocalizedString("Terms of Use", bundle: .module, comment: ""),
+                        title: NSLocalizedString(
+                            "Terms of Use", bundle: .module,
+                            comment: "Not translated in the catalog: link title to the host-provided terms page."),
                         subtitle: nil,
                         value: nil,
                         icon: Self.icon("doc.text.fill"),

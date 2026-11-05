@@ -1,4 +1,4 @@
-> Current 4.0 requirement: Swift 6.4+ / Xcode 27.1+. Minimum deployment remains iOS 15. Older version notes below are historical.
+> Current 5.0 requirement: Swift 6.4+ / Xcode 27.1+, minimum deployment iOS 15. Upgrading from 4.0.x: see [Documentation/MIGRATION-5.0.md](Documentation/MIGRATION-5.0.md). Older version notes below are historical.
 
 # Migrating from 2.8.8 to 3.0.0
 

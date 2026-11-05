@@ -1,10 +1,3 @@
-//
-//  UserCell.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 01.12.2024.
-//
-
 import UIKit
 
 // MARK: - UserCell

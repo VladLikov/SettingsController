@@ -1,5 +1,44 @@
 # Changelog
 
+## 5.0.0 — Unreleased
+
+Source-breaking release. See [Migration to 5.0](Documentation/MIGRATION-5.0.md); most 4.x initializers remain as deprecated wrappers.
+
+### Changed (breaking)
+- `SettingsDestination` (`.controller`, `.factory`, `.action` with `SettingsActionContext`) replaces the mutually exclusive destination properties of `SettingsRow` and `PremiumPayload`.
+- One profile row: `.user(name:avatar:destination:)`; `.userFactory` is removed.
+- `ThemeStorage` uses `appColorID`, `followsSystemAppearance` and `InterfaceStyle`; `TapticStorage` uses `isTapticEngineEnabled` and `TapticStyle`. Raw values match 4.x. New `settingsDidSelectAppColor(_:)` event with a default implementation.
+- `Inset` is renamed `IconPadding` (`padding:` labels).
+- `makeSplitPresentation(configuration:)` replaces `getSplitPresentationSettingsController(configuration:)` (deprecated).
+- `SettingsCell`, `SwitchCell`, `MailCell`, `AppItem`, `AppStoreAppsLoader` and `AppStoreAppRowState` are internal; `SettingsRowItem.app` is removed.
+- `MailType` minimum lengths ignore whitespace.
+
+### Performance
+- The premium card is measured once per content and text size, without `ViewThatFits` trial layouts, and the result is shared across presentations; the row estimate uses the measured height and the palette is cached outside `body`.
+- App catalog results stay in memory for ten minutes; loading placeholders match the last received count.
+- Profile and account state are requested concurrently.
+- The App Store overlay inset is no longer recomputed on every scroll frame.
+
+### Fixed
+- The star icon of an active premium row updates when the accent color changes.
+- In an expanded split, action rows no longer take the selection from the row whose screen is shown; loading placeholders are not highlightable.
+- Every row that opens a screen ignores taps during a navigation transition.
+
+### UX and accessibility
+- Progress on an app row while its App Store page loads; repeated taps do not restart it.
+- The support form protects a typed message from accidental dismissal, shows the characters still needed, and closes after the mail app opens the draft.
+- Chevrons only for rows that show a screen; rows that leave the app show an arrow.
+- The Taptic screen plays a sample of the chosen strength; the library's haptics honor the Taptic Engine setting.
+- About shows the localized premium status and offers Copy for every diagnostic value.
+- VoiceOver reads one loading row per catalog.
+- Cross-fades for catalog results, premium card changes, profile updates, network icons and accent tint (off with Reduce Motion); a person glyph replaces an empty avatar.
+- Review, More Apps, Telegram and VK fall back to web links without `LSApplicationQueriesSchemes`.
+- Redeem Code uses `AppStore.presentOfferCodeRedeemSheet(in:)` on iOS 16+.
+
+### Internal
+- swift-format configuration and CI lint; shared request deduplication, `CancellableRequest`, `SettingsSectionRenderer`, row metrics and file layout; Points of Interest signposts for premium card sizing.
+- New strings (`Discard Message`, `Characters needed: %ld`, `Copy`) are translated for all 51 locales and marked `needs_review`.
+
 ## 4.0.8 — 2026-10-29
 
 ### Fixed

@@ -1,10 +1,3 @@
-//
-//  PremiumCardPayload.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 20.05.2025.
-//
-
 import SwiftUI
 import UIKit
 

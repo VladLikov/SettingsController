@@ -1,10 +1,3 @@
-//
-//  ColorCell.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 07.10.2024.
-//
-
 import UIKit
 
 class ColorCell: UITableViewCell {

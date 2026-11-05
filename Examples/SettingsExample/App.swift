@@ -192,13 +192,12 @@ final class DashboardController: UIViewController {
         let stack = makeStack(in: view)
         stack.addArrangedSubview(makeButton("Open full screen", id: "open-fullscreen") { [weak self] in self?.open(sheet: false) })
         stack.addArrangedSubview(makeButton("Open sheet", id: "open-sheet") { [weak self] in self?.open(sheet: true) })
-        // Compile public models and cells through an ordinary import, not @testable.
-        _ = AppItem(
-            id: 1, name: "Example", iconURL: URL(string: "https://example.com/icon.png")!,
-            storeURL: URL(string: "https://apps.apple.com/app/id1")!)
-        _ = SettingsCell(style: .default, reuseIdentifier: nil)
-        _ = SwitchCell(style: .default, reuseIdentifier: nil)
-        _ = MailCell(style: .default, reuseIdentifier: nil)
+        // Compile the public 5.0 surface through an ordinary import, not @testable.
+        _ = SettingsRow(
+            title: "Example", icon: SettingsIcon(image: UIImage(systemName: "star.fill"), color: .systemBlue, padding: IconPadding()),
+            destination: .action { _ in })
+        _ = PremiumCard(title: "Example", tierTitle: "PRO", buttonTitle: "Go", color: .systemBlue, onTap: {})
+        _ = MailController(type: .custom(placeholder: "", minCharactersCount: 0, navigationTitle: "", subject: ""), email: "a@b.c")
     }
 
     private func open(sheet: Bool) {

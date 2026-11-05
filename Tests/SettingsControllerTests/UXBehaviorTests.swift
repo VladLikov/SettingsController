@@ -149,3 +149,34 @@ final class ExternalLinkTests: XCTestCase {
             ["itms-apps://itunes.apple.com/app/id123?action=write-review", "https://apps.apple.com/app/id123?action=write-review"])
     }
 }
+
+@MainActor
+final class DoubleTapTests: XCTestCase {
+    func testSecondSelectionDoesNotPushTwiceAndFirstSelectionIsNeverBlocked() {
+        var created = 0
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(
+                    kind: .rows([
+                        .row(
+                            SettingsRow(
+                                title: "A", icon: SettingsIcon(image: nil, color: .blue),
+                                destination: .factory {
+                                    created += 1
+                                    return UIViewController()
+                                }))
+                    ]))
+            ]))
+        let navigation = UINavigationController(rootViewController: settings)
+        let window = mountedWindow(navigation)
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        let row = IndexPath(row: 0, section: 0)
+        settings.tableView(settings.tableView, didSelectRowAt: row)
+        settings.tableView(settings.tableView, didSelectRowAt: row)
+        XCTAssertEqual(created, 1)
+        XCTAssertEqual(navigation.viewControllers.count, 2)
+    }
+}

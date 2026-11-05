@@ -1,10 +1,3 @@
-//
-//  SettingsController+Routing.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 12.09.2024.
-//
-
 import AlertKit
 import SafeSFSymbols
 import UIKit

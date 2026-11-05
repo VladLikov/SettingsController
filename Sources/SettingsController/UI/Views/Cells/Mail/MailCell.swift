@@ -1,10 +1,3 @@
-//
-//  MailCell.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 11.04.2026.
-//
-
 import UIKit
 
 // MARK: - MailCellDelegate

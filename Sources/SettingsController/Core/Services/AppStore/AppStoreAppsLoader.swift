@@ -1,10 +1,3 @@
-//
-//  AppStoreAppsLoader.swift
-//  SettingsController
-//
-//  Created by Влад Лыков on 29.04.2025.
-//
-
 import Foundation
 
 enum AppStoreAppsLoader {
