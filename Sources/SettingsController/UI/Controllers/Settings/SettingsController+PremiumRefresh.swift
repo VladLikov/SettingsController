@@ -90,7 +90,7 @@ extension SettingsController {
             default: break
             }
         }
-        rebuildSections(changedSectionIDs: replacements, reconfiguredRows: rows)
+        rebuildSections(changedSectionIDs: replacements, reconfiguredRows: rows, animated: premiumChanged)
     }
 
     func pushAboutController(appID: String, privacyURL: URL, termsURL: URL, navigationTitle: String?) {

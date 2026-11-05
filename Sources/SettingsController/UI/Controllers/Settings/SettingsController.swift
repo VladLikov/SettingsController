@@ -193,7 +193,10 @@ public final class SettingsController: UITableViewController {
         configuration.eventHandler?.settingsDidDismiss()
     }
 
-    func rebuildSections(reload: Bool = true, changedSectionIDs: Set<Int>? = nil, reconfiguredRows: [IndexPath] = []) {
+    /// `animated` cross-fades replaced sections (catalog results, premium card and row), unless Reduce Motion is on.
+    func rebuildSections(
+        reload: Bool = true, changedSectionIDs: Set<Int>? = nil, reconfiguredRows: [IndexPath] = [], animated: Bool = false
+    ) {
         let oldIDs = visibleSectionIDs
         let rendered = SettingsSectionRenderer.render(
             configuration.sections,
@@ -213,14 +216,16 @@ public final class SettingsController: UITableViewController {
         let deleted = IndexSet(oldIDs.indices.filter { !ids.contains(oldIDs[$0]) })
         let inserted = IndexSet(ids.indices.filter { !oldIDs.contains(ids[$0]) })
         let replaced = IndexSet(oldIDs.indices.filter { ids.contains(oldIDs[$0]) && changedSectionIDs.contains(oldIDs[$0]) })
-        UIView.performWithoutAnimation {
+        let fades = animated && !UIAccessibility.isReduceMotionEnabled
+        let animation: UITableView.RowAnimation = fades ? .fade : .none
+        let apply = { [self] in
             if !deleted.isEmpty || !inserted.isEmpty || !replaced.isEmpty {
                 tableView.performBatchUpdates {
                     sections = result
                     visibleSectionIDs = ids
-                    tableView.deleteSections(deleted, with: .none)
-                    tableView.insertSections(inserted, with: .none)
-                    tableView.reloadSections(replaced, with: .none)
+                    tableView.deleteSections(deleted, with: animation)
+                    tableView.insertSections(inserted, with: animation)
+                    tableView.reloadSections(replaced, with: animation)
                 }
             } else {
                 sections = result
@@ -228,6 +233,7 @@ public final class SettingsController: UITableViewController {
             }
             if !reconfiguredRows.isEmpty { tableView.reconfigureRows(at: reconfiguredRows) }
         }
+        if fades { apply() } else { UIView.performWithoutAnimation(apply) }
     }
 
     /// Updates premium gradients and CTA tint after a host-owned appearance change.
@@ -293,7 +299,7 @@ public final class SettingsController: UITableViewController {
         catalogRequests[id] = request
         let wasLoading = catalogStates[id] == .loading
         catalogStates[id] = .loading
-        if !wasLoading { rebuildSections(changedSectionIDs: [id]) }
+        if !wasLoading { rebuildSections(changedSectionIDs: [id], animated: true) }
         let fetch = fetchApps
         request.start { [weak self] token in
             do {
@@ -310,7 +316,7 @@ public final class SettingsController: UITableViewController {
     private func finishCatalogLoad(_ state: AppCatalogState, id: Int, token: CancellableRequest.Token) {
         guard token.finish() else { return }
         catalogStates[id] = state
-        rebuildSections(changedSectionIDs: [id])
+        rebuildSections(changedSectionIDs: [id], animated: true)
     }
 
     private func cachedApps(_ kind: SettingsSectionKind) -> [AppItem]? {
