@@ -211,3 +211,44 @@ final class StateRefreshConcurrencyTests: XCTestCase {
         XCTAssertTrue(settings.isPremium)
     }
 }
+
+@MainActor
+final class SettingsSectionRendererTests: XCTestCase {
+    private let definitions = [
+        SettingsSection(kind: .ourApps(developerID: "d", limit: 3, excludeAppID: "0")),
+        SettingsSection(kind: .premiumCard(premiumCard())),
+        SettingsSection(kind: .rows([.defaultRow(.user("Initial", nil, UIViewController.self))])),
+    ]
+
+    private func state(_ catalog: AppCatalogState, premium: Bool = false, user: UserInfo? = nil) -> SettingsRenderState {
+        SettingsRenderState(catalogStates: [0: catalog], isPremium: premium, premiumColorOverride: nil, currentUser: user)
+    }
+
+    func testEmptyCatalogIsHiddenAndIDsKeepConfigurationIndexes() {
+        let rendered = SettingsSectionRenderer.render(definitions, state: state(.empty))
+        XCTAssertEqual(rendered.ids, [1, 2])
+    }
+
+    func testLoadingCatalogUsesTheLastKnownCountForPlaceholders() {
+        var loading = state(.loading)
+        loading.placeholderCount = { _ in 2 }
+        let rendered = SettingsSectionRenderer.render(definitions, state: loading)
+        guard case .rows(let rows) = rendered.sections[0].kind else { return XCTFail("Expected rows") }
+        XCTAssertEqual(rows.count, 2)
+    }
+
+    func testActivePremiumReplacesTheCardAndUserRowShowsTheProfile() {
+        let rendered = SettingsSectionRenderer.render(definitions, state: state(.failed, premium: true, user: UserInfo(name: "New")))
+        guard case .rows(let premiumRows) = rendered.sections[1].kind, case .defaultRow(.premium(let payload)) = premiumRows[0] else {
+            return XCTFail("Expected an active premium row")
+        }
+        XCTAssertTrue(payload.isPremium)
+        guard case .rows(let userRows) = rendered.sections[2].kind, case .defaultRow(.user(let name, _, _)) = userRows[0] else {
+            return XCTFail("Expected the user row")
+        }
+        XCTAssertEqual(name, "New")
+        guard case .rows(let catalogRows) = rendered.sections[0].kind, case .app(.failed) = catalogRows[0] else {
+            return XCTFail("Expected the retry row")
+        }
+    }
+}

@@ -75,7 +75,8 @@ final class AboutAppController: UITableViewController {
     }
 
     var data: [(section: AboutSection, items: [AboutItem])] = []
-    var checkUpdateTask: Task<Void, Never>?
+    let updateCheck = CancellableRequest()
+    var checkUpdateTask: Task<Void, Never>? { updateCheck.task }
 
     private(set) var isPremium: Bool
     private(set) var userID: String?
@@ -85,9 +86,8 @@ final class AboutAppController: UITableViewController {
     var currentVersion: @MainActor () -> String? = { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String }
     var currentOSVersion: @MainActor () -> String = { UIDevice.current.systemVersion }
     var onAccountUpdate: (@MainActor (SettingsMailInfo?, Bool) -> Void)?
-    private(set) var accountTask: Task<Void, Never>?
-    let accountLifetime = RequestLifetime()
-    let updateLifetime = RequestLifetime()
+    let accountRequest = CancellableRequest()
+    var accountTask: Task<Void, Never>? { accountRequest.task }
     var accountResolved = false
     let appID: String
     let privacyURL: URL
@@ -104,11 +104,6 @@ final class AboutAppController: UITableViewController {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    deinit {
-        checkUpdateTask?.cancel()
-        accountTask?.cancel()
     }
 
     override func viewDidLoad() {
@@ -134,9 +129,7 @@ final class AboutAppController: UITableViewController {
     }
 
     func cancelAccountRequest() {
-        accountLifetime.invalidate()
-        accountTask?.cancel()
-        accountTask = nil
+        accountRequest.cancel()
     }
 
     func acceptAccountInfo(_ info: SettingsMailInfo?, premium: Bool) {
@@ -147,10 +140,8 @@ final class AboutAppController: UITableViewController {
 
     func cancelRequests() {
         cancelAccountRequest()
-        updateLifetime.invalidate()
-        let wasChecking = checkUpdateTask != nil
-        checkUpdateTask?.cancel()
-        checkUpdateTask = nil
+        let wasChecking = updateCheck.isRunning
+        updateCheck.cancel()
         if wasChecking { refreshUpdateRow() }
         accountResolved = false
     }
@@ -173,14 +164,10 @@ final class AboutAppController: UITableViewController {
 
     func loadAccountInfo() {
         guard let provider = dataProvider else { return }
-        let lifetime = accountLifetime
-        let request = lifetime.begin()
-        accountTask?.cancel()
         let fallback = isPremium
-        accountTask = Task { @MainActor [weak self] in
-            defer { if lifetime.finish(request) { self?.accountTask = nil } }
+        accountRequest.start { [weak self] token in
             let result = await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback)
-            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
+            guard token.isCurrent else { return }
             self?.accountResolved = true
             self?.applyAccountInfo(result.info, premium: result.isPremium ?? fallback)
             self?.onAccountUpdate?(result.info, result.isPremium ?? fallback)

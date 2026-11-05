@@ -30,17 +30,17 @@ public final class SettingsController: UITableViewController {
     var sections: [SettingsSection] = []
     var visibleSectionIDs: [Int] = []
     var catalogStates: [Int: AppCatalogState] = [:]
-    var catalogLifetimes: [Int: RequestLifetime] = [:]
-    var appLoadTasks: [Int: Task<Void, Never>] = [:]
+    var catalogRequests: [Int: CancellableRequest] = [:]
+    var appLoadTasks: [Int: Task<Void, Never>] { catalogRequests.compactMapValues(\.task) }
     var premiumColorOverride: UIColor?
     var isPremium: Bool
     var currentUser: UserInfo?
     var currentMailInfo: SettingsMailInfo?
     var needsStateRefresh = true
-    var stateRefreshTask: Task<Void, Never>?
-    let stateLifetime = RequestLifetime()
-    var storeProductTask: Task<Void, Never>?
-    let storeLifetime = RequestLifetime()
+    let stateRefresh = CancellableRequest()
+    var stateRefreshTask: Task<Void, Never>? { stateRefresh.task }
+    let storeProduct = CancellableRequest()
+    var storeProductTask: Task<Void, Never>? { storeProduct.task }
     var languageSettingsTask: Task<Void, Never>?
     var openURL: OpenURLOperation = SystemActions.openURL
     var loadStoreProduct: @MainActor (Int) async throws -> UIViewController? = StoreProductLoader.load
@@ -87,9 +87,6 @@ public final class SettingsController: UITableViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     deinit {
-        for task in appLoadTasks.values { task.cancel() }
-        stateRefreshTask?.cancel()
-        storeProductTask?.cancel()
         languageSettingsTask?.cancel()
     }
 
@@ -165,15 +162,11 @@ public final class SettingsController: UITableViewController {
     }
 
     func cancelOperations() {
-        stateLifetime.invalidate()
+        stateRefresh.cancel()
         cancelPendingStoreProduct()
-        for lifetime in catalogLifetimes.values { lifetime.invalidate() }
-        stateRefreshTask?.cancel()
-        stateRefreshTask = nil
         languageSettingsTask?.cancel()
         languageSettingsTask = nil
-        for task in appLoadTasks.values { task.cancel() }
-        appLoadTasks.removeAll()
+        for request in catalogRequests.values { request.cancel() }
         needsStateRefresh = true
         activeAboutController?.cancelRequests()
     }
@@ -193,54 +186,13 @@ public final class SettingsController: UITableViewController {
 
     func rebuildSections(reload: Bool = true, changedSectionIDs: Set<Int>? = nil, reconfiguredRows: [IndexPath] = []) {
         let oldIDs = visibleSectionIDs
-        var result: [SettingsSection] = []
-        var ids: [Int] = []
-        for (id, definition) in configuration.sections.enumerated() {
-            var section = definition
-            switch definition.kind {
-            case .ourApps(_, let limit, _):
-                switch catalogStates[id] ?? (limit > 0 ? .loading : .empty) {
-                case .empty: continue
-                case .loading:
-                    guard limit > 0 else { continue }
-                    // Match the last received count so the section does not jump when apps arrive.
-                    let count = min(limit, max(1, placeholderCount(definition.kind) ?? limit))
-                    section.kind = .rows(Array(repeating: .app(.placeholder), count: count))
-                case .loaded(let apps):
-                    guard !apps.isEmpty else { continue }
-                    section.kind = .rows(apps.map { .app(.loaded($0)) })
-                case .failed: section.kind = .rows([.app(.failed)])
-                }
-            case .premiumCard(let card):
-                let premium = premiumColorOverride.map { card.premium.withColor($0) } ?? card.premium
-                if isPremium {
-                    section.kind = .rows([.defaultRow(.premium(premium.withPremiumStatus(true)))])
-                } else if premiumColorOverride != nil {
-                    section.kind = .premiumCard(
-                        PremiumCardPayload(
-                            image: card.image, title: card.title,
-                            tierTitle: card.tierTitle, subtitle: card.subtitle, buttonTitle: card.buttonTitle, premium: premium))
-                }
-            case .rows(let rows):
-                section.kind = .rows(
-                    rows.map { row in
-                        switch row {
-                        case .defaultRow(.premium(let payload)):
-                            let premium = premiumColorOverride.map { payload.withColor($0) } ?? payload
-                            return .defaultRow(.premium(premium.withPremiumStatus(isPremium)))
-                        case .defaultRow(.user(_, _, let type)):
-                            guard let user = currentUser else { return row }
-                            return .defaultRow(.user(user.name, user.avatar, type))
-                        case .defaultRow(.userFactory(_, _, let factory)):
-                            guard let user = currentUser else { return row }
-                            return .defaultRow(.userFactory(user.name, user.avatar, factory))
-                        default: return row
-                        }
-                    })
-            }
-            result.append(section)
-            ids.append(id)
-        }
+        let rendered = SettingsSectionRenderer.render(
+            configuration.sections,
+            state: SettingsRenderState(
+                catalogStates: catalogStates, isPremium: isPremium, premiumColorOverride: premiumColorOverride,
+                currentUser: currentUser, placeholderCount: { [self] in placeholderCount($0) }))
+        let result = rendered.sections
+        let ids = rendered.ids
         guard reload, isViewLoaded, tableView.window != nil, let changedSectionIDs else {
             sections = result
             visibleSectionIDs = ids
@@ -329,32 +281,26 @@ public final class SettingsController: UITableViewController {
             case .ourApps(let developer, let limit, let excluded) = configuration.sections[id].kind,
             limit > 0
         else { return }
-        let lifetime = catalogLifetimes[id] ?? RequestLifetime()
-        catalogLifetimes[id] = lifetime
-        let request = lifetime.begin()
-        appLoadTasks[id]?.cancel()
+        let request = catalogRequests[id] ?? CancellableRequest()
+        catalogRequests[id] = request
         let wasLoading = catalogStates[id] == .loading
         catalogStates[id] = .loading
         if !wasLoading { rebuildSections(changedSectionIDs: [id]) }
         let fetch = fetchApps
-        appLoadTasks[id] = Task { @MainActor [weak self] in
-            defer { if lifetime.finish(request) { self?.appLoadTasks[id] = nil } }
+        request.start { [weak self] token in
             do {
                 let apps = try await fetch(developer, limit, excluded)
-                guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
-                self?.finishCatalogLoad(apps.isEmpty ? .empty : .loaded(apps), id: id, request: request)
+                guard token.isCurrent else { return }
+                self?.finishCatalogLoad(apps.isEmpty ? .empty : .loaded(apps), id: id, token: token)
             } catch {
-                guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled,
-                    lifetime.isCurrent(request)
-                else { return }
-                self?.finishCatalogLoad(.failed, id: id, request: request)
+                guard token.isCurrent, !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
+                self?.finishCatalogLoad(.failed, id: id, token: token)
             }
         }
     }
 
-    private func finishCatalogLoad(_ state: AppCatalogState, id: Int, request: UUID) {
-        guard catalogLifetimes[id]?.finish(request) == true else { return }
-        appLoadTasks[id] = nil
+    private func finishCatalogLoad(_ state: AppCatalogState, id: Int, token: CancellableRequest.Token) {
+        guard token.finish() else { return }
         catalogStates[id] = state
         rebuildSections(changedSectionIDs: [id])
     }

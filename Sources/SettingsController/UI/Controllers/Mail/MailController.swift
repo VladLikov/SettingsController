@@ -20,11 +20,11 @@ public class MailController: UITableViewController {
     private let isPremium: Bool?
     private let productID: String?
     private weak var dataProvider: (any SettingsControllerDataProvider)?
-    private(set) var mailTask: Task<Void, Never>?
+    private let mailRequest = CancellableRequest()
+    var mailTask: Task<Void, Never>? { mailRequest.task }
     private var isPreparingMail = false
     private var pendingMailFallback: MailDraft?
     private var fallbackPresentationScheduled = false
-    private let mailLifetime = RequestLifetime()
     var openURL: OpenURLOperation = SystemActions.openURL
 
     private var currentText: String = ""
@@ -73,7 +73,6 @@ public class MailController: UITableViewController {
     }
 
     deinit {
-        mailTask?.cancel()
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -190,9 +189,7 @@ extension MailController: MailCellDelegate {
 extension MailController {
     func cancelMailPreparation() {
         pendingMailFallback = nil
-        mailLifetime.invalidate()
-        mailTask?.cancel()
-        mailTask = nil
+        mailRequest.cancel()
         setPreparingMail(false)
     }
 
@@ -206,8 +203,6 @@ extension MailController {
         guard !isPreparingMail, currentText.prefix(type.minCharactersCount).count >= type.minCharactersCount else { return }
         pendingMailFallback = nil
         setPreparingMail(true)
-        let request = mailLifetime.begin()
-        let lifetime = mailLifetime
         let text = currentText
         let provider = dataProvider
         let fallback = isPremium
@@ -216,10 +211,10 @@ extension MailController {
         let product = productID
         let open = openURL
 
-        mailTask = Task { @MainActor [weak self] in
+        mailRequest.start { [weak self] token in
             let diagnostics = await MailInfoResolver.resolve(provider: provider, fallbackPremium: fallback)
-            guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else {
-                self?.finishMailPreparation(request)
+            guard token.isCurrent, self?.settingsCanPresent == true else {
+                self?.finishMailPreparation(token)
                 return
             }
             let draft = MailBuilder.makeDraft(
@@ -229,8 +224,8 @@ extension MailController {
             )
             let opened: Bool
             if let url = draft.url { opened = await open(url) } else { opened = false }
-            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
-            self?.finishMailPreparation(request)
+            guard token.isCurrent else { return }
+            self?.finishMailPreparation(token)
             if !opened {
                 self?.pendingMailFallback = draft
                 self?.presentPendingMailFallbackIfPossible()
@@ -238,9 +233,8 @@ extension MailController {
         }
     }
 
-    private func finishMailPreparation(_ request: UUID) {
-        guard mailLifetime.finish(request) else { return }
-        mailTask = nil
+    private func finishMailPreparation(_ token: CancellableRequest.Token) {
+        guard token.finish() else { return }
         setPreparingMail(false)
     }
 

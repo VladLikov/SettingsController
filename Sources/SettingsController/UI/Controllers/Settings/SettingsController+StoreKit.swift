@@ -4,32 +4,21 @@ import UIKit
 extension SettingsController {
     /// Only navigation intent is revoked; catalog/image/state requests are independent.
     func cancelPendingStoreProduct() {
-        storeLifetime.invalidate()
-        storeProductTask?.cancel()
-        storeProductTask = nil
+        storeProduct.cancel()
     }
 
     func openApp(_ id: Int, url: URL) {
-        let lifetime = storeLifetime
-        let request = lifetime.begin()
-        storeProductTask?.cancel()
         let load = loadStoreProduct
         let open = openURL
-        storeProductTask = Task { @MainActor [weak self] in
-            defer { if lifetime.finish(request) { self?.storeProductTask = nil } }
+        storeProduct.start { [weak self] token in
             let destination: UIViewController?
             do {
                 destination = try await load(id)
             } catch {
-                guard !Task.isCancelled, !(error is CancellationError),
-                    (error as? URLError)?.code != .cancelled,
-                    lifetime.isCurrent(request)
-                else { return }
+                guard token.isCurrent, !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
                 destination = nil
             }
-            guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else {
-                return
-            }
+            guard token.isCurrent, self?.settingsCanPresent == true else { return }
             if let destination {
                 #if !os(visionOS)
                 (destination as? SKStoreProductViewController)?.delegate = self

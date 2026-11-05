@@ -4,23 +4,16 @@ import UIKit
 
 extension AboutAppController {
     func checkForUpdate() {
-        guard checkUpdateTask == nil else { return }
-        let lifetime = updateLifetime
-        let request = lifetime.begin()
+        guard !updateCheck.isRunning else { return }
         let lookup = loadUpdate
         let appID = appID
         let version = currentVersion()
         let osVersion = currentOSVersion()
-        checkUpdateTask = Task { @MainActor [weak self] in
-            defer {
-                if lifetime.finish(request) {
-                    self?.checkUpdateTask = nil
-                    self?.refreshUpdateRow()
-                }
-            }
+        updateCheck.start { [weak self] token in
+            defer { if token.finish() { self?.refreshUpdateRow() } }
             do {
                 guard let version, let update = try await lookup(appID) else { throw URLError(.cannotParseResponse) }
-                guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else { return }
+                guard token.isCurrent, self?.settingsCanPresent == true else { return }
                 if AppUpdateLookup.compare(version, update.version) != .orderedAscending {
                     self?.showUpdateMessage(
                         NSLocalizedString(
@@ -35,8 +28,8 @@ extension AboutAppController {
                     self?.showAvailableUpdate(update)
                 }
             } catch {
-                guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled,
-                    lifetime.isCurrent(request), self?.settingsCanPresent == true
+                guard token.isCurrent, !(error is CancellationError), (error as? URLError)?.code != .cancelled,
+                    self?.settingsCanPresent == true
                 else { return }
                 self?.showUpdateMessage(
                     NSLocalizedString(

@@ -84,8 +84,11 @@ final class Patch401RegressionTests: XCTestCase {
                 if fails { throw URLError(.notConnectedToInternet) }
                 return product
             }
-            let catalog = Task { @MainActor in await Task.yield() }
-            settings.appLoadTasks[99] = catalog
+            let catalogGate = ControlledValue<Bool>()
+            let catalogRequest = CancellableRequest()
+            let catalog = catalogRequest.start { _ in _ = try? await catalogGate.value() }
+            settings.catalogRequests[99] = catalogRequest
+            defer { catalogGate.complete(.success(true)) }
             settings.openApp(1, url: URL(string: "https://apps.apple.com/app/id1")!)
             let task = try XCTUnwrap(settings.storeProductTask)
             await gate.waitUntilStarted()

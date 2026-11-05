@@ -40,12 +40,8 @@ extension SettingsController {
             }
         guard let provider = configuration.dataProvider, wantsUser || wantsAccount else { return nil }
         if wantsAccount { activeAboutController?.cancelAccountRequest() }
-        let lifetime = stateLifetime
-        let request = lifetime.begin()
-        stateRefreshTask?.cancel()
         let fallback = isPremium
-        let task = Task { @MainActor [weak self] in
-            defer { if lifetime.finish(request) { self?.stateRefreshTask = nil } }
+        return stateRefresh.start { [weak self] token in
             // Account and profile are independent: both main-actor requests interleave at their suspension points.
             let profile: Task<UserInfo?, Never>? = wantsUser ? Task { @MainActor in await provider.settingsCurrentUserInfo() } : nil
             let (context, user) = await withTaskCancellationHandler {
@@ -55,11 +51,9 @@ extension SettingsController {
             } onCancel: {
                 profile?.cancel()
             }
-            guard !Task.isCancelled, lifetime.isCurrent(request) else { return }
+            guard token.isCurrent else { return }
             self?.applyResolvedState(info: context.info, premium: context.isPremium, user: user, includesAccount: wantsAccount)
         }
-        stateRefreshTask = task
-        return task
     }
 
     func applyResolvedState(info: SettingsMailInfo?, premium: Bool?, user: UserInfo?, includesAccount: Bool) {
@@ -103,9 +97,7 @@ extension SettingsController {
     func pushAboutController(appID: String, privacyURL: URL, termsURL: URL, navigationTitle: String?) {
         // The destination starts the newer account request; an older root refresh
         // must not overwrite it when it completes out of order.
-        stateLifetime.invalidate()
-        stateRefreshTask?.cancel()
-        stateRefreshTask = nil
+        stateRefresh.cancel()
         needsStateRefresh = true
         let controller = AboutAppController(
             isPremium: isPremium, userID: currentMailInfo?.userID,
