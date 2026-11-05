@@ -9,10 +9,14 @@ import Foundation
 import UIKit.UIViewController
 
 public struct SettingsRow {
-    
-    public typealias SettingsAction = ((_ indexPath: IndexPath,
-                                        _ tableView: UITableView,
-                                        _ viewController: UIViewController) -> Void)
+
+    public typealias SettingsAction = (
+        (
+            _ indexPath: IndexPath,
+            _ tableView: UITableView,
+            _ viewController: UIViewController
+        ) -> Void
+    )
 
     public let title: String
     public let detail: String?
@@ -21,11 +25,13 @@ public struct SettingsRow {
     public let action: SettingsAction?
     public let destinationFactory: SettingsDestinationFactory?
 
-    public init(title: String,
-                detail: String? = nil,
-                icon: SettingsIcon,
-                destinationControllerType: UIViewController.Type? = nil,
-                action: SettingsAction? = nil) {
+    public init(
+        title: String,
+        detail: String? = nil,
+        icon: SettingsIcon,
+        destinationControllerType: UIViewController.Type? = nil,
+        action: SettingsAction? = nil
+    ) {
 
         self.title = title
         self.detail = detail
@@ -35,8 +41,10 @@ public struct SettingsRow {
         self.destinationFactory = nil
     }
 
-    public init(title: String, detail: String? = nil, icon: SettingsIcon,
-                destinationFactory: @escaping SettingsDestinationFactory) {
+    public init(
+        title: String, detail: String? = nil, icon: SettingsIcon,
+        destinationFactory: @escaping SettingsDestinationFactory
+    ) {
         self.title = title
         self.detail = detail
         self.icon = icon

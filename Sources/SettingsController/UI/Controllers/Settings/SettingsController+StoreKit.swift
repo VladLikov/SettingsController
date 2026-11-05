@@ -4,14 +4,14 @@ import UIKit
 @MainActor
 enum StoreProductLoader {
     static func load(_ id: Int) async throws -> UIViewController? {
-#if !os(visionOS)
+        #if !os(visionOS)
         let controller = SKStoreProductViewController()
         let loaded = try await controller.loadProduct(withParameters: [SKStoreProductParameterITunesItemIdentifier: id])
         try Task.checkCancellation()
         return loaded ? controller : nil
-#else
+        #else
         return nil
-#endif
+        #endif
     }
 }
 
@@ -36,17 +36,18 @@ extension SettingsController {
                 destination = try await load(id)
             } catch {
                 guard !Task.isCancelled, !(error is CancellationError),
-                      (error as? URLError)?.code != .cancelled,
-                      lifetime.isCurrent(request) else { return }
+                    (error as? URLError)?.code != .cancelled,
+                    lifetime.isCurrent(request)
+                else { return }
                 destination = nil
             }
             guard !Task.isCancelled, lifetime.isCurrent(request), self?.settingsCanPresent == true else {
                 return
             }
             if let destination {
-#if !os(visionOS)
+                #if !os(visionOS)
                 (destination as? SKStoreProductViewController)?.delegate = self
-#endif
+                #endif
                 self?.present(destination, animated: true)
             } else {
                 _ = await open(url)
@@ -61,7 +62,8 @@ extension SettingsController {
 
     func displayAppOverlayIfNeeded() {
         guard !overlayAppViewDidShown, let appID = configuration.overlayAppID,
-              let scene = view.window?.windowScene else { return }
+            let scene = view.window?.windowScene
+        else { return }
         let position: SKOverlay.Position = tabBarController == nil ? .bottom : .bottomRaised
         let overlay = SKOverlay(configuration: SKOverlay.AppConfiguration(appIdentifier: appID, position: position))
         overlay.delegate = self
@@ -96,10 +98,10 @@ extension SettingsController {
 
 extension SettingsController: @preconcurrency SKOverlayDelegate {
     public func storeOverlayDidFinishPresentation(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {
-#if !os(visionOS)
+        #if !os(visionOS)
         overlayFrame = transitionContext.endFrame
         updateOverlayInset()
-#endif
+        #endif
     }
 
     public func storeOverlayDidFinishDismissal(_ overlay: SKOverlay, transitionContext: SKOverlay.TransitionContext) {

@@ -59,8 +59,9 @@ actor RemoteImageLoader {
                 let image = try await flight.task.value
                 // A cancelled old flight must never remove/cache over a newer one.
                 if inFlightTasks[key]?.id == flight.id {
-                    cache.setObject(image, forKey: cacheKey,
-                                    cost: (image.cgImage?.bytesPerRow ?? 0) * (image.cgImage?.height ?? 0))
+                    cache.setObject(
+                        image, forKey: cacheKey,
+                        cost: (image.cgImage?.bytesPerRow ?? 0) * (image.cgImage?.height ?? 0))
                     inFlightTasks[key] = nil
                 }
                 try Task.checkCancellation()
@@ -100,7 +101,8 @@ actor RemoteImageLoader {
         try Task.checkCancellation()
 
         if let httpResponse = response as? HTTPURLResponse,
-           !(200...299).contains(httpResponse.statusCode) {
+            !(200...299).contains(httpResponse.statusCode)
+        {
             throw URLError(.badServerResponse)
         }
 
@@ -117,12 +119,13 @@ actor RemoteImageLoader {
             return nil
         }
 
-        let thumbnailOptions = [
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceShouldCacheImmediately: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,
-            kCGImageSourceThumbnailMaxPixelSize: pixelSize
-        ] as CFDictionary
+        let thumbnailOptions =
+            [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceShouldCacheImmediately: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: pixelSize,
+            ] as CFDictionary
 
         guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions) else {
             return nil

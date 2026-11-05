@@ -32,8 +32,10 @@ public class SwitchCell: UITableViewCell {
         switchControl.onTintColor = tintColor
     }
 
-    public func configure(title: String?, isOn: Bool, onTintColor: UIColor?,
-                          valueChanged: @escaping (Bool) -> Void) {
+    public func configure(
+        title: String?, isOn: Bool, onTintColor: UIColor?,
+        valueChanged: @escaping (Bool) -> Void
+    ) {
         var configuration = defaultContentConfiguration()
         configuration.text = title
         configuration.textProperties.numberOfLines = 0

@@ -72,7 +72,7 @@ public final class SettingsController: UITableViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     deinit {
-        appLoadTasks.values.forEach { $0.cancel() }
+        for task in appLoadTasks.values { task.cancel() }
         stateRefreshTask?.cancel()
         storeProductTask?.cancel()
         languageSettingsTask?.cancel()
@@ -139,12 +139,12 @@ public final class SettingsController: UITableViewController {
     func cancelOperations() {
         stateLifetime.invalidate()
         cancelPendingStoreProduct()
-        catalogLifetimes.values.forEach { $0.invalidate() }
+        for lifetime in catalogLifetimes.values { lifetime.invalidate() }
         stateRefreshTask?.cancel()
         stateRefreshTask = nil
         languageSettingsTask?.cancel()
         languageSettingsTask = nil
-        appLoadTasks.values.forEach { $0.cancel() }
+        for task in appLoadTasks.values { task.cancel() }
         appLoadTasks.removeAll()
         needsStateRefresh = true
         activeAboutController?.cancelRequests()
@@ -186,24 +186,27 @@ public final class SettingsController: UITableViewController {
                 if isPremium {
                     section.kind = .rows([.defaultRow(.premium(premium.withPremiumStatus(true)))])
                 } else if premiumColorOverride != nil {
-                    section.kind = .premiumCard(PremiumCardPayload(image: card.image, title: card.title,
-                        tierTitle: card.tierTitle, subtitle: card.subtitle, buttonTitle: card.buttonTitle, premium: premium))
+                    section.kind = .premiumCard(
+                        PremiumCardPayload(
+                            image: card.image, title: card.title,
+                            tierTitle: card.tierTitle, subtitle: card.subtitle, buttonTitle: card.buttonTitle, premium: premium))
                 }
             case .rows(let rows):
-                section.kind = .rows(rows.map { row in
-                    switch row {
-                    case .defaultRow(.premium(let payload)):
-                        let premium = premiumColorOverride.map { payload.withColor($0) } ?? payload
-                        return .defaultRow(.premium(premium.withPremiumStatus(isPremium)))
-                    case .defaultRow(.user(_, _, let type)):
-                        guard let user = currentUser else { return row }
-                        return .defaultRow(.user(user.name, user.avatar, type))
-                    case .defaultRow(.userFactory(_, _, let factory)):
-                        guard let user = currentUser else { return row }
-                        return .defaultRow(.userFactory(user.name, user.avatar, factory))
-                    default: return row
-                    }
-                })
+                section.kind = .rows(
+                    rows.map { row in
+                        switch row {
+                        case .defaultRow(.premium(let payload)):
+                            let premium = premiumColorOverride.map { payload.withColor($0) } ?? payload
+                            return .defaultRow(.premium(premium.withPremiumStatus(isPremium)))
+                        case .defaultRow(.user(_, _, let type)):
+                            guard let user = currentUser else { return row }
+                            return .defaultRow(.user(user.name, user.avatar, type))
+                        case .defaultRow(.userFactory(_, _, let factory)):
+                            guard let user = currentUser else { return row }
+                            return .defaultRow(.userFactory(user.name, user.avatar, factory))
+                        default: return row
+                        }
+                    })
             }
             result.append(section)
             ids.append(id)
@@ -260,8 +263,9 @@ public final class SettingsController: UITableViewController {
 
     func loadOurApps(for id: Int) {
         guard configuration.sections.indices.contains(id),
-              case let .ourApps(developer, limit, excluded) = configuration.sections[id].kind,
-              limit > 0 else { return }
+            case .ourApps(let developer, let limit, let excluded) = configuration.sections[id].kind,
+            limit > 0
+        else { return }
         let lifetime = catalogLifetimes[id] ?? RequestLifetime()
         catalogLifetimes[id] = lifetime
         let request = lifetime.begin()
@@ -278,7 +282,8 @@ public final class SettingsController: UITableViewController {
                 self?.finishCatalogLoad(apps.isEmpty ? .empty : .loaded(apps), id: id, request: request)
             } catch {
                 guard !Task.isCancelled, !(error is CancellationError), (error as? URLError)?.code != .cancelled,
-                      lifetime.isCurrent(request) else { return }
+                    lifetime.isCurrent(request)
+                else { return }
                 self?.finishCatalogLoad(.failed, id: id, request: request)
             }
         }

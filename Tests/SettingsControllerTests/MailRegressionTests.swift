@@ -1,5 +1,6 @@
-import XCTest
 import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -24,11 +25,13 @@ final class MailRegressionTests: XCTestCase {
     }
 
     func testDeterministicEnvironmentAndSingleUserID() {
-        let environment = MailEnvironment(appName: "Fixture", version: "1.2", build: "42",
+        let environment = MailEnvironment(
+            appName: "Fixture", version: "1.2", build: "42",
             deviceModel: "Model", deviceType: "Phone", systemName: "iOS", systemVersion: "15.0",
             battery: "Unknown", locale: "ru_RU", preferredLanguage: "en-GB", appLanguage: "ru",
             region: "ru", timeZone: "UTC", timestamp: "fixed")
-        let draft = MailBuilder.makeDraft(with: "Exact message", recipient: "support@example.com",
+        let draft = MailBuilder.makeDraft(
+            with: "Exact message", recipient: "support@example.com",
             type: .supportRequest, isPremium: true, productID: "fallback",
             mailInfo: SettingsMailInfo(userID: "u-123", productID: "annual", isPremium: false), environment: environment)
         XCTAssertTrue(draft.body.contains("User ID: u-123\nProduct ID: annual\nPro Status: false"))
@@ -47,8 +50,12 @@ final class MailRegressionTests: XCTestCase {
         var controller: MailController? = MailController(type: .supportRequest, email: "support@example.com", dataProvider: provider)
         let weakController = MailWeakReference(controller)
         controller?.loadViewIfNeeded()
-        controller?.openURL = { opened.append($0); return true }
-        controller?.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Please help with this", needsHeightUpdate: false)
+        controller?.openURL = {
+            opened.append($0)
+            return true
+        }
+        controller?.mailCell(
+            MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Please help with this", needsHeightUpdate: false)
         controller?.prepareMail()
         let task = try XCTUnwrap(controller?.mailTask)
         await gate.waitUntilStarted()
@@ -66,9 +73,15 @@ final class MailRegressionTests: XCTestCase {
         provider.mailOperation = { try? await gate.value() }
         let controller = MailController(type: .supportRequest, email: "support@example.com", dataProvider: provider)
         let window = mountedWindow(UINavigationController(rootViewController: controller))
-        defer { window.isHidden = true; window.rootViewController = nil }
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         var opens = 0
-        controller.openURL = { _ in opens += 1; return false }
+        controller.openURL = { _ in
+            opens += 1
+            return false
+        }
         let text = "Do not lose my message & details"
         controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: text, needsHeightUpdate: false)
         controller.prepareMail()
@@ -92,7 +105,11 @@ final class MailRegressionTests: XCTestCase {
         let controller = MailController(type: .supportRequest, email: "support@example.com")
         let navigation = UINavigationController(rootViewController: controller)
         let window = mountedWindow(navigation)
-        defer { navigation.dismiss(animated: false); window.isHidden = true; window.rootViewController = nil }
+        defer {
+            navigation.dismiss(animated: false)
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         let gate = ControlledValue<Bool>()
         controller.openURL = { _ in (try? await gate.value()) ?? false }
         let text = "Keep my message after the failed open"
@@ -102,7 +119,8 @@ final class MailRegressionTests: XCTestCase {
         await gate.waitUntilStarted()
         window.rootViewController = nil
         XCTAssertNil(controller.view.window)
-        gate.complete(.success(false)); await task.value
+        gate.complete(.success(false))
+        await task.value
         XCTAssertNil(controller.presentedViewController)
         window.rootViewController = navigation
         window.makeKeyAndVisible()
@@ -118,17 +136,24 @@ final class MailRegressionTests: XCTestCase {
             let controller = MailController(type: .supportRequest, email: "support@example.com")
             let navigation = UINavigationController(rootViewController: controller)
             let window = mountedWindow(navigation)
-            defer { window.isHidden = true; window.rootViewController = nil }
+            defer {
+                window.isHidden = true
+                window.rootViewController = nil
+            }
             let gate = ControlledValue<Bool>()
             controller.openURL = { _ in (try? await gate.value()) ?? false }
-            controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Original pending message", needsHeightUpdate: false)
+            controller.mailCell(
+                MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Original pending message", needsHeightUpdate: false)
             controller.prepareMail()
             let task = try XCTUnwrap(controller.mailTask)
             await gate.waitUntilStarted()
             window.rootViewController = nil
-            gate.complete(.success(false)); await task.value
+            gate.complete(.success(false))
+            await task.value
             if edit {
-                controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Edited message after failure", needsHeightUpdate: false)
+                controller.mailCell(
+                    MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Edited message after failure", needsHeightUpdate: false
+                )
             } else {
                 controller.cancelMailPreparation()
             }
@@ -142,11 +167,20 @@ final class MailRegressionTests: XCTestCase {
     func testInvalidMailLinkShowsErrorWithoutCallingExternalOpener() async throws {
         let controller = MailController(type: .supportRequest, email: "")
         let window = mountedWindow(UINavigationController(rootViewController: controller))
-        defer { controller.dismiss(animated: false); window.isHidden = true; window.rootViewController = nil }
+        defer {
+            controller.dismiss(animated: false)
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         var opens = 0
-        controller.openURL = { _ in opens += 1; return true }
-        controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Keep my invalid link message", needsHeightUpdate: false)
-        controller.prepareMail(); await controller.mailTask?.value
+        controller.openURL = { _ in
+            opens += 1
+            return true
+        }
+        controller.mailCell(
+            MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Keep my invalid link message", needsHeightUpdate: false)
+        controller.prepareMail()
+        await controller.mailTask?.value
         XCTAssertEqual(opens, 0)
         XCTAssertNotNil(controller.presentedViewController as? UIAlertController)
         XCTAssertTrue(controller.navigationItem.rightBarButtonItem?.isEnabled == true)
@@ -159,8 +193,12 @@ final class MailRegressionTests: XCTestCase {
         let controller = MailController(type: .supportRequest, email: "support@example.com", dataProvider: provider)
         controller.loadViewIfNeeded()
         let window = mountedWindow(controller)
-        defer { window.isHidden = true; window.rootViewController = nil }
-        controller.mailCell(MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Please help with this", needsHeightUpdate: false)
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        controller.mailCell(
+            MailCell(style: .default, reuseIdentifier: nil), didChangeText: "Please help with this", needsHeightUpdate: false)
         let send = try XCTUnwrap(controller.navigationItem.rightBarButtonItem)
         controller.prepareMail()
         let task = try XCTUnwrap(controller.mailTask)

@@ -13,15 +13,17 @@ public enum AppStoreAppsLoader {
         try await fetch(developerId: developerId, limit: limit, excludeAppID: excludeAppID, session: .shared)
     }
 
-    static func fetch(developerId: String, limit: Int, excludeAppID: String? = nil,
-                      session: URLSession) async throws -> [AppItem] {
+    static func fetch(
+        developerId: String, limit: Int, excludeAppID: String? = nil,
+        session: URLSession
+    ) async throws -> [AppItem] {
         guard limit > 0 else { return [] }
         try Task.checkCancellation()
 
         var components = URLComponents(string: "https://itunes.apple.com/lookup")
         components?.queryItems = [
             URLQueryItem(name: "id", value: developerId),
-            URLQueryItem(name: "entity", value: "software")
+            URLQueryItem(name: "entity", value: "software"),
         ]
 
         guard let url = components?.url else {
@@ -41,13 +43,14 @@ public enum AppStoreAppsLoader {
         apps.reserveCapacity(min(limit, raw.results.count))
         for row in raw.results {
             guard row.kind == "software", let id = row.trackId, id > 0,
-                  excludeAppID == nil || String(id) != excludeAppID,
-                  let name = row.trackName, !name.isEmpty,
-                  let icon = row.artworkUrl100, let link = row.trackViewUrl,
-                  let iconURL = URL(string: icon), let storeURL = URL(string: link),
-                  ["https", "http"].contains(iconURL.scheme?.lowercased() ?? ""),
-                  ["https", "http"].contains(storeURL.scheme?.lowercased() ?? ""),
-                  iconURL.host != nil, storeURL.host != nil else { continue }
+                excludeAppID == nil || String(id) != excludeAppID,
+                let name = row.trackName, !name.isEmpty,
+                let icon = row.artworkUrl100, let link = row.trackViewUrl,
+                let iconURL = URL(string: icon), let storeURL = URL(string: link),
+                ["https", "http"].contains(iconURL.scheme?.lowercased() ?? ""),
+                ["https", "http"].contains(storeURL.scheme?.lowercased() ?? ""),
+                iconURL.host != nil, storeURL.host != nil
+            else { continue }
             apps.append(AppItem(id: id, name: name, iconURL: iconURL, storeURL: storeURL))
             if apps.count == limit { break }
         }
@@ -69,7 +72,10 @@ private struct LookupResponse: Decodable {
 // Shares only requests currently in flight. No TTL or stale response cache is added.
 actor CatalogRequestLoader {
     static let shared = CatalogRequestLoader()
-    private struct Key: Hashable { let session: ObjectIdentifier; let url: URL }
+    private struct Key: Hashable {
+        let session: ObjectIdentifier
+        let url: URL
+    }
     private struct Flight {
         let id: UUID
         let task: Task<Data, Error>
@@ -122,6 +128,8 @@ actor CatalogRequestLoader {
         if flight.consumers.isEmpty {
             flights[key] = nil
             flight.task.cancel()
-        } else { flights[key] = flight }
+        } else {
+            flights[key] = flight
+        }
     }
 }

@@ -30,9 +30,10 @@ public struct PremiumPayload {
         self.destinationFactory = nil
     }
 
-
-    public init(isPremium: Bool, color: UIColor,
-                destinationFactory: @escaping SettingsDestinationFactory) {
+    public init(
+        isPremium: Bool, color: UIColor,
+        destinationFactory: @escaping SettingsDestinationFactory
+    ) {
         self.isPremium = isPremium
         self.color = color
         self.destinationControllerType = nil

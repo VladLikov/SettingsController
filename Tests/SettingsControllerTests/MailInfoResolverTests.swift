@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -25,11 +26,12 @@ final class MailInfoResolverTests: XCTestCase {
     }
 
     func testModernProviderUsesTypedPremiumWithoutDuplicateLookup() async {
-        let provider = ModernProvider(SettingsMailInfo(
-            userID: "adapty-profile-123",
-            productID: "yearly",
-            isPremium: false
-        ))
+        let provider = ModernProvider(
+            SettingsMailInfo(
+                userID: "adapty-profile-123",
+                productID: "yearly",
+                isPremium: false
+            ))
         let result = await MailInfoResolver.resolve(provider: provider, fallbackPremium: true)
         XCTAssertEqual(result.info?.userID, "adapty-profile-123")
         XCTAssertEqual(result.info?.productID, "yearly")

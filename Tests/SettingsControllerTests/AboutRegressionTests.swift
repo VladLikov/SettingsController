@@ -1,5 +1,6 @@
-import XCTest
 import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -8,13 +9,15 @@ final class AboutRegressionTests: XCTestCase {
         for (installed, os, expectedTitle, expectedActions) in [
             ("2.0", "27.0", "Latest version is installed", 1),
             ("1.0", "15.0", "Update requires a newer iOS version", 1),
-            ("1.0", "27.0", "Update available", 2)
+            ("1.0", "27.0", "Update available", 2),
         ] {
             let about = makeAbout()
             let window = mountedWindow(about)
             about.currentVersion = { installed }
             about.currentOSVersion = { os }
-            about.loadUpdate = { _ in AppUpdate(version: "2.0", minimumOSVersion: "16.0", url: URL(string: "https://apps.apple.com/app/id1")!) }
+            about.loadUpdate = { _ in
+                AppUpdate(version: "2.0", minimumOSVersion: "16.0", url: URL(string: "https://apps.apple.com/app/id1")!)
+            }
             about.checkForUpdate()
             await about.checkUpdateTask?.value
             let alert = try XCTUnwrap(about.presentedViewController as? UIAlertController)
@@ -37,7 +40,10 @@ final class AboutRegressionTests: XCTestCase {
     func testUpdateLookupIsSingleFlightAndCancelledSuccessDoesNotPresent() async throws {
         let about = makeAbout()
         let window = mountedWindow(about)
-        defer { window.isHidden = true; window.rootViewController = nil }
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         about.currentVersion = { "1.0" }
         about.currentOSVersion = { "15.0" }
         let gate = ControlledValue<AppUpdate?>()
@@ -64,7 +70,10 @@ final class AboutRegressionTests: XCTestCase {
     func testUpdateNetworkFailureShowsRecoverableError() async {
         let about = makeAbout()
         let window = mountedWindow(about)
-        defer { window.isHidden = true; window.rootViewController = nil }
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         about.currentVersion = { "1.0" }
         about.loadUpdate = { _ in throw URLError(.notConnectedToInternet) }
         about.checkForUpdate()
@@ -80,7 +89,9 @@ final class AboutRegressionTests: XCTestCase {
         provider.mailOperation = { try? await gate.value() }
         let settings = SettingsController(configuration: SettingsConfiguration(sections: [], dataProvider: provider))
         let navigation = UINavigationController(rootViewController: settings)
-        settings.pushAboutController(appID: "1", privacyURL: URL(string: "https://example.com/privacy")!, termsURL: URL(string: "https://example.com/terms")!, navigationTitle: "About")
+        settings.pushAboutController(
+            appID: "1", privacyURL: URL(string: "https://example.com/privacy")!, termsURL: URL(string: "https://example.com/terms")!,
+            navigationTitle: "About")
         let about = try XCTUnwrap(navigation.topViewController as? AboutAppController)
         about.loadViewIfNeeded()
         let task = try XCTUnwrap(about.accountTask)

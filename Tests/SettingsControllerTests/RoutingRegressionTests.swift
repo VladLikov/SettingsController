@@ -1,5 +1,6 @@
-import XCTest
 import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -13,31 +14,41 @@ final class RoutingRegressionTests: XCTestCase {
     }
 
     private func verifyCustomActionRevokesStore(fails: Bool) async throws {
-        let store = ControlledValue<Bool>(), catalog = ControlledValue<[AppItem]>()
+        let store = ControlledValue<Bool>()
+        let catalog = ControlledValue<[AppItem]>()
         var calls = 0
-        let row = SettingsRow(title: "Custom", icon: SettingsIcon(image: nil, color: .blue), action: { path, table, presenter in
-            calls += 1
-            XCTAssertEqual(path, IndexPath(row: 0, section: 0))
-            let settings = presenter as! SettingsController
-            XCTAssertTrue(table === settings.tableView)
-            // Cancellation must happen before host code executes.
-            XCTAssertNil(settings.storeProductTask)
-            XCTAssertFalse(settings.appLoadTasks[1]?.isCancelled ?? true)
-        })
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [
-            SettingsSection(kind: .rows([.row(row)])),
-            SettingsSection(kind: .ourApps(developerID: "fixture", limit: 1, excludeAppID: "0"))
-        ]))
+        let row = SettingsRow(
+            title: "Custom", icon: SettingsIcon(image: nil, color: .blue),
+            action: { path, table, presenter in
+                calls += 1
+                XCTAssertEqual(path, IndexPath(row: 0, section: 0))
+                let settings = presenter as! SettingsController
+                XCTAssertTrue(table === settings.tableView)
+                // Cancellation must happen before host code executes.
+                XCTAssertNil(settings.storeProductTask)
+                XCTAssertFalse(settings.appLoadTasks[1]?.isCancelled ?? true)
+            })
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(kind: .rows([.row(row)])),
+                SettingsSection(kind: .ourApps(developerID: "fixture", limit: 1, excludeAppID: "0")),
+            ]))
         settings.needsStateRefresh = false
         settings.fetchApps = { _, _, _ in try await catalog.value() }
         let window = mountedWindow(settings)
-        defer { settings.dismiss(animated: false); window.isHidden = true; window.rootViewController = nil }
+        defer {
+            settings.dismiss(animated: false)
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         await catalog.waitUntilStarted()
         let catalogTask = try XCTUnwrap(settings.appLoadTasks[1])
         let url = URL(string: "https://fixture.example/\(UUID().uuidString).png")!
-        let png = try XCTUnwrap(UIGraphicsImageRenderer(size: CGSize(width: 8, height: 8)).image { c in
-            UIColor.red.setFill(); c.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
-        }.pngData())
+        let png = try XCTUnwrap(
+            UIGraphicsImageRenderer(size: CGSize(width: 8, height: 8)).image { c in
+                UIColor.red.setFill()
+                c.fill(CGRect(x: 0, y: 0, width: 8, height: 8))
+            }.pngData())
         await FixtureServer.shared.register(url, data: png, hold: true)
         let session = fixtureSession()
         defer { session.invalidateAndCancel() }
@@ -46,7 +57,10 @@ final class RoutingRegressionTests: XCTestCase {
         await FixtureServer.shared.waitForRequest(url)
         let product = UIViewController()
         var externalOpens = 0
-        settings.openURL = { _ in externalOpens += 1; return true }
+        settings.openURL = { _ in
+            externalOpens += 1
+            return true
+        }
         settings.loadStoreProduct = { _ in
             _ = try await store.value()
             if fails { throw URLError(.notConnectedToInternet) }
@@ -62,10 +76,12 @@ final class RoutingRegressionTests: XCTestCase {
         XCTAssertFalse(imageTask.isCancelled)
         let activeImages = await loader.activeConsumerCount
         XCTAssertEqual(activeImages, 1)
-        store.complete(.success(true)); await stale.value
+        store.complete(.success(true))
+        await stale.value
         XCTAssertNil(settings.presentedViewController)
         XCTAssertEqual(externalOpens, 0)
-        catalog.complete(.success([])); await catalogTask.value
+        catalog.complete(.success([]))
+        await catalogTask.value
         XCTAssertEqual(settings.catalogStates[1], .empty)
         await FixtureServer.shared.release(url)
         let image = try await imageTask.value
@@ -76,12 +92,17 @@ final class RoutingRegressionTests: XCTestCase {
 
     func testLanguageOpensSystemSettingsOnceWithoutNavigationOrProvider() async throws {
         let provider = RegressionProvider()
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .rows([.defaultRow(.language)]))], dataProvider: provider))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [SettingsSection(kind: .rows([.defaultRow(.language)]))], dataProvider: provider)
+        )
         let navigation = UINavigationController(rootViewController: settings)
         settings.loadViewIfNeeded()
         let gate = ControlledValue<Bool>()
         var urls: [URL] = []
-        settings.openURL = { url in urls.append(url); return (try? await gate.value()) ?? false }
+        settings.openURL = { url in
+            urls.append(url)
+            return (try? await gate.value()) ?? false
+        }
         settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: 0, section: 0))
         settings.tableView(settings.tableView, didSelectRowAt: IndexPath(row: 0, section: 0))
         let task = try XCTUnwrap(settings.languageSettingsTask)
@@ -113,9 +134,19 @@ final class RoutingRegressionTests: XCTestCase {
 
     func testUserFactoryIsLazyAndOldTypeDestinationStillWorks() {
         var calls = 0
-        let settings = SettingsController(configuration: SettingsConfiguration(sections: [SettingsSection(kind: .rows([
-            .defaultRow(.user("User", destinationFactory: { calls += 1; return UIViewController() }))
-        ]))]))
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(sections: [
+                SettingsSection(
+                    kind: .rows([
+                        .defaultRow(
+                            .user(
+                                "User",
+                                destinationFactory: {
+                                    calls += 1
+                                    return UIViewController()
+                                }))
+                    ]))
+            ]))
         let navigation = UINavigationController(rootViewController: settings)
         settings.loadViewIfNeeded()
         XCTAssertEqual(calls, 0)
@@ -131,11 +162,20 @@ final class RoutingRegressionTests: XCTestCase {
         let settings = SettingsController(configuration: SettingsConfiguration(sections: []))
         settings.needsStateRefresh = false
         let window = mountedWindow(settings)
-        defer { window.isHidden = true; window.rootViewController = nil }
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         let gate = ControlledValue<Bool>()
         var opens = 0
-        settings.openURL = { _ in opens += 1; return true }
-        settings.loadStoreProduct = { _ in _ = try await gate.value(); return UIViewController() }
+        settings.openURL = { _ in
+            opens += 1
+            return true
+        }
+        settings.loadStoreProduct = { _ in
+            _ = try await gate.value()
+            return UIViewController()
+        }
         settings.openApp(1, url: URL(string: "https://apps.apple.com/app/id1")!)
         let task = try XCTUnwrap(settings.storeProductTask)
         await gate.waitUntilStarted()
@@ -151,11 +191,21 @@ final class RoutingRegressionTests: XCTestCase {
         let settings = SettingsController(configuration: SettingsConfiguration(sections: []))
         settings.needsStateRefresh = false
         let window = mountedWindow(settings)
-        defer { window.isHidden = true; window.rootViewController = nil }
-        let a = ControlledValue<Bool>(), b = ControlledValue<Bool>()
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        let a = ControlledValue<Bool>()
+        let b = ControlledValue<Bool>()
         var urls: [URL] = []
-        settings.openURL = { urls.append($0); return true }
-        settings.loadStoreProduct = { id in _ = try await (id == 1 ? a : b).value(); return nil }
+        settings.openURL = {
+            urls.append($0)
+            return true
+        }
+        settings.loadStoreProduct = { id in
+            _ = try await (id == 1 ? a : b).value()
+            return nil
+        }
         settings.openApp(1, url: URL(string: "https://apps.apple.com/app/id1")!)
         let old = try XCTUnwrap(settings.storeProductTask)
         await a.waitUntilStarted()
@@ -176,9 +226,15 @@ final class RoutingRegressionTests: XCTestCase {
         let settings = SettingsController(configuration: SettingsConfiguration(sections: []))
         settings.needsStateRefresh = false
         let window = mountedWindow(settings)
-        defer { window.isHidden = true; window.rootViewController = nil }
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         var opens = 0
-        settings.openURL = { _ in opens += 1; return true }
+        settings.openURL = { _ in
+            opens += 1
+            return true
+        }
         settings.loadStoreProduct = { _ in throw URLError(.cancelled) }
         settings.openApp(1, url: URL(string: "https://apps.apple.com/app/id1")!)
         await settings.storeProductTask?.value
@@ -190,9 +246,15 @@ final class RoutingRegressionTests: XCTestCase {
         let settings = SettingsController(configuration: SettingsConfiguration(sections: []))
         settings.needsStateRefresh = false
         let window = mountedWindow(settings)
-        defer { window.isHidden = true; window.rootViewController = nil }
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         var opens = 0
-        settings.openURL = { _ in opens += 1; return true }
+        settings.openURL = { _ in
+            opens += 1
+            return true
+        }
         settings.loadStoreProduct = { _ in throw URLError(.notConnectedToInternet) }
         settings.openApp(1, url: URL(string: "https://apps.apple.com/app/id1")!)
         await settings.storeProductTask?.value
@@ -202,7 +264,9 @@ final class RoutingRegressionTests: XCTestCase {
     func testSplitDiscardsOnlyPlaceholder() throws {
         let primary = UINavigationController(rootViewController: UIViewController())
         let split = SplitController.makeDefault(for: primary)
-        let secondary = split.style == .unspecified ? split.viewControllers[1]
+        let secondary =
+            split.style == .unspecified
+            ? split.viewControllers[1]
             : try XCTUnwrap(split.viewController(for: .secondary))
         XCTAssertTrue(split.splitViewController(split, collapseSecondary: secondary, onto: primary))
         let actual = UINavigationController(rootViewController: UIViewController())
@@ -210,7 +274,9 @@ final class RoutingRegressionTests: XCTestCase {
     }
 
     func testDivisionMakesNativeColumnsEqualAndRestoresUnfoldedWidths() throws {
-        guard #available(iOS 27.1, *) else { throw XCTSkip("Reserved-region column policy requires iOS 27.1; exercised on the Duo runtime.") }
+        guard #available(iOS 27.1, *) else {
+            throw XCTSkip("Reserved-region column policy requires iOS 27.1; exercised on the Duo runtime.")
+        }
         let split = SplitController.makeDefault(for: UINavigationController(rootViewController: UIViewController()))
         XCTAssertEqual(split.style, .doubleColumn)
         split.traitOverrides.horizontalSizeClass = .regular
@@ -229,7 +295,7 @@ final class RoutingRegressionTests: XCTestCase {
         XCTAssertGreaterThan(split.maximumPrimaryColumnWidth, 475)
         XCTAssertEqual(split.minimumPrimaryColumnWidth, 0)
         XCTAssertEqual(split.minimumSecondaryColumnWidth, 0)
-        split.applyDivisionLayout(hasActiveDivision: true) // Repeated region updates must not overwrite the snapshot.
+        split.applyDivisionLayout(hasActiveDivision: true)  // Repeated region updates must not overwrite the snapshot.
         split.applyDivisionLayout(hasActiveDivision: false)
         XCTAssertEqual(split.preferredPrimaryColumnWidthFraction, 0.31)
         XCTAssertEqual(split.preferredPrimaryColumnWidth, 300)
@@ -271,6 +337,9 @@ final class RoutingRegressionTests: XCTestCase {
 @MainActor
 private final class DependencyController: UIViewController {
     let dependency: NSObject
-    init(_ dependency: NSObject) { self.dependency = dependency; super.init(nibName: nil, bundle: nil) }
+    init(_ dependency: NSObject) {
+        self.dependency = dependency
+        super.init(nibName: nil, bundle: nil)
+    }
     required init?(coder: NSCoder) { fatalError("Unused") }
 }

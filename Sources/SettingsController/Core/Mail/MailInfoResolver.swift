@@ -2,7 +2,9 @@ import Foundation
 
 @MainActor
 enum MailInfoResolver {
-    static func resolve(provider: (any SettingsControllerDataProvider)?, fallbackPremium: Bool?) async -> (info: SettingsMailInfo?, isPremium: Bool?) {
+    static func resolve(provider: (any SettingsControllerDataProvider)?, fallbackPremium: Bool?) async -> (
+        info: SettingsMailInfo?, isPremium: Bool?
+    ) {
         guard !Task.isCancelled else { return (nil, fallbackPremium) }
         guard let provider else { return (nil, fallbackPremium) }
         let info = await provider.settingsMailInfo()

@@ -10,11 +10,11 @@ import UIKit
 // MARK: - UserCell
 
 class UserCell: UITableViewCell {
-    
+
     // MARK: Properties
 
     private static let userImageViewSize: CGFloat = 45
-    
+
     private lazy var userImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -26,7 +26,7 @@ class UserCell: UITableViewCell {
         imageView.clipsToBounds = true
         return imageView
     }()
-    
+
     private lazy var userLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -37,20 +37,20 @@ class UserCell: UITableViewCell {
         label.textAlignment = .natural
         return label
     }()
-    
+
     // MARK: Life Cycle
-    
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         setupView()
         setConstraints()
     }
-    
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
- 
+
     // MARK: Configure
 
     public func configure(title: String, avatar: UIImage?) {
@@ -62,10 +62,10 @@ class UserCell: UITableViewCell {
     // MARK: Setup View
 
     private func setupView() {
-        
-        accessoryType  = .disclosureIndicator
+
+        accessoryType = .disclosureIndicator
         selectionStyle = .default
-        
+
         isAccessibilityElement = true
         accessibilityTraits = .button
         userImageView.isAccessibilityElement = false
@@ -73,17 +73,17 @@ class UserCell: UITableViewCell {
         contentView.addSubview(userLabel)
 
     }
-    
+
     // MARK: Set Constraints
 
     private func setConstraints() {
-        
+
         NSLayoutConstraint.activate([
             userImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             userImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            userImageView.widthAnchor.constraint(equalToConstant:  Self.userImageViewSize),
+            userImageView.widthAnchor.constraint(equalToConstant: Self.userImageViewSize),
             userImageView.heightAnchor.constraint(equalToConstant: Self.userImageViewSize),
-            
+
             userImageView.topAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor, constant: 10),
             userImageView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -10),
             userLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
@@ -91,7 +91,7 @@ class UserCell: UITableViewCell {
             userLabel.leadingAnchor.constraint(equalTo: userImageView.trailingAnchor, constant: 15),
             userLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
         ])
-        
+
     }
-    
+
 }

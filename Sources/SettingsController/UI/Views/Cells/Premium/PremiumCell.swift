@@ -1,5 +1,5 @@
-import UIKit
 import SwiftUI
+import UIKit
 
 final class PremiumCell: UITableViewCell {
     private var host: UIHostingController<PremiumCard>?
@@ -26,14 +26,16 @@ final class PremiumCell: UITableViewCell {
 
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        if window == nil { detachHost(discard: false) }
-        else if let parent = hostingParent { attachHost(to: parent) }
+        if window == nil { detachHost(discard: false) } else if let parent = hostingParent { attachHost(to: parent) }
     }
 
-    func configure(payload: PremiumCardPayload, parent: UIViewController,
-                   forceLegacyHosting: Bool = false, onTap: @escaping () -> Void) {
-        let card = PremiumCard(image: payload.image, title: payload.title, tierTitle: payload.tierTitle, subtitle: payload.subtitle,
-                               buttonTitle: payload.buttonTitle, color: payload.premium.color, onTap: onTap)
+    func configure(
+        payload: PremiumCardPayload, parent: UIViewController,
+        forceLegacyHosting: Bool = false, onTap: @escaping () -> Void
+    ) {
+        let card = PremiumCard(
+            image: payload.image, title: payload.title, tierTitle: payload.tierTitle, subtitle: payload.subtitle,
+            buttonTitle: payload.buttonTitle, color: payload.premium.color, onTap: onTap)
         if #available(iOS 16, *), !forceLegacyHosting {
             detachHost(discard: true)
             hostingParent = nil
@@ -41,20 +43,22 @@ final class PremiumCell: UITableViewCell {
         } else {
             contentConfiguration = nil
             hostingParent = parent
-            if let host { host.rootView = card }
-            else { host = UIHostingController(rootView: card) }
+            if let host { host.rootView = card } else { host = UIHostingController(rootView: card) }
             attachHost(to: parent)
             host?.view.invalidateIntrinsicContentSize()
             setNeedsLayout()
         }
     }
 
-    override func systemLayoutSizeFitting(_ targetSize: CGSize,
-                                          withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
-                                          verticalFittingPriority: UILayoutPriority) -> CGSize {
+    override func systemLayoutSizeFitting(
+        _ targetSize: CGSize,
+        withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority,
+        verticalFittingPriority: UILayoutPriority
+    ) -> CGSize {
         guard let host else {
-            return super.systemLayoutSizeFitting(targetSize, withHorizontalFittingPriority: horizontalFittingPriority,
-                                                  verticalFittingPriority: verticalFittingPriority)
+            return super.systemLayoutSizeFitting(
+                targetSize, withHorizontalFittingPriority: horizontalFittingPriority,
+                verticalFittingPriority: verticalFittingPriority)
         }
         let width = max(targetSize.width, 1)
         let fitted = host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
@@ -72,7 +76,7 @@ final class PremiumCell: UITableViewCell {
             host.view.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             host.view.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             host.view.topAnchor.constraint(equalTo: contentView.topAnchor),
-            host.view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            host.view.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
         ]
         NSLayoutConstraint.activate(hostConstraints)
         host.didMove(toParent: parent)

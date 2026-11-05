@@ -51,7 +51,8 @@ public final class SettingsCell: UITableViewCell {
     }
     private func observeAppearance() {
         if #available(iOS 17, *) {
-            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (cell: SettingsCell, _: UITraitCollection) in
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) {
+                (cell: SettingsCell, _: UITraitCollection) in
                 cell.refreshIconForTraits()
             }
         }
@@ -86,7 +87,8 @@ extension SettingsCell {
     }
 
     private func updateContentConfiguration() {
-        var configuration = currentDetail == nil
+        var configuration =
+            currentDetail == nil
             ? defaultContentConfiguration()
             : UIListContentConfiguration.valueCell()
 

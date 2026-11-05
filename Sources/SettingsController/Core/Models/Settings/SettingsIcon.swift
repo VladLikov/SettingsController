@@ -5,8 +5,8 @@
 //  Created by Влад Лыков on 12.09.2024.
 //
 
-import UIKit
 import SafeSFSymbols
+import UIKit
 
 public struct SettingsIcon {
 
@@ -39,15 +39,18 @@ public struct SettingsIcon {
         traitCollection: UITraitCollection = .current
     ) -> UIImage? {
         guard size.width.isFinite, size.height.isFinite, cornerRadius.isFinite,
-              size.width > 0, size.height > 0, cornerRadius >= 0 else {
+            size.width > 0, size.height > 0, cornerRadius >= 0
+        else {
             return nil
         }
 
-        guard let cacheKey = tileCacheKey(
-            size: size,
-            cornerRadius: cornerRadius,
-            traitCollection: traitCollection
-        ) else {
+        guard
+            let cacheKey = tileCacheKey(
+                size: size,
+                cornerRadius: cornerRadius,
+                traitCollection: traitCollection
+            )
+        else {
             return renderSettingsTileImage(size: size, cornerRadius: cornerRadius, traitCollection: traitCollection)
         }
 
@@ -55,11 +58,13 @@ public struct SettingsIcon {
             return cached
         }
 
-        guard let rendered = renderSettingsTileImage(
-            size: size,
-            cornerRadius: cornerRadius,
-            traitCollection: traitCollection
-        ) else {
+        guard
+            let rendered = renderSettingsTileImage(
+                size: size,
+                cornerRadius: cornerRadius,
+                traitCollection: traitCollection
+            )
+        else {
             return nil
         }
 
@@ -185,16 +190,17 @@ public enum SettingsIconGenerator {
     }
 }
 
-private extension SettingsIcon {
+extension SettingsIcon {
 
     @MainActor
-    func renderSettingsTileImage(
+    fileprivate func renderSettingsTileImage(
         size: CGSize,
         cornerRadius: CGFloat,
         traitCollection: UITraitCollection
     ) -> UIImage? {
         guard let glyph = image, glyph.size.width > 0, glyph.size.height > 0,
-              let target = glyphRect(for: glyph, in: CGRect(origin: .zero, size: size)) else { return nil }
+            let target = glyphRect(for: glyph, in: CGRect(origin: .zero, size: size))
+        else { return nil }
 
         let resolvedColor = color.resolvedColor(with: traitCollection)
         let format = UIGraphicsImageRendererFormat.default()
@@ -215,22 +221,24 @@ private extension SettingsIcon {
         }
     }
 
-    func glyphRect(for glyph: UIImage, in bounds: CGRect) -> CGRect? {
+    fileprivate func glyphRect(for glyph: UIImage, in bounds: CGRect) -> CGRect? {
         let padding = inset?.value ?? 0
         guard padding.isFinite, padding >= 0 else { return nil }
-        let virtualSize = CGSize(width: glyph.size.width + padding * 2,
-                                 height: glyph.size.height + padding * 2)
+        let virtualSize = CGSize(
+            width: glyph.size.width + padding * 2,
+            height: glyph.size.height + padding * 2)
         guard virtualSize.width.isFinite, virtualSize.height.isFinite else { return nil }
         let maxSize = inset == nil ? bounds.size.applyingScale(0.7) : bounds.size
         let fitted = virtualSize.aspectFit(in: maxSize)
         let scale = fitted.width / virtualSize.width
-        return CGRect(x: bounds.midX - fitted.width / 2 + padding * scale,
-                      y: bounds.midY - fitted.height / 2 + padding * scale,
-                      width: glyph.size.width * scale, height: glyph.size.height * scale)
+        return CGRect(
+            x: bounds.midX - fitted.width / 2 + padding * scale,
+            y: bounds.midY - fitted.height / 2 + padding * scale,
+            width: glyph.size.width * scale, height: glyph.size.height * scale)
     }
 
     @MainActor
-    func tileCacheKey(
+    fileprivate func tileCacheKey(
         size: CGSize,
         cornerRadius: CGFloat,
         traitCollection: UITraitCollection
@@ -248,22 +256,23 @@ private extension SettingsIcon {
             cornerRadius.cacheKeyComponent,
             scale.cacheKeyComponent,
             inset == nil ? "inset:none" : "inset:" + insetValue.cacheKeyComponent,
-            "\(traitCollection.userInterfaceStyle.rawValue)"
+            "\(traitCollection.userInterfaceStyle.rawValue)",
         ].joined(separator: "|") as NSString
     }
 }
 
-private extension CGSize {
+extension CGSize {
 
-    func applyingScale(_ scale: CGFloat) -> CGSize {
+    fileprivate func applyingScale(_ scale: CGFloat) -> CGSize {
         CGSize(width: width * scale, height: height * scale)
     }
 
-    func aspectFit(in boundingSize: CGSize) -> CGSize {
+    fileprivate func aspectFit(in boundingSize: CGSize) -> CGSize {
         guard width > 0,
-              height > 0,
-              boundingSize.width > 0,
-              boundingSize.height > 0 else {
+            height > 0,
+            boundingSize.width > 0,
+            boundingSize.height > 0
+        else {
             return .zero
         }
 
@@ -272,13 +281,14 @@ private extension CGSize {
     }
 }
 
-private extension UIImage {
+extension UIImage {
 
-    func padded(by insets: UIEdgeInsets, renderingMode: UIImage.RenderingMode? = nil) -> UIImage? {
+    fileprivate func padded(by insets: UIEdgeInsets, renderingMode: UIImage.RenderingMode? = nil) -> UIImage? {
         guard insets.top >= 0,
-              insets.left >= 0,
-              insets.bottom >= 0,
-              insets.right >= 0 else {
+            insets.left >= 0,
+            insets.bottom >= 0,
+            insets.right >= 0
+        else {
             return nil
         }
 
@@ -307,9 +317,9 @@ private extension UIImage {
     }
 }
 
-private extension UIColor {
+extension UIColor {
 
-    var rgbaCacheKey: String {
+    fileprivate var rgbaCacheKey: String {
         var red: CGFloat = 0
         var green: CGFloat = 0
         var blue: CGFloat = 0
@@ -323,14 +333,14 @@ private extension UIColor {
             red.cacheKeyComponent,
             green.cacheKeyComponent,
             blue.cacheKeyComponent,
-            alpha.cacheKeyComponent
+            alpha.cacheKeyComponent,
         ].joined(separator: ",")
     }
 }
 
-private extension CGFloat {
+extension CGFloat {
 
-    var cacheKeyComponent: String {
+    fileprivate var cacheKeyComponent: String {
         String(format: "%.4f", Double(self))
     }
 }

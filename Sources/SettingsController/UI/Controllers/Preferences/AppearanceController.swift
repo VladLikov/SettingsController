@@ -10,19 +10,18 @@ import UIKit
 // MARK: - AppearanceController
 
 class AppearanceController: UITableViewController {
-    
+
     // MARK: Properties [Private]
 
     var onColorChange: ((UIColor) -> Void)?
 
     private let colors: [any AppColorType]
-    
+
     private var theme: ThemeStorage
     private weak var eventHandler: (any SettingsControllerEventHandler)?
-    
-    
+
     // MARK: Life Cycle
-    
+
     init(
         themeStorage: ThemeStorage,
         colors: [any AppColorType],
@@ -33,12 +32,12 @@ class AppearanceController: UITableViewController {
         self.eventHandler = eventHandler
         super.init(style: .insetGrouped)
     }
-    
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -46,7 +45,7 @@ class AppearanceController: UITableViewController {
 
         tableView?.rowHeight = UITableView.automaticDimension
         tableView?.estimatedRowHeight = defaultRowEstimatedHeight
-                
+
         tableView?.register(SwitchCell.self)
         tableView?.register(ColorCell.self)
         tableView?.register(UITableViewCell.self)
@@ -58,11 +57,11 @@ class AppearanceController: UITableViewController {
 // MARK: - UITableViewDataSource
 
 extension AppearanceController {
-        
+
     override func numberOfSections(in tableView: UITableView) -> Int {
         return theme.autoTheme ? 2 : 3
     }
-    
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == 0 {
             return colors.count
@@ -71,47 +70,53 @@ extension AppearanceController {
         }
         return 1
     }
-    
+
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         if section == 0 {
-            return NSLocalizedString("App color", bundle: .module, comment: "Appearance section heading for selecting the app accent color.")
+            return NSLocalizedString(
+                "App color", bundle: .module, comment: "Appearance section heading for selecting the app accent color.")
         } else if section == 1 {
-            return NSLocalizedString("Light & Dark theme", bundle: .module, comment: "Appearance section heading for light and dark interface mode.")
+            return NSLocalizedString(
+                "Light & Dark theme", bundle: .module, comment: "Appearance section heading for light and dark interface mode.")
         }
         return nil
     }
-    
+
     override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
         if section == 1 {
-            return NSLocalizedString("When the switch is on, the system appearance is used.", bundle: .module, comment: "Footer explaining the automatic system appearance switch.")
+            return NSLocalizedString(
+                "When the switch is on, the system appearance is used.", bundle: .module,
+                comment: "Footer explaining the automatic system appearance switch.")
         }
         return nil
     }
-    
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-           
-        let section = indexPath.section, row = indexPath.row
-        
+
+        let section = indexPath.section
+        let row = indexPath.row
+
         if section == 0 {
-            
+
             let cell = tableView.dequeueReusableCell(withClass: ColorCell.self, for: indexPath)
-                        
+
             let appColor = colors[row]
-            
+
             cell.configure(appColor: appColor)
-            
+
             let isSelected = theme.appColorRawValue == appColor.rawValue
-            
+
             cell.accessoryType = isSelected ? .checkmark : .none
-                        
+
             return cell
-            
+
         } else if section == 1 && row == 0 {
-            
+
             let cell = tableView.dequeueReusableCell(withClass: SwitchCell.self, for: indexPath)
 
             cell.configure(
-                title: NSLocalizedString("Automatically", bundle: .module, comment: "Switch label for following the system light or dark appearance."),
+                title: NSLocalizedString(
+                    "Automatically", bundle: .module, comment: "Switch label for following the system light or dark appearance."),
                 isOn: theme.autoTheme,
                 onTintColor: theme.appColor
             ) { [weak self] isOn in
@@ -119,18 +124,19 @@ extension AppearanceController {
             }
 
             return cell
-            
+
         } else if section == 2 {
-            
+
             let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
 
             cell.selectionStyle = .none
 
             var configuration = cell.defaultContentConfiguration()
-            configuration.text = [
-                NSLocalizedString("Light Theme", bundle: .module, comment: "Option selecting light interface appearance."),
-                NSLocalizedString("Dark Theme", bundle: .module, comment: "Option selecting dark interface appearance.")
-            ][row]
+            configuration.text =
+                [
+                    NSLocalizedString("Light Theme", bundle: .module, comment: "Option selecting light interface appearance."),
+                    NSLocalizedString("Dark Theme", bundle: .module, comment: "Option selecting dark interface appearance."),
+                ][row]
             configuration.textProperties.numberOfLines = 0
             configuration.textProperties.lineBreakMode = .byWordWrapping
             configuration.directionalLayoutMargins.top = 6
@@ -138,27 +144,27 @@ extension AppearanceController {
             cell.contentConfiguration = configuration
 
             let isSelected = row == selectedInterfaceStyleIndex
-            
+
             cell.accessoryType = isSelected ? .checkmark : .none
-            
+
             cell.tintColor = view.tintColor
-            
+
             return cell
-            
+
         }
-        
+
         preconditionFailure("Unexpected appearance settings indexPath: \(indexPath)")
-        
+
     }
-    
+
 }
 
 // MARK: - UITableViewDelegate
 
 extension AppearanceController {
-        
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
+
         if indexPath.section == 0 {
             let currentRaw = theme.appColorRawValue
             guard colors.indices.contains(indexPath.row) else { return }
@@ -168,40 +174,40 @@ extension AppearanceController {
             tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
 
             let newAppColor = colors[indexPath.row]
-            
+
             let newColor = newAppColor.color
-            
+
             theme.appColor = newColor
             theme.appColorRawValue = newAppColor.rawValue
             eventHandler?.settingsDidUpdateTheme(theme)
             onColorChange?(newColor)
-            
+
             navigationController?.navigationBar.tintColor = newColor
-                                                
+
             updateVisibleThemeControlsTint(newColor)
-            
-#if !os(visionOS)
+
+            #if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()
-#endif
-                        
+            #endif
+
         } else if indexPath.section == 2 {
-            
+
             let oldIndexPath = IndexPath(row: selectedInterfaceStyleIndex, section: indexPath.section)
 
             tableView.cellForRow(at: oldIndexPath)?.accessoryType = .none
             tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-            
+
             theme.interfaceStyle = indexPath.row + 1
             eventHandler?.settingsDidUpdateTheme(theme)
-            
-#if !os(visionOS)
+
+            #if !os(visionOS)
             UISelectionFeedbackGenerator().selectionChanged()
-#endif
+            #endif
 
         }
-                
+
     }
-    
+
 }
 
 // MARK: - Actions

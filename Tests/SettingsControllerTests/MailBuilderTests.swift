@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -12,7 +13,7 @@ final class MailBuilderTests: XCTestCase {
             minCharactersCount: 1,
             navigationTitle: "Contact",
             subject: "Question"
-        )
+        ),
     ]
 
     func testTypedUserAndPurchaseInfoInEveryMailType() throws {
@@ -33,9 +34,10 @@ final class MailBuilderTests: XCTestCase {
             )
             let body = try mailBody(from: url)
 
-            XCTAssertTrue(body.contains(
-                "User ID: adapty-user-456\nProduct ID: com.example.premium.monthly\nPro Status: true"
-            ))
+            XCTAssertTrue(
+                body.contains(
+                    "User ID: adapty-user-456\nProduct ID: com.example.premium.monthly\nPro Status: true"
+                ))
             XCTAssertFalse(body.contains("Adapty Profile ID:"))
             XCTAssertFalse(body.contains("legacy-product"))
             XCTAssertFalse(body.contains("Device Name:"))

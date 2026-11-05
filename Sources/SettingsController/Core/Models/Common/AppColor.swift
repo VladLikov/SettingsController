@@ -9,31 +9,31 @@ import UIKit
 
 public enum AppColor: String, CaseIterable, AppColorType {
     case blue, purple, pink, green, red, orange, yellow, gray
-    
+
     public var title: String {
         switch self {
-        case .red:    NSLocalizedString("Red",    bundle: .module, comment: "")
-        case .green:  NSLocalizedString("Green",  bundle: .module, comment: "")
-        case .blue:   NSLocalizedString("Blue",   bundle: .module, comment: "")
-        case .pink:   NSLocalizedString("Pink",   bundle: .module, comment: "")
+        case .red: NSLocalizedString("Red", bundle: .module, comment: "")
+        case .green: NSLocalizedString("Green", bundle: .module, comment: "")
+        case .blue: NSLocalizedString("Blue", bundle: .module, comment: "")
+        case .pink: NSLocalizedString("Pink", bundle: .module, comment: "")
         case .purple: NSLocalizedString("Purple", bundle: .module, comment: "Name of the purple accent color in the appearance palette.")
         case .orange: NSLocalizedString("Orange", bundle: .module, comment: "Name of the orange accent color in the appearance palette.")
         case .yellow: NSLocalizedString("Yellow", bundle: .module, comment: "Name of the yellow accent color in the appearance palette.")
-        case .gray:   NSLocalizedString("Gray",   bundle: .module, comment: "")
+        case .gray: NSLocalizedString("Gray", bundle: .module, comment: "")
         }
     }
-    
+
     public var color: UIColor {
         switch self {
-        case .red:    .systemRed
-        case .green:  .systemGreen
-        case .blue:   .systemBlue
-        case .pink:   .systemPink
+        case .red: .systemRed
+        case .green: .systemGreen
+        case .blue: .systemBlue
+        case .pink: .systemPink
         case .purple: .systemIndigo
         case .orange: .systemOrange
         case .yellow: .systemYellow
-        case .gray:   .systemGray
+        case .gray: .systemGray
         }
     }
-    
+
 }

@@ -124,8 +124,9 @@ extension SettingsController {
             openLanguageSettings()
 
         case .appearance(let theme, let colors):
-            let appearance = AppearanceController(themeStorage: theme, colors: colors,
-                                                  eventHandler: configuration.eventHandler)
+            let appearance = AppearanceController(
+                themeStorage: theme, colors: colors,
+                eventHandler: configuration.eventHandler)
             appearance.onColorChange = { [weak self] color in self?.updatePremiumColor(color) }
             pushViewController(appearance, navigationTitle: row.title)
 

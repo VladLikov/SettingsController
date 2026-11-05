@@ -5,40 +5,46 @@
 //  Created by Влад Лыков on 11.04.2026.
 //
 
-import UIKit
 import SafeSFSymbols
+import UIKit
 
 public enum MailType: Equatable {
     case supportRequest,
-         languageRequest,
-         custom(placeholder: String, minCharactersCount: Int, navigationTitle: String, subject: String)
-    
+        languageRequest
+    case
+        custom(placeholder: String, minCharactersCount: Int, navigationTitle: String, subject: String)
+
     public var navigationTitle: String {
         switch self {
         case .supportRequest:
             return NSLocalizedString("Ask Support a Question", bundle: .module, comment: "Navigation title of the support message form.")
-            
+
         case .languageRequest:
-            return NSLocalizedString("Request a Language", bundle: .module, comment: "Navigation title of the standalone language request form.")
-            
+            return NSLocalizedString(
+                "Request a Language", bundle: .module, comment: "Navigation title of the standalone language request form.")
+
         case .custom(_, _, let navigationTitle, _):
             return navigationTitle
         }
     }
-    
+
     public var placeholder: String {
         switch self {
         case .supportRequest:
-            return NSLocalizedString("What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module, comment: "Placeholder in the support form; a message needs at least ten characters.")
-            
+            return NSLocalizedString(
+                "What went wrong? Add at least 10 characters. The more detail, the faster we can help.", bundle: .module,
+                comment: "Placeholder in the support form; a message needs at least ten characters.")
+
         case .languageRequest:
-            return NSLocalizedString("Which language would you like to see in the app?", bundle: .module, comment: "Placeholder asking for a desired language in the standalone language request form.")
-            
+            return NSLocalizedString(
+                "Which language would you like to see in the app?", bundle: .module,
+                comment: "Placeholder asking for a desired language in the standalone language request form.")
+
         case .custom(let placeholder, _, _, _):
             return placeholder
         }
     }
-    
+
     public var minCharactersCount: Int {
         switch self {
         case .supportRequest:
@@ -49,7 +55,7 @@ public enum MailType: Equatable {
             return max(0, minCharactersCount)
         }
     }
-    
+
     public var subject: String {
         switch self {
         case .supportRequest:
@@ -57,7 +63,7 @@ public enum MailType: Equatable {
 
         case .languageRequest:
             return NSLocalizedString("Language Request", bundle: .module, comment: "")
-            
+
         case .custom(_, _, _, let subject):
             return subject
         }
@@ -68,7 +74,7 @@ public enum MailType: Equatable {
 
 @MainActor
 public class MailController: UITableViewController {
-    
+
     // MARK: Properties [Private]
 
     private let type: MailType
@@ -84,45 +90,50 @@ public class MailController: UITableViewController {
     var openURL: OpenURLOperation = SystemActions.openURL
 
     private var currentText: String = ""
-        
+
     // MARK: UI Elements [Private]
 
     private lazy var sendButton: UIBarButtonItem = {
-        
-        let button = UIBarButtonItem(image: UIImage(.arrow.up),
-                                         primaryAction: .init { [weak self] _ in
-            
-            self?.prepareMail()
-        })
-        
+
+        let button = UIBarButtonItem(
+            image: UIImage(.arrow.up),
+            primaryAction: .init { [weak self] _ in
+
+                self?.prepareMail()
+            })
+
         if #available(iOS 26.0, *) {
             button.style = .prominent
         }
-        
+
         button.accessibilityIdentifier = "settings.mail.send"
-        button.accessibilityLabel = NSLocalizedString("Send", bundle: .module, comment: "Mail navigation action preparing an external draft; it does not send the email itself.")
+        button.accessibilityLabel = NSLocalizedString(
+            "Send", bundle: .module, comment: "Mail navigation action preparing an external draft; it does not send the email itself.")
         button.isEnabled = type.minCharactersCount == 0
-        
+
         return button
     }()
-    
+
     // MARK: Life Cycle
 
-    public init(type: MailType, email: String, isPremium: Bool? = nil, productID: String? = nil, dataProvider: (any SettingsControllerDataProvider)? = nil) {
+    public init(
+        type: MailType, email: String, isPremium: Bool? = nil, productID: String? = nil,
+        dataProvider: (any SettingsControllerDataProvider)? = nil
+    ) {
         self.type = type
         self.email = email
         self.isPremium = isPremium
         self.productID = productID
         self.dataProvider = dataProvider
-        
+
         super.init(style: .insetGrouped)
     }
-    
+
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     deinit {
         mailTask?.cancel()
         NotificationCenter.default.removeObserver(self)
@@ -130,14 +141,14 @@ public class MailController: UITableViewController {
 
     public override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         setupView()
         NotificationCenter.default.addObserver(
             self, selector: #selector(retryMailFallbackAfterActivation(_:)),
             name: UIApplication.didBecomeActiveNotification, object: nil
         )
     }
-    
+
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         if settingsIsLeavingHierarchy { cancelMailPreparation() }
@@ -157,29 +168,30 @@ public class MailController: UITableViewController {
 // MARK: - Setup View
 
 extension MailController {
-    
+
     private func setupView() {
-                
+
         tableView.register(MailCell.self)
-        
+
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 100
-        
+
         setupNavigationBar()
     }
-    
+
     private func setupNavigationBar() {
-        
+
         title = type.navigationTitle
 
         navigationItem.largeTitleDisplayMode = .never
-        
-        let closeButton = UIBarButtonItem(systemItem: .close,
-                                          primaryAction: .init { [weak self] _ in
-            self?.cancelMailPreparation()
-            self?.dismiss(animated: true)
-        })
-        
+
+        let closeButton = UIBarButtonItem(
+            systemItem: .close,
+            primaryAction: .init { [weak self] _ in
+                self?.cancelMailPreparation()
+                self?.dismiss(animated: true)
+            })
+
         closeButton.accessibilityIdentifier = "settings.mail.close"
         navigationItem.leftBarButtonItem = closeButton
         navigationItem.rightBarButtonItem = sendButton
@@ -189,26 +201,28 @@ extension MailController {
 // MARK: - UITableViewDataSource
 
 extension MailController {
-        
+
     public override func numberOfSections(in tableView: UITableView) -> Int { 1 }
-    
+
     public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 1 }
-    
+
     public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         NSLocalizedString("Message", bundle: .module, comment: "Section heading for the editable support message.")
     }
-    
+
     public override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        NSLocalizedString("After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module, comment: "Mail form footer explaining that the external mail app opens a draft and the user sends it there.")
+        NSLocalizedString(
+            "After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module,
+            comment: "Mail form footer explaining that the external mail app opens a draft and the user sends it there.")
     }
-    
+
     public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
+
         let cell = tableView.dequeueReusableCell(withClass: MailCell.self, for: indexPath)
-        
+
         cell.delegate = self
         cell.configure(type: type, text: currentText)
-        
+
         return cell
     }
 }
@@ -324,17 +338,37 @@ extension MailController {
 
     private func showMailFallback(_ draft: MailDraft) {
         let alert = UIAlertController(
-            title: NSLocalizedString("Unable to open a mail app", bundle: .module, comment: "Recovery alert title when the external mailto handler cannot be opened."),
-            message: NSLocalizedString("Your message is still here. You can copy the support address or message.", bundle: .module, comment: "Mail recovery explanation: the editable message is preserved and the user can explicitly copy the address or full draft."),
+            title: NSLocalizedString(
+                "Unable to open a mail app", bundle: .module,
+                comment: "Recovery alert title when the external mailto handler cannot be opened."),
+            message: NSLocalizedString(
+                "Your message is still here. You can copy the support address or message.", bundle: .module,
+                comment:
+                    "Mail recovery explanation: the editable message is preserved and the user can explicitly copy the address or full draft."
+            ),
             preferredStyle: .alert
         )
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Address", bundle: .module, comment: "Mail recovery action copying only the support email address to the clipboard."), style: .default) { _ in
-            UIPasteboard.general.string = draft.recipient
-        })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Copy Message", bundle: .module, comment: "Mail recovery action copying the draft subject and full body to the clipboard."), style: .default) { _ in
-            UIPasteboard.general.string = draft.subject + "\n\n" + draft.body
-        })
-        alert.addAction(UIAlertAction(title: NSLocalizedString("Cancel", bundle: .module, comment: "Cancel action dismissing the mail recovery alert without changing the message."), style: .cancel))
+        alert.addAction(
+            UIAlertAction(
+                title: NSLocalizedString(
+                    "Copy Address", bundle: .module,
+                    comment: "Mail recovery action copying only the support email address to the clipboard."), style: .default
+            ) { _ in
+                UIPasteboard.general.string = draft.recipient
+            })
+        alert.addAction(
+            UIAlertAction(
+                title: NSLocalizedString(
+                    "Copy Message", bundle: .module,
+                    comment: "Mail recovery action copying the draft subject and full body to the clipboard."), style: .default
+            ) { _ in
+                UIPasteboard.general.string = draft.subject + "\n\n" + draft.body
+            })
+        alert.addAction(
+            UIAlertAction(
+                title: NSLocalizedString(
+                    "Cancel", bundle: .module, comment: "Cancel action dismissing the mail recovery alert without changing the message."),
+                style: .cancel))
         present(alert, animated: true)
     }
 }

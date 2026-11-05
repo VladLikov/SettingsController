@@ -5,9 +5,9 @@
 //  Created by Влад Лыков on 12.09.2024.
 //
 
-import UIKit
 import AlertKit
 import SafeSFSymbols
+import UIKit
 
 // MARK: - Routing
 
@@ -28,7 +28,8 @@ extension SettingsController {
         if let split = splitViewController as? SplitController, split.style != .unspecified {
             split.showSettingsDetail(viewController)
         } else if let split = splitViewController, !split.isCollapsed {
-            let destination = (viewController as? UINavigationController)
+            let destination =
+                (viewController as? UINavigationController)
                 ?? UINavigationController(rootViewController: viewController)
             split.showDetailViewController(destination, sender: self)
         } else if viewController is UINavigationController {
@@ -44,14 +45,16 @@ extension SettingsController {
         if isPremium {
             let style: AlertViewStyle
 
-#if os(visionOS)
+            #if os(visionOS)
             style = .iOS17AppleMusic
-#else
+            #else
             style = .iOS16AppleMusic
-#endif
+            #endif
 
             AlertKitAPI.present(
-                title: NSLocalizedString("Premium is active", bundle: .module, comment: "Confirmation shown when an already-premium user taps the premium action."),
+                title: NSLocalizedString(
+                    "Premium is active", bundle: .module,
+                    comment: "Confirmation shown when an already-premium user taps the premium action."),
                 icon: .custom(UIImage(.star.fill)),
                 style: style,
                 haptic: .success
@@ -78,7 +81,8 @@ extension SettingsController {
 
     func openLanguageSettings() {
         guard languageSettingsTask == nil,
-              let url = URL(string: UIApplication.openSettingsURLString) else { return }
+            let url = URL(string: UIApplication.openSettingsURLString)
+        else { return }
         cancelPendingStoreProduct()
         let open = openURL
         languageSettingsTask = Task { @MainActor [weak self] in
@@ -87,10 +91,16 @@ extension SettingsController {
             self?.languageSettingsTask = nil
             guard !success, let self, settingsCanPresent else { return }
             let alert = UIAlertController(
-                title: NSLocalizedString("Unable to open Settings", bundle: .module, comment: "Alert title when opening the host app page in system Settings fails."),
+                title: NSLocalizedString(
+                    "Unable to open Settings", bundle: .module,
+                    comment: "Alert title when opening the host app page in system Settings fails."),
                 message: nil, preferredStyle: .alert
             )
-            alert.addAction(UIAlertAction(title: NSLocalizedString("OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."), style: .default))
+            alert.addAction(
+                UIAlertAction(
+                    title: NSLocalizedString(
+                        "OK", bundle: .module, comment: "Confirmation button dismissing an informational or recoverable error alert."),
+                    style: .default))
             present(alert, animated: true)
         }
     }
@@ -137,7 +147,8 @@ extension SettingsController {
 
     func openTelegramChannel(_ channelUsername: String) {
         guard let appURL = URL(string: "tg://resolve?domain=\(channelUsername)"),
-              let webURL = URL(string: "https://t.me/\(channelUsername)") else {
+            let webURL = URL(string: "https://t.me/\(channelUsername)")
+        else {
             return
         }
 
@@ -152,7 +163,8 @@ extension SettingsController {
 
     func openVKGroup(_ groupID: String) {
         guard let appURL = URL(string: "vk://vk.com/club\(groupID)"),
-              let webURL = URL(string: "https://vk.com/club\(groupID)") else {
+            let webURL = URL(string: "https://vk.com/club\(groupID)")
+        else {
             return
         }
 

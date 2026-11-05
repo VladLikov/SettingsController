@@ -1,5 +1,6 @@
-import XCTest
 import SwiftUI
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -37,8 +38,10 @@ final class PremiumHeadingTests: XCTestCase {
         XCTAssertNil(old.tierTitle)
         XCTAssertEqual(old.title, "Existing title")
         XCTAssertEqual(old.subtitle, "Existing subtitle")
-        let oldView = PremiumCard(image: Image(systemName: "star.fill"), title: "Existing PRO", subtitle: "Existing subtitle",
-                                  buttonTitle: "Upgrade", color: .blue) {}
+        let oldView = PremiumCard(
+            image: Image(systemName: "star.fill"), title: "Existing PRO", subtitle: "Existing subtitle",
+            buttonTitle: "Upgrade", color: .blue
+        ) {}
         XCTAssertNil(oldView.tierTitle)
         XCTAssertEqual(String(oldView.headingText.characters), "Existing PRO")
         let new = PremiumCardPayload(title: "App Lock", tierTitle: " PRO ", buttonTitle: "Upgrade", premium: premium)

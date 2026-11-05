@@ -1,5 +1,6 @@
-import XCTest
 import UIKit
+import XCTest
+
 @testable import SettingsController
 
 @MainActor
@@ -9,7 +10,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         controller.view = EmptyStateView(title: "Select", subtitle: "Detail")
         controller.additionalSafeAreaInsets = UIEdgeInsets(top: 40, left: 80, bottom: 60, right: 50)
         let window = mountedWindow(controller)
-        defer { window.isHidden = true; window.rootViewController = nil }
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
         let scroll = try XCTUnwrap(controller.view.subviews.first as? UIScrollView)
         controller.view.layoutIfNeeded()
         XCTAssertEqual(scroll.frame, controller.view.bounds)
@@ -29,7 +33,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
                 XCTAssertFalse(palette.middle.isEqual(palette.end))
                 XCTAssertFalse(palette.controlTint.isEqual(palette.middle))
                 XCTAssertFalse(palette.controlTint.isEqual(palette.end))
-                var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+                var r: CGFloat = 0
+                var g: CGFloat = 0
+                var b: CGFloat = 0
+                var a: CGFloat = 0
                 XCTAssertTrue(palette.legacyControlTint.getRed(&r, green: &g, blue: &b, alpha: &a))
                 let channels = [r, g, b].map { value -> Double in
                     let c = Double(value)
@@ -48,8 +55,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             XCTAssertTrue(dark.controlTint.isEqual(dark.legacyControlTint))
             XCTAssertFalse(light.controlTint.isEqual(light.legacyControlTint))
             for style in [UIUserInterfaceStyle.light, .dark] {
-                let traits = UITraitCollection(traitsFrom: [UITraitCollection(userInterfaceStyle: style),
-                    UITraitCollection(accessibilityContrast: .high)])
+                let traits = UITraitCollection(traitsFrom: [
+                    UITraitCollection(userInterfaceStyle: style),
+                    UITraitCollection(accessibilityContrast: .high),
+                ])
                 let increased = PremiumCardPalette(color: color, traits: traits)
                 XCTAssertTrue(increased.controlTint.isEqual(increased.legacyControlTint))
             }
@@ -79,7 +88,8 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
 
     func testLargeSourceProducesDestinationSizedBitmap() throws {
         let source = UIGraphicsImageRenderer(size: CGSize(width: 1024, height: 2048)).image { context in
-            UIColor.black.setFill(); context.fill(CGRect(x: 0, y: 0, width: 1024, height: 2048))
+            UIColor.black.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 1024, height: 2048))
         }
         let icon = SettingsIcon(image: source, color: .blue, inset: Inset(20))
         let traits = UITraitCollection(displayScale: 2)
@@ -105,7 +115,8 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             XCTAssertEqual(parent.children.count, 1)
             XCTAssertEqual(cell.contentView.constraints.count, 4)
         }
-        let size = cell.systemLayoutSizeFitting(CGSize(width: 320, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
+        let size = cell.systemLayoutSizeFitting(
+            CGSize(width: 320, height: 0), withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
         XCTAssertGreaterThanOrEqual(size.height, 72)
         cell.prepareForReuse()
         XCTAssertTrue(parent.children.isEmpty)
@@ -158,8 +169,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertEqual(consumers, 2)
         first.cancel()
         await FixtureServer.shared.release(url)
-        do { _ = try await first.value; XCTFail("Cancelled waiter must not receive an image") }
-        catch { XCTAssertTrue(error is CancellationError) }
+        do {
+            _ = try await first.value
+            XCTFail("Cancelled waiter must not receive an image")
+        } catch { XCTAssertTrue(error is CancellationError) }
         let image = try await second.value
         XCTAssertNotNil(image.cgImage)
         let requests = await FixtureServer.shared.requestCount(url)
@@ -182,8 +195,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         let active = await loader.activeRequestCount
         XCTAssertEqual(active, 0)
         await FixtureServer.shared.release(url)
-        do { _ = try await first.value; XCTFail("Cancelled consumer received image") }
-        catch { XCTAssertTrue(error is CancellationError) }
+        do {
+            _ = try await first.value
+            XCTFail("Cancelled consumer received image")
+        } catch { XCTAssertTrue(error is CancellationError) }
         let image = try await loader.image(from: url, maxPixelSize: 30, scale: 2)
         XCTAssertNotNil(image.cgImage)
         let requests = await FixtureServer.shared.requestCount(url)
@@ -204,8 +219,10 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertEqual(requests, 2)
         let bad = URL(string: "https://fixture.example/\(UUID().uuidString).png")!
         await FixtureServer.shared.register(bad, data: Data(), status: 500)
-        do { _ = try await loader.image(from: bad, maxPixelSize: 20, scale: 1); XCTFail("Expected error") }
-        catch { XCTAssertEqual((error as? URLError)?.code, .badServerResponse) }
+        do {
+            _ = try await loader.image(from: bad, maxPixelSize: 20, scale: 1)
+            XCTFail("Expected error")
+        } catch { XCTAssertEqual((error as? URLError)?.code, .badServerResponse) }
         await FixtureServer.shared.register(bad, data: try pngData())
         let retried = try await loader.image(from: bad, maxPixelSize: 20, scale: 1)
         XCTAssertNotNil(retried.cgImage)
@@ -213,7 +230,8 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
 
     private func pngData() throws -> Data {
         let image = UIGraphicsImageRenderer(size: CGSize(width: 100, height: 100)).image { context in
-            UIColor.blue.setFill(); context.fill(CGRect(x: 0, y: 0, width: 100, height: 100))
+            UIColor.blue.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 100, height: 100))
         }
         return try XCTUnwrap(image.pngData())
     }

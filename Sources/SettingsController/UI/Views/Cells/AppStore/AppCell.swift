@@ -26,7 +26,9 @@ final class AppCell: UITableViewCell {
     private var iconRequest = UUID()
     private static let placeholders = NSCache<NSString, UIImage>()
     private func makePlaceholder() -> UIImage {
-        let key = "\(traitCollection.userInterfaceStyle.rawValue):\(traitCollection.accessibilityContrast.rawValue):\(traitCollection.displayScale)" as NSString
+        let key =
+            "\(traitCollection.userInterfaceStyle.rawValue):\(traitCollection.accessibilityContrast.rawValue):\(traitCollection.displayScale)"
+            as NSString
         if let image = Self.placeholders.object(forKey: key) { return image }
         Self.placeholders.countLimit = 12
         let format = UIGraphicsImageRendererFormat.default()
@@ -46,7 +48,8 @@ final class AppCell: UITableViewCell {
 
         accessoryType = .disclosureIndicator
         if #available(iOS 17, *) {
-            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (cell: AppCell, previous: UITraitCollection) in
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) {
+                (cell: AppCell, previous: UITraitCollection) in
                 cell.refreshAppearance(previous)
             }
         }
@@ -63,7 +66,10 @@ final class AppCell: UITableViewCell {
     }
 
     private func refreshAppearance(_ previous: UITraitCollection?) {
-        if isShowingPlaceholder { currentIcon = makePlaceholder(); updateContentConfiguration() }
+        if isShowingPlaceholder {
+            currentIcon = makePlaceholder()
+            updateContentConfiguration()
+        }
         if previous?.displayScale != traitCollection.displayScale, let url = representedIconURL {
             iconTask?.cancel()
             load(icon: url)
@@ -91,11 +97,12 @@ final class AppCell: UITableViewCell {
 // MARK: - Configure
 
 extension AppCell {
-    
+
     public func configure(with row: AppStoreAppRowState) {
 
         if case .loaded(let item) = row, representedIconURL == item.iconURL,
-           representedScale == max(traitCollection.displayScale, 1), !isShowingPlaceholder || iconTask != nil {
+            representedScale == max(traitCollection.displayScale, 1), !isShowingPlaceholder || iconTask != nil
+        {
             currentTitle = item.name
             accessoryType = .disclosureIndicator
             updateContentConfiguration()
@@ -114,7 +121,9 @@ extension AppCell {
             accessoryType = .none
 
         case .failed:
-            currentTitle = NSLocalizedString("Failed to load. Tap to retry.", bundle: .module, comment: "Developer app catalog error row; tapping retries the same catalog request.")
+            currentTitle = NSLocalizedString(
+                "Failed to load. Tap to retry.", bundle: .module,
+                comment: "Developer app catalog error row; tapping retries the same catalog request.")
             accessoryType = .none
 
         case .loaded(let item):

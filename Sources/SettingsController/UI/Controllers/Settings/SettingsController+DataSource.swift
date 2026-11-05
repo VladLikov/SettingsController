@@ -84,9 +84,9 @@ extension SettingsController {
     }
 }
 
-private extension SettingsRowItem.DefaultRow {
+extension SettingsRowItem.DefaultRow {
 
-    var premiumStatusTitle: String? {
+    fileprivate var premiumStatusTitle: String? {
         guard case .premium(let payload) = self else { return nil }
 
         return payload.isPremium

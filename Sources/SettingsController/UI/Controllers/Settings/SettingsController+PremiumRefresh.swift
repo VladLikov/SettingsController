@@ -26,14 +26,19 @@ extension SettingsController {
                 }
             }
         }
-        let wantsAccount = activeAboutController != nil || configuration.sections.contains { section in
-            switch section.kind {
-            case .premiumCard: return true
-            case .rows(let rows):
-                return rows.contains { if case .defaultRow(.premium) = $0 { return true }; return false }
-            case .ourApps: return false
+        let wantsAccount =
+            activeAboutController != nil
+            || configuration.sections.contains { section in
+                switch section.kind {
+                case .premiumCard: return true
+                case .rows(let rows):
+                    return rows.contains {
+                        if case .defaultRow(.premium) = $0 { return true }
+                        return false
+                    }
+                case .ourApps: return false
+                }
             }
-        }
         guard let provider = configuration.dataProvider, wantsUser || wantsAccount else { return nil }
         if wantsAccount { activeAboutController?.cancelAccountRequest() }
         let lifetime = stateLifetime
@@ -61,8 +66,11 @@ extension SettingsController {
         var premiumChanged = false
         var userChanged = false
         if includesAccount {
-            currentMailInfo = info // nil must clear a previous account ID.
-            if let premium, premium != isPremium { isPremium = premium; premiumChanged = true }
+            currentMailInfo = info  // nil must clear a previous account ID.
+            if let premium, premium != isPremium {
+                isPremium = premium
+                premiumChanged = true
+            }
             activeAboutController?.acceptAccountInfo(info, premium: isPremium)
         }
         // nil means "no new snapshot". A guest UserInfo explicitly represents logout.
@@ -80,8 +88,8 @@ extension SettingsController {
                 for (index, row) in definitions.enumerated() {
                     switch row {
                     case .defaultRow(.premium) where premiumChanged,
-                         .defaultRow(.user) where userChanged,
-                         .defaultRow(.userFactory) where userChanged:
+                        .defaultRow(.user) where userChanged,
+                        .defaultRow(.userFactory) where userChanged:
                         rows.append(IndexPath(row: index, section: visible))
                     default: break
                     }
@@ -99,8 +107,9 @@ extension SettingsController {
         stateRefreshTask?.cancel()
         stateRefreshTask = nil
         needsStateRefresh = true
-        let controller = AboutAppController(isPremium: isPremium, userID: currentMailInfo?.userID,
-                                            appID: appID, privacyURL: privacyURL, termsURL: termsURL)
+        let controller = AboutAppController(
+            isPremium: isPremium, userID: currentMailInfo?.userID,
+            appID: appID, privacyURL: privacyURL, termsURL: termsURL)
         controller.dataProvider = configuration.dataProvider
         controller.openURL = openURL
         controller.onAccountUpdate = { [weak self] info, premium in

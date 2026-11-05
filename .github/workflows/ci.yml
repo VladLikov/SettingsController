@@ -48,6 +48,8 @@ jobs:
           persist-credentials: false
       - name: Validate localization and privacy resources
         run: python3 scripts/validate-resources.py
+      - name: Check formatting (swift-format)
+        run: xcrun swift format lint --strict --recursive --parallel Sources Tests Examples Package.swift
       - name: Build and test the iOS 15 deployment target
         run: bash scripts/test-ios.sh
       - name: Source and warning evidence

@@ -26,8 +26,8 @@ public protocol SettingsControllerDataProvider: AnyObject {
     func settingsMailInfo() async -> SettingsMailInfo?
 }
 
-public extension SettingsControllerDataProvider {
-    func settingsMailInfo() async -> SettingsMailInfo? { nil }
+extension SettingsControllerDataProvider {
+    public func settingsMailInfo() async -> SettingsMailInfo? { nil }
 }
 
 // MARK: - SettingsControllerDelegate
@@ -52,14 +52,16 @@ public final class SettingsConfiguration {
     private let retainedEventHandler: (any SettingsControllerEventHandler)?
     private let retainedDataProvider: (any SettingsControllerDataProvider)?
 
-    public init(title: String? = nil,
-                insets: SettingsInsets? = nil,
-                overlayAppID: String? = nil,
-                sections: [SettingsSection],
-                eventHandler: (any SettingsControllerEventHandler)? = nil,
-                dataProvider: (any SettingsControllerDataProvider)? = nil,
-                delegate: (any SettingsControllerDelegate)? = nil,
-                productID: String? = nil) {
+    public init(
+        title: String? = nil,
+        insets: SettingsInsets? = nil,
+        overlayAppID: String? = nil,
+        sections: [SettingsSection],
+        eventHandler: (any SettingsControllerEventHandler)? = nil,
+        dataProvider: (any SettingsControllerDataProvider)? = nil,
+        delegate: (any SettingsControllerDelegate)? = nil,
+        productID: String? = nil
+    ) {
 
         self.title = title
         self.sections = sections

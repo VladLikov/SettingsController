@@ -17,18 +17,19 @@ class ColorCell: UITableViewCell {
 
     private var currentTitle: String?
     private var currentColor: UIColor?
-    
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
         selectionStyle = .none
         if #available(iOS 17, *) {
-            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) { (cell: ColorCell, _: UITraitCollection) in
+            registerForTraitChanges([UITraitUserInterfaceStyle.self, UITraitAccessibilityContrast.self, UITraitDisplayScale.self]) {
+                (cell: ColorCell, _: UITraitCollection) in
                 cell.updateContentConfiguration()
             }
         }
     }
-    
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
@@ -46,7 +47,7 @@ class ColorCell: UITableViewCell {
         currentColor = nil
         contentConfiguration = nil
     }
-    
+
     public func configure(appColor: any AppColorType) {
         currentTitle = appColor.title
         currentColor = appColor.color
@@ -62,7 +63,9 @@ class ColorCell: UITableViewCell {
         configuration.textProperties.lineBreakMode = .byWordWrapping
         configuration.directionalLayoutMargins.top = Metrics.verticalPadding
         configuration.directionalLayoutMargins.bottom = Metrics.verticalPadding
-        configuration.image = currentColor.map { Self.makeSwatchImage(color: $0.resolvedColor(with: traitCollection), scale: traitCollection.displayScale) }
+        configuration.image = currentColor.map {
+            Self.makeSwatchImage(color: $0.resolvedColor(with: traitCollection), scale: traitCollection.displayScale)
+        }
         configuration.imageProperties.maximumSize = Metrics.swatchSize
         configuration.imageProperties.reservedLayoutSize = Metrics.swatchSize
         configuration.imageToTextPadding = Metrics.imageToTextPadding

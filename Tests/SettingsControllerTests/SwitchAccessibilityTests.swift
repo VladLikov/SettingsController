@@ -1,6 +1,6 @@
-import XCTest
-import UIKit
 import SettingsController
+import UIKit
+import XCTest
 
 @MainActor
 final class SwitchAccessibilityTests: XCTestCase {
