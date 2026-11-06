@@ -183,3 +183,38 @@ final class DoubleTapTests: XCTestCase {
         XCTAssertEqual(navigation.viewControllers.count, 2)
     }
 }
+
+@MainActor
+final class TapticScreenTests: XCTestCase {
+    private final class Storage: TapticStorage {
+        var isTapticEngineEnabled = true
+        var tapticStyle = TapticStyle.medium
+    }
+
+    func testToggleRemovesStylesAndSelectionMovesTheCheckmark() throws {
+        let storage = Storage()
+        let controller = TapticEngineController(tapticStorage: storage, eventHandler: nil)
+        let window = mountedWindow(controller)
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        let table = controller.tableView!
+        XCTAssertEqual(table.numberOfSections, 2)
+        controller.tableView(table, didSelectRowAt: IndexPath(row: 2, section: 1))
+        table.layoutIfNeeded()
+        XCTAssertEqual(storage.tapticStyle, .heavy)
+        XCTAssertEqual(table.cellForRow(at: IndexPath(row: 2, section: 1))?.accessoryType, .checkmark)
+        XCTAssertEqual(table.cellForRow(at: IndexPath(row: 1, section: 1))?.accessoryType, Optional(.none))
+
+        let toggle = try XCTUnwrap(table.cellForRow(at: IndexPath(row: 0, section: 0)) as? SwitchCell)
+        toggle.switchControl.isOn = false
+        for target in toggle.switchControl.allTargets {
+            for action in toggle.switchControl.actions(forTarget: target, forControlEvent: .valueChanged) ?? [] {
+                _ = (target as NSObject).perform(NSSelectorFromString(action), with: toggle.switchControl)
+            }
+        }
+        XCTAssertFalse(storage.isTapticEngineEnabled)
+        XCTAssertEqual(table.numberOfSections, 1)
+    }
+}

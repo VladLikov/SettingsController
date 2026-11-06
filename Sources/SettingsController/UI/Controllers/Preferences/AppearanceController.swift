@@ -15,9 +15,17 @@ final class AppearanceController: UITableViewController {
     private var followsSystemAppearance: Bool
     private var interfaceStyle: InterfaceStyle
 
-    private enum Section: Int {
+    enum Section: Hashable, Sendable {
         case colors, automatic, style
     }
+
+    enum Item: Hashable, Sendable {
+        case color(String)
+        case automatic
+        case style(InterfaceStyle)
+    }
+
+    private(set) var dataSource: TitledDataSource<Section, Item>?
 
     init(themeStorage: ThemeStorage, colors: [any AppColorType], eventHandler: (any SettingsControllerEventHandler)?) {
         theme = themeStorage
@@ -42,6 +50,7 @@ final class AppearanceController: UITableViewController {
         tableView.register(ColorCell.self)
         tableView.register(UITableViewCell.self)
         navigationItem.largeTitleDisplayMode = .never
+        installDataSource()
     }
 
     private var selectedColor: UIColor? {
@@ -49,49 +58,55 @@ final class AppearanceController: UITableViewController {
     }
 }
 
-// MARK: - UITableViewDataSource
+// MARK: - Data source
 
 extension AppearanceController {
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        followsSystemAppearance ? 2 : 3
-    }
-
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch Section(rawValue: section) {
-        case .colors: colors.count
-        case .automatic: 1
-        case .style: InterfaceStyle.allCases.count
-        case nil: 0
+    private func installDataSource() {
+        let dataSource = TitledDataSource<Section, Item>(tableView: tableView) { [unowned self] tableView, indexPath, item in
+            cell(for: item, in: tableView, at: indexPath)
         }
-    }
-
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        switch Section(rawValue: section) {
-        case .colors:
-            NSLocalizedString("App color", bundle: .module, comment: "Appearance section heading for selecting the app accent color.")
-        case .automatic:
-            NSLocalizedString(
-                "Light & Dark theme", bundle: .module, comment: "Appearance section heading for light and dark interface mode.")
-        case .style, nil:
-            nil
+        dataSource.defaultRowAnimation = .automatic
+        dataSource.header = { section in
+            switch section {
+            case .colors:
+                NSLocalizedString("App color", bundle: .module, comment: "Appearance section heading for selecting the app accent color.")
+            case .automatic:
+                NSLocalizedString(
+                    "Light & Dark theme", bundle: .module, comment: "Appearance section heading for light and dark interface mode.")
+            case .style:
+                nil
+            }
         }
+        dataSource.footer = { section in
+            guard section == .automatic else { return nil }
+            return NSLocalizedString(
+                "When the switch is on, the system appearance is used.", bundle: .module,
+                comment: "Footer explaining the automatic system appearance switch.")
+        }
+        self.dataSource = dataSource
+        tableView.dataSource = dataSource
+        UIView.performWithoutAnimation { dataSource.apply(makeSnapshot(), animatingDifferences: false) }
     }
 
-    override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        guard Section(rawValue: section) == .automatic else { return nil }
-        return NSLocalizedString(
-            "When the switch is on, the system appearance is used.", bundle: .module,
-            comment: "Footer explaining the automatic system appearance switch.")
+    private func makeSnapshot() -> NSDiffableDataSourceSnapshot<Section, Item> {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
+        snapshot.appendSections([.colors, .automatic])
+        snapshot.appendItems(colors.map { .color($0.rawValue) }, toSection: .colors)
+        snapshot.appendItems([.automatic], toSection: .automatic)
+        if !followsSystemAppearance {
+            snapshot.appendSections([.style])
+            snapshot.appendItems(InterfaceStyle.allCases.map { .style($0) }, toSection: .style)
+        }
+        return snapshot
     }
 
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        switch Section(rawValue: indexPath.section) {
-        case .colors:
+    private func cell(for item: Item, in tableView: UITableView, at indexPath: IndexPath) -> UITableViewCell {
+        switch item {
+        case .color(let id):
             let cell = tableView.dequeueReusableCell(withClass: ColorCell.self, for: indexPath)
-            let appColor = colors[indexPath.row]
-            cell.configure(appColor: appColor)
-            cell.accessoryType = selectedColorID == appColor.rawValue ? .checkmark : .none
+            if let appColor = colors.first(where: { $0.rawValue == id }) { cell.configure(appColor: appColor) }
+            cell.accessoryType = selectedColorID == id ? .checkmark : .none
             return cell
 
         case .automatic:
@@ -106,20 +121,16 @@ extension AppearanceController {
             }
             return cell
 
-        case .style:
+        case .style(let style):
             let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
-            let style = InterfaceStyle.allCases[indexPath.row]
             var configuration = cell.defaultContentConfiguration()
             configuration.text = style.title
             configuration.applySettingsRowLayout()
             cell.contentConfiguration = configuration
             cell.selectionStyle = .none
             cell.accessoryType = style == interfaceStyle ? .checkmark : .none
-            cell.tintColor = view.tintColor
+            cell.tintColor = selectedColor ?? view.tintColor
             return cell
-
-        case nil:
-            preconditionFailure("Unexpected appearance settings indexPath: \(indexPath)")
         }
     }
 }
@@ -129,41 +140,37 @@ extension AppearanceController {
 extension AppearanceController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        switch Section(rawValue: indexPath.section) {
-        case .colors:
-            selectColor(at: indexPath)
-        case .style:
-            selectInterfaceStyle(InterfaceStyle.allCases[indexPath.row], at: indexPath)
+        switch dataSource?.itemIdentifier(for: indexPath) {
+        case .color(let id):
+            selectColor(id)
+        case .style(let style):
+            selectInterfaceStyle(style)
         case .automatic, nil:
             break
         }
     }
 
-    private func selectColor(at indexPath: IndexPath) {
-        guard colors.indices.contains(indexPath.row) else { return }
-        let appColor = colors[indexPath.row]
-        if let old = colors.firstIndex(where: { $0.rawValue == selectedColorID }) {
-            tableView.cellForRow(at: IndexPath(row: old, section: Section.colors.rawValue))?.accessoryType = .none
-        }
-        tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        selectedColorID = appColor.rawValue
-        theme.appColorID = appColor.rawValue
+    private func selectColor(_ id: String) {
+        guard let appColor = colors.first(where: { $0.rawValue == id }) else { return }
+        let previous = selectedColorID
+        selectedColorID = id
+        theme.appColorID = id
         eventHandler?.settingsDidSelectAppColor(appColor)
         eventHandler?.settingsDidUpdateTheme(theme)
         onColorChange?(appColor.color)
-        applyTint(appColor.color)
+        navigationController?.navigationBar.tintColor = appColor.color
+        // Checkmarks, the switch tint and the style checkmarks follow the new accent.
+        dataSource?.reconfigure([.color(previous), .color(id), .automatic] + InterfaceStyle.allCases.map { .style($0) })
         haptics.selectionChanged()
     }
 
-    private func selectInterfaceStyle(_ style: InterfaceStyle, at indexPath: IndexPath) {
+    private func selectInterfaceStyle(_ style: InterfaceStyle) {
         guard style != interfaceStyle else { return }
-        if let old = InterfaceStyle.allCases.firstIndex(of: interfaceStyle) {
-            tableView.cellForRow(at: IndexPath(row: old, section: Section.style.rawValue))?.accessoryType = .none
-        }
-        tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
+        let previous = interfaceStyle
         interfaceStyle = style
         theme.interfaceStyle = style
         eventHandler?.settingsDidUpdateTheme(theme)
+        dataSource?.reconfigure([.style(previous), .style(style)])
         haptics.selectionChanged()
     }
 
@@ -172,21 +179,6 @@ extension AppearanceController {
         followsSystemAppearance = isOn
         theme.followsSystemAppearance = isOn
         eventHandler?.settingsDidUpdateTheme(theme)
-        let sections = IndexSet(integer: Section.style.rawValue)
-        if isOn {
-            tableView.deleteSections(sections, with: .automatic)
-        } else {
-            tableView.insertSections(sections, with: .automatic)
-        }
-    }
-
-    /// Applies the new accent to the navigation bar, switch and checkmarks.
-    private func applyTint(_ color: UIColor) {
-        navigationController?.navigationBar.tintColor = color
-        (tableView.cellForRow(at: IndexPath(row: 0, section: Section.automatic.rawValue)) as? SwitchCell)?.switchControl.onTintColor = color
-        guard !followsSystemAppearance else { return }
-        for row in InterfaceStyle.allCases.indices {
-            tableView.cellForRow(at: IndexPath(row: row, section: Section.style.rawValue))?.tintColor = color
-        }
+        dataSource?.apply(makeSnapshot(), animatingDifferences: tableView.window != nil)
     }
 }
