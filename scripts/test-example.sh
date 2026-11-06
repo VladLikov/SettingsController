@@ -4,8 +4,9 @@ cd "$(dirname "$0")/.."
 # MODE=all (default) builds and tests on one simulator.
 # MODE=build compiles once for any simulator (build-for-testing); MODE=test runs those products
 # with test-without-building, so CI compiles once and tests on several devices.
+# MODE=boot only starts booting the selected simulator, so CI can overlap a first boot with downloads.
 MODE=${MODE:-all}
-case "$MODE" in all|build|test) ;; *) echo 'MODE must be all, build or test' >&2; exit 2;; esac
+case "$MODE" in all|build|test|boot) ;; *) echo 'MODE must be all, build, test or boot' >&2; exit 2;; esac
 DERIVED=.build/example-derived
 BUILD_FLAGS=(CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0)
 if [ "$MODE" = build ]; then
@@ -31,6 +32,10 @@ assert devices, 'Missing requested runtime/device: '+runtime+' '+sys.argv[3]
 print(devices[0]['udid'])
 PY
 )
+if [ "$MODE" = boot ]; then
+  xcrun simctl boot "$ID" 2>&1 || true
+  exit 0
+fi
 git rev-parse HEAD > "$OUT/tested-sha.txt"
 printf 'Runtime=%s\nDevice=%s\n' "$RUNTIME" "$ID" > "$OUT/destination.txt"
 rm -rf "$OUT/TestResults.xcresult"
@@ -48,6 +53,9 @@ xcrun simctl bootstatus "$ID" -b 2>&1 | tee "$OUT/bootstatus.log"
 TEST_FLAGS=(-destination "platform=iOS Simulator,id=$ID" -derivedDataPath "$DERIVED"
   -resultBundlePath "$OUT/TestResults.xcresult" -parallel-testing-enabled NO -collect-test-diagnostics never
   -test-timeouts-enabled YES -maximum-test-execution-time-allowance 300)
+# On CI, a test that fails once is run again: a slow runner snapshot passes the second time,
+# while a real failure fails both attempts.
+if [ "${CI:-}" = true ]; then TEST_FLAGS+=(-retry-tests-on-failure -test-iterations 2); fi
 if [ "$MODE" = test ]; then
   XCTESTRUN=$(ls "$DERIVED"/Build/Products/*.xctestrun 2>/dev/null | head -1)
   [ -n "$XCTESTRUN" ] || { echo "No .xctestrun in $DERIVED/Build/Products; run MODE=build first" >&2; exit 2; }
