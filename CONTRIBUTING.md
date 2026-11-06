@@ -23,7 +23,9 @@ behavior and provide translator context for new localized strings.
 
 Format with the toolchain's swift-format before submitting; CI runs
 `xcrun swift format lint --strict --recursive Sources Tests Examples Package.swift`.
-Run tests and `git diff --check`. Describe what changed,
+Run tests and `git diff --check`. `bash scripts/test-example.sh` builds and
+tests the public example on one simulator; CI uses `MODE=build` once and
+`MODE=test` on each simulator to test the same build without recompiling. Describe what changed,
 why, and what you tested. Never include credentials or production secrets.
 
 For bugs, include Xcode/iOS versions, reproduction steps, expected and actual

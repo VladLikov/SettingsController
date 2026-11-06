@@ -1,12 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# MODE=all (default) builds and tests on one simulator.
+# MODE=build compiles once for any simulator (build-for-testing); MODE=test runs those products
+# with test-without-building, so CI compiles once and tests on several devices.
+MODE=${MODE:-all}
+case "$MODE" in all|build|test) ;; *) echo 'MODE must be all, build or test' >&2; exit 2;; esac
+DERIVED=.build/example-derived
+BUILD_FLAGS=(CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0)
+if [ "$MODE" = build ]; then
+  mkdir -p .build/example-results
+  python3 scripts/generate-example.py
+  xcodebuild -project Examples/SettingsExample/SettingsExample.xcodeproj -scheme SettingsExample \
+    -destination 'generic/platform=iOS Simulator' -derivedDataPath "$DERIVED" \
+    build-for-testing "${BUILD_FLAGS[@]}" 2>&1 | tee .build/example-results/build.log
+  exit 0
+fi
 DEVICE_FAMILY=${DEVICE_FAMILY:-iPhone}
 case "$DEVICE_FAMILY" in iPhone|iPad) ;; *) exit 2;; esac
 RUNTIME=${IOS_RUNTIME:-$(xcrun --sdk iphonesimulator --show-sdk-version)}
 OUT=".build/example-results/${RESULT_LABEL:-$DEVICE_FAMILY}"
 mkdir -p "$OUT"
-python3 scripts/generate-example.py
+[ "$MODE" = all ] && python3 scripts/generate-example.py
 xcrun simctl list devices available -j > "$OUT/simulators.json"
 ID=$(python3 - "$OUT/simulators.json" "$RUNTIME" "$DEVICE_FAMILY" "${DEVICE_NAME:-}" <<'PY'
 import json,sys
@@ -30,8 +45,14 @@ trap collect EXIT
 # Wait for Apple's native boot-readiness monitor before starting UI automation.
 # A device can be selected while CoreSimulator is still completing its first boot.
 xcrun simctl bootstatus "$ID" -b 2>&1 | tee "$OUT/bootstatus.log"
-xcodebuild -project Examples/SettingsExample/SettingsExample.xcodeproj -scheme SettingsExample \
-  -destination "platform=iOS Simulator,id=$ID" -derivedDataPath .build/example-derived \
-  -resultBundlePath "$OUT/TestResults.xcresult" -parallel-testing-enabled NO -collect-test-diagnostics never \
-  -test-timeouts-enabled YES -maximum-test-execution-time-allowance 300 \
-  test CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0 2>&1 | tee "$OUT/test.log"
+TEST_FLAGS=(-destination "platform=iOS Simulator,id=$ID" -derivedDataPath "$DERIVED"
+  -resultBundlePath "$OUT/TestResults.xcresult" -parallel-testing-enabled NO -collect-test-diagnostics never
+  -test-timeouts-enabled YES -maximum-test-execution-time-allowance 300)
+if [ "$MODE" = test ]; then
+  XCTESTRUN=$(ls "$DERIVED"/Build/Products/*.xctestrun 2>/dev/null | head -1)
+  [ -n "$XCTESTRUN" ] || { echo "No .xctestrun in $DERIVED/Build/Products; run MODE=build first" >&2; exit 2; }
+  xcodebuild test-without-building -xctestrun "$XCTESTRUN" "${TEST_FLAGS[@]}" 2>&1 | tee "$OUT/test.log"
+else
+  xcodebuild -project Examples/SettingsExample/SettingsExample.xcodeproj -scheme SettingsExample \
+    "${TEST_FLAGS[@]}" test "${BUILD_FLAGS[@]}" 2>&1 | tee "$OUT/test.log"
+fi
