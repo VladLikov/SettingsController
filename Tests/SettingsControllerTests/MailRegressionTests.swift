@@ -96,7 +96,7 @@ final class MailRegressionTests: XCTestCase {
         XCTAssertNotNil(controller.presentedViewController as? UIAlertController)
         XCTAssertTrue(controller.navigationItem.rightBarButtonItem?.isEnabled == true)
         let cell = try XCTUnwrap(
-            controller.tableView.dataSource?.tableView(controller.tableView, cellForRowAt: IndexPath(row: 0, section: 0)) as? MailCell)
+            controller.tableView.dataSource?.tableView(controller.tableView, cellForRowAt: MailController.messageIndexPath) as? MailCell)
         let textViews = cell.contentView.subviews.compactMap { $0 as? UITextView }
         XCTAssertEqual(textViews.first?.text, text)
         controller.dismiss(animated: false)
@@ -129,7 +129,7 @@ final class MailRegressionTests: XCTestCase {
         XCTAssertNotNil(controller.presentedViewController as? UIAlertController)
         XCTAssertTrue(controller.navigationItem.rightBarButtonItem?.isEnabled == true)
         let cell = try XCTUnwrap(
-            controller.tableView.dataSource?.tableView(controller.tableView, cellForRowAt: IndexPath(row: 0, section: 0)) as? MailCell)
+            controller.tableView.dataSource?.tableView(controller.tableView, cellForRowAt: MailController.messageIndexPath) as? MailCell)
         XCTAssertEqual(cell.contentView.subviews.compactMap { $0 as? UITextView }.first?.text, text)
     }
 

@@ -98,8 +98,8 @@ final class UXBehaviorTests: XCTestCase {
     func testAboutOffersCopyForDiagnosticValuesAndLocalizedPremiumStatus() {
         let about = makeAbout()
         about.loadViewIfNeeded()
-        let bundleRow = IndexPath(row: 0, section: 0)
-        XCTAssertNotNil(about.tableView(about.tableView, contextMenuConfigurationForRowAt: bundleRow, point: .zero))
+        let osVersionRow = IndexPath(row: 0, section: 2)
+        XCTAssertNotNil(about.tableView(about.tableView, contextMenuConfigurationForRowAt: osVersionRow, point: .zero))
         let account = about.data.firstIndex { $0.section == .account }!
         let premium = about.data[account].items[1]
         XCTAssertNotEqual(premium.value, "false")

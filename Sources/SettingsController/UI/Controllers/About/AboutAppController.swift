@@ -8,7 +8,7 @@ import UIKit
 final class AboutAppController: UITableViewController {
 
     enum AboutSection {
-        case build
+        case update
         case links
         case device
         case account
@@ -16,10 +16,7 @@ final class AboutAppController: UITableViewController {
 
         var title: String? {
             switch self {
-            case .build:
-                return NSLocalizedString(
-                    "Build", bundle: .module, comment: "About section heading for bundle identifier, version and update check.")
-            case .links:
+            case .update, .links:
                 return nil
             case .device:
                 return NSLocalizedString("Device", bundle: .module, comment: "About section heading for operating system and device model.")
@@ -36,7 +33,7 @@ final class AboutAppController: UITableViewController {
                 return NSLocalizedString(
                     "Tap User ID to copy. Support may request it.", bundle: .module,
                     comment: "Account section footer explaining the explicit copy action.")
-            case .build, .links, .device, .locale:
+            case .update, .links, .device, .locale:
                 return nil
             }
         }
@@ -54,7 +51,6 @@ final class AboutAppController: UITableViewController {
         let title: String
         let subtitle: String?
         let value: String?
-        let icon: SettingsIcon?
         let action: AboutAction
 
         var isSelectable: Bool {
@@ -70,6 +66,11 @@ final class AboutAppController: UITableViewController {
     var data: [(section: AboutSection, items: [AboutItem])] = []
     let updateCheck = CancellableRequest()
     var dataSource: TitledDataSource<AboutSection, String>?
+    private struct HeaderSizeKey: Equatable {
+        let width: CGFloat
+        let category: UIContentSizeCategory
+    }
+    private var headerSizeKey: HeaderSizeKey?
     var checkUpdateTask: Task<Void, Never>? { updateCheck.task }
 
     private(set) var isPremium: Bool
@@ -110,8 +111,36 @@ final class AboutAppController: UITableViewController {
 
         setupData()
         installDataSource()
+        installHeader()
         observeAppearance()
         loadAccountInfo()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        sizeHeader()
+    }
+
+    /// The app icon, name, version and bundle ID above the list.
+    private func installHeader() {
+        let app = Self.appHeader
+        tableView.tableHeaderView = AboutAppHeaderView(
+            icon: AboutAppHeaderView.appIcon(), name: app.name, version: app.version, bundleID: app.bundleID)
+    }
+
+    /// A table header keeps its frame; resize it when the width or the text size changes.
+    private func sizeHeader() {
+        guard let header = tableView.tableHeaderView else { return }
+        let width = tableView.bounds.width
+        let key = HeaderSizeKey(width: width, category: traitCollection.preferredContentSizeCategory)
+        guard width > 0, key != headerSizeKey else { return }
+        headerSizeKey = key
+        let height = header.systemLayoutSizeFitting(
+            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel
+        ).height
+        header.frame = CGRect(x: 0, y: 0, width: width, height: ceil(height))
+        tableView.tableHeaderView = header
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -215,18 +244,12 @@ extension AboutAppController {
         let item = data[indexPath.section].items[indexPath.row]
         let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
 
+        // As in Settings › General › About: the label on the left, its value on the right.
+        // A long value, such as a User ID, goes under its label instead.
         var config =
             item.subtitle == nil
             ? UIListContentConfiguration.valueCell()
             : UIListContentConfiguration.subtitleCell()
-
-        if let icon = item.icon {
-            config.applySettingsIcon(icon.generateSettingsImage(traitCollection: traitCollection))
-        } else {
-            config.image = nil
-            config.imageProperties.reservedLayoutSize = .zero
-            config.imageToTextPadding = SettingsMetrics.imageToTextPadding
-        }
         config.applySettingsRowLayout()
 
         config.text = item.title

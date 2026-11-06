@@ -161,7 +161,7 @@ extension MailCell {
                 constant: -12
             ),
             textView.heightAnchor.constraint(
-                greaterThanOrEqualToConstant: 100),
+                greaterThanOrEqualToConstant: 160),
 
             placeholderLabel.topAnchor.constraint(
                 equalTo: textView.topAnchor,

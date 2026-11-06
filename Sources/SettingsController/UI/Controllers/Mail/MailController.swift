@@ -14,7 +14,7 @@ public class MailController: UITableViewController {
     private let productID: String?
     private weak var dataProvider: (any SettingsControllerDataProvider)?
     private let mailRequest = CancellableRequest()
-    private var dataSource: TitledDataSource<Int, Int>?
+    private var dataSource: TitledDataSource<Section, Item>?
     var mailTask: Task<Void, Never>? { mailRequest.task }
     private var isPreparingMail = false
     private var pendingMailFallback: MailDraft?
@@ -93,7 +93,7 @@ public class MailController: UITableViewController {
         super.viewDidAppear(animated)
         if presentPendingMailFallbackIfPossible() { return }
 
-        guard let cell = tableView.cellForRow(at: IndexPath(row: 0, section: 0)) as? MailCell else {
+        guard let cell = tableView.cellForRow(at: Self.messageIndexPath) as? MailCell else {
             return
         }
         cell.beginEditing()
@@ -107,6 +107,7 @@ extension MailController {
     private func setupView() {
 
         tableView.register(MailCell.self)
+        tableView.register(UITableViewCell.self)
         installDataSource()
 
         tableView.rowHeight = UITableView.automaticDimension
@@ -132,28 +133,103 @@ extension MailController {
 extension MailController {
 
     /// One section with the message field. The cell keeps its text view, so typing never re-creates it.
+    enum Section: Hashable, Sendable {
+        case recipient, message, diagnostics
+    }
+
+    enum Item: Hashable, Sendable {
+        case recipient
+        case message
+        case diagnostic(Int)
+    }
+
+    static let messageIndexPath = IndexPath(row: 0, section: 1)
+
+    /// Like a Mail draft: who it goes to, the message, and the device details that will be attached.
     func installDataSource() {
-        let dataSource = TitledDataSource<Int, Int>(tableView: tableView) { [unowned self] tableView, indexPath, _ in
-            let cell = tableView.dequeueReusableCell(withClass: MailCell.self, for: indexPath)
-            cell.delegate = self
-            cell.configure(type: type, text: currentText)
-            cell.showMissingCharacters(type.missingCharacters(in: currentText))
-            return cell
+        let diagnostics = Self.diagnostics()
+        let dataSource = TitledDataSource<Section, Item>(tableView: tableView) { [unowned self] tableView, indexPath, item in
+            switch item {
+            case .recipient:
+                let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
+                var configuration = UIListContentConfiguration.subtitleCell()
+                configuration.text = email
+                configuration.secondaryText = "\(MailEnvironment.current().appName) \(type.subject)"
+                configuration.secondaryTextProperties.color = .secondaryLabel
+                configuration.applySettingsRowLayout()
+                configuration.applySettingsIcon(
+                    SettingsIcon(
+                        image: UIImage(systemName: "envelope.fill"), color: .systemBlue, padding: IconPadding(),
+                        cacheIdentifier: "sf:envelope.fill"
+                    )
+                    .generateSettingsImage(traitCollection: traitCollection))
+                cell.contentConfiguration = configuration
+                cell.selectionStyle = .none
+                cell.accessibilityIdentifier = "settings.mail.recipient"
+                return cell
+
+            case .message:
+                let cell = tableView.dequeueReusableCell(withClass: MailCell.self, for: indexPath)
+                cell.delegate = self
+                cell.configure(type: type, text: currentText)
+                cell.showMissingCharacters(type.missingCharacters(in: currentText))
+                return cell
+
+            case .diagnostic(let index):
+                let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
+                var configuration = UIListContentConfiguration.valueCell()
+                configuration.text = diagnostics[index].title
+                configuration.secondaryText = diagnostics[index].value
+                configuration.applySettingsRowLayout()
+                cell.contentConfiguration = configuration
+                cell.selectionStyle = .none
+                return cell
+            }
         }
-        dataSource.header = { _ in
-            NSLocalizedString("Message", bundle: .module, comment: "Section heading for the editable support message.")
+        dataSource.header = { section in
+            switch section {
+            case .recipient: nil
+            case .message: NSLocalizedString("Message", bundle: .module, comment: "Section heading for the editable support message.")
+            case .diagnostics:
+                NSLocalizedString("Device", bundle: .module, comment: "About section heading for operating system and device model.")
+            }
         }
-        dataSource.footer = { _ in
-            NSLocalizedString(
+        dataSource.footer = { section in
+            guard section == .diagnostics else { return nil }
+            return NSLocalizedString(
                 "After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module,
                 comment: "Mail form footer explaining that the external mail app opens a draft and the user sends it there.")
         }
         self.dataSource = dataSource
         tableView.dataSource = dataSource
-        var snapshot = NSDiffableDataSourceSnapshot<Int, Int>()
-        snapshot.appendSections([0])
-        snapshot.appendItems([0], toSection: 0)
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
+        snapshot.appendSections([.recipient, .message, .diagnostics])
+        snapshot.appendItems([.recipient], toSection: .recipient)
+        snapshot.appendItems([.message], toSection: .message)
+        snapshot.appendItems(diagnostics.indices.map { .diagnostic($0) }, toSection: .diagnostics)
         UIView.performWithoutAnimation { dataSource.apply(snapshot, animatingDifferences: false) }
+    }
+
+    /// The device details the draft carries, shown so the user knows what is sent.
+    private static func diagnostics() -> [(title: String, value: String)] {
+        let info = Bundle.main.infoDictionary
+        let version = "\(info?["CFBundleShortVersionString"] as? String ?? "-") (\(info?["CFBundleVersion"] as? String ?? "-"))"
+        return [
+            (
+                NSLocalizedString("App Version", bundle: .module, comment: "Diagnostic label for the installed app version and build."),
+                version
+            ),
+            (
+                NSLocalizedString("OS Version", bundle: .module, comment: "Diagnostic label for the operating system version."),
+                AboutAppController.systemVersionDescription
+            ),
+            (
+                NSLocalizedString(
+                    "Device Model", bundle: .module,
+                    comment: "Diagnostic label for the hardware model, without a user-assigned device name."),
+                DeviceModel.supportDescription
+            ),
+        ]
     }
 }
 
