@@ -23,46 +23,50 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         XCTAssertGreaterThan(content.bounds.width, 0)
     }
 
-    func testPremiumPillPaletteKeepsWhiteContentAndDistinctGradientTones() {
+    func testPremiumPaletteKeepsWhiteTextReadableForEveryAccent() {
+        let accents: [UIColor] = AppColor.allCases.map(\.color) + [.white, .black, .yellow]
         for style in [UIUserInterfaceStyle.light, .dark] {
-            let traits = UITraitCollection(userInterfaceStyle: style)
-            for color in [UIColor.systemBlue, .systemIndigo, .white, .yellow, .black] {
-                let palette = PremiumCardPalette(color: color, traits: traits)
-                XCTAssertTrue(palette.text.isEqual(UIColor.white))
-                XCTAssertFalse(palette.base.isEqual(palette.middle))
-                XCTAssertFalse(palette.middle.isEqual(palette.end))
-                XCTAssertFalse(palette.controlTint.isEqual(palette.middle))
-                XCTAssertFalse(palette.controlTint.isEqual(palette.end))
-                var r: CGFloat = 0
-                var g: CGFloat = 0
-                var b: CGFloat = 0
-                var a: CGFloat = 0
-                XCTAssertTrue(palette.legacyControlTint.getRed(&r, green: &g, blue: &b, alpha: &a))
-                let channels = [r, g, b].map { value -> Double in
-                    let c = Double(value)
-                    return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4)
+            for contrast in [UIAccessibilityContrast.normal, .high] {
+                let traits = UITraitCollection(traitsFrom: [
+                    UITraitCollection(userInterfaceStyle: style), UITraitCollection(accessibilityContrast: contrast),
+                ])
+                let minimum = contrast == .high ? 7.0 : 4.5
+                for accent in accents {
+                    let palette = PremiumCardPalette(color: accent, traits: traits)
+                    XCTAssertTrue(palette.text.isEqual(UIColor.white))
+                    let end = rgb(palette.end)
+                    let start = rgb(palette.start)
+                    let underControl = end.map { $0 + (1 - $0) * PremiumCardPalette.controlFillOpacity }
+                    for (name, color) in [("end", end), ("start", start), ("under CTA", underControl)] {
+                        XCTAssertGreaterThanOrEqual(
+                            PremiumCardPalette.whiteContrast(color), minimum - 0.01, "\(accent) \(style.rawValue) \(name)")
+                    }
+                    XCTAssertLessThanOrEqual(start.reduce(0, +), end.reduce(0, +), "The gradient starts deeper than it ends")
                 }
-                let luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
-                XCTAssertGreaterThanOrEqual(1.05 / (luminance + 0.05), 4.79)
             }
         }
     }
 
-    func testGlassTintUsesDarkAndIncreasedContrastVariants() {
-        for color in [UIColor.systemBlue, .systemOrange, .systemIndigo, .yellow, .white, .black] {
-            let light = PremiumCardPalette(color: color, traits: UITraitCollection(userInterfaceStyle: .light))
-            let dark = PremiumCardPalette(color: color, traits: UITraitCollection(userInterfaceStyle: .dark))
-            XCTAssertTrue(dark.controlTint.isEqual(dark.legacyControlTint))
-            XCTAssertFalse(light.controlTint.isEqual(light.legacyControlTint))
-            for style in [UIUserInterfaceStyle.light, .dark] {
-                let traits = UITraitCollection(traitsFrom: [
-                    UITraitCollection(userInterfaceStyle: style),
-                    UITraitCollection(accessibilityContrast: .high),
-                ])
-                let increased = PremiumCardPalette(color: color, traits: traits)
-                XCTAssertTrue(increased.controlTint.isEqual(increased.legacyControlTint))
-            }
+    func testPremiumPaletteKeepsTheAccentHue() {
+        for accent in AppColor.allCases where accent != .gray {
+            let palette = PremiumCardPalette(color: accent.color, traits: UITraitCollection(userInterfaceStyle: .light))
+            var original: CGFloat = 0
+            var shaded: CGFloat = 0
+            accent.color.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
+                .getHue(&original, saturation: nil, brightness: nil, alpha: nil)
+            palette.end.getHue(&shaded, saturation: nil, brightness: nil, alpha: nil)
+            let difference = min(abs(original - shaded), 1 - abs(original - shaded))
+            XCTAssertLessThan(difference, 0.01, "\(accent) keeps its hue")
         }
+    }
+
+    private func rgb(_ color: UIColor) -> [CGFloat] {
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return [r, g, b]
     }
 
     func testNilAndZeroInsetDoNotCollide() throws {

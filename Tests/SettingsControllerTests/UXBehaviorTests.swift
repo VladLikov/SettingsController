@@ -52,16 +52,19 @@ final class UXBehaviorTests: XCTestCase {
         }
     }
 
-    func testRowsUseChevronsOnlyForScreens() {
-        XCTAssertEqual(
-            DisplayRow.item(.defaultRow(.about(appID: "1", privacyURL: URL(string: "https://a.b")!, termsURL: URL(string: "https://a.b")!)))
-                .accessory, .disclosure)
-        XCTAssertEqual(DisplayRow.item(.defaultRow(.rateApp(appID: "1"))).accessory, .external)
-        XCTAssertEqual(DisplayRow.item(.defaultRow(.language)).accessory, .external)
-        XCTAssertEqual(DisplayRow.item(.defaultRow(.shareApp(appID: "1"))).accessory, .none)
-        XCTAssertEqual(DisplayRow.item(.defaultRow(.contactDeveloper(email: "a@b.c"))).accessory, .none)
+    func testActionableRowsUseChevronsAndMoreAppsAnArrow() {
+        for row: SettingsRowItem.DefaultRow in [
+            .language, .contactDeveloper(email: "a@b.c"), .rateApp(appID: "1"), .shareApp(appID: "1"), .redeemCode,
+            .telegram(id: "t"), .vkGroup(id: "1"),
+        ] {
+            XCTAssertEqual(DisplayRow.item(.defaultRow(row)).accessory, .disclosure, "\(row)")
+        }
+        XCTAssertEqual(DisplayRow.item(.defaultRow(.moreApps(developerID: "1"))).accessory, .external)
         let action = SettingsRow(title: "A", icon: SettingsIcon(image: nil, color: .blue), destination: .action { _ in })
-        XCTAssertEqual(DisplayRow.item(.row(action)).accessory, .none)
+        XCTAssertEqual(DisplayRow.item(.row(action)).accessory, .disclosure)
+        let inert = SettingsRow(title: "A", icon: SettingsIcon(image: nil, color: .blue), destination: nil)
+        XCTAssertEqual(DisplayRow.item(.row(inert)).accessory, .none)
+        XCTAssertEqual(DisplayRow.app(.placeholder).accessory, .none)
     }
 
     func testSecondTapOnAnOpeningAppDoesNotRestartTheRequest() async throws {

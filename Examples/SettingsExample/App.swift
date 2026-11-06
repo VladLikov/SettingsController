@@ -64,8 +64,13 @@ final class DemoStore: SettingsControllerDelegate {
         // Literal QA copy/colors match the owner's App Lock reference, without modifying the real host.
         let appLockReference = ProcessInfo.processInfo.arguments.contains("-demo-applock-premium")
         let purpleReference = ProcessInfo.processInfo.arguments.contains("-demo-premium-reference-purple")
+        // QA: `-demo-premium-color green` previews the card in one AppColor.
+        let arguments = ProcessInfo.processInfo.arguments
+        let requestedPremiumColor = arguments.firstIndex(of: "-demo-premium-color")
+            .flatMap { arguments.indices.contains($0 + 1) ? AppColor(rawValue: arguments[$0 + 1])?.color : nil }
         let premium = PremiumPayload(
-            isPremium: premium, color: purpleReference ? .systemIndigo : (appLockReference ? AppColor.blue.color : .systemIndigo),
+            isPremium: premium,
+            color: requestedPremiumColor ?? (purpleReference ? .systemIndigo : (appLockReference ? AppColor.blue.color : .systemIndigo)),
             destination: .factory { [self] in
                 UINavigationController(rootViewController: PaywallController(store: self))
             })

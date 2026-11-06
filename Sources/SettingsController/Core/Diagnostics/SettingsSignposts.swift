@@ -11,7 +11,7 @@ enum SettingsSignposts {
 enum PremiumCardSizingStatistics {
     /// Calls of `PremiumCell.systemLayoutSizeFitting`.
     private(set) static var cellSizingCount = 0
-    /// Real SwiftUI measurement passes performed by `PremiumCardMeasurer`.
+    /// SwiftUI layouts run to size the card, that is, height cache misses.
     private(set) static var measurementCount = 0
     private(set) static var measurementDuration: Double = 0
 

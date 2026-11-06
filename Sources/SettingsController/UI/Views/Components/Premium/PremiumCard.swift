@@ -1,13 +1,5 @@
 import SwiftUI
 
-/// How the card arranges its heading and call to action.
-enum PremiumCardLayout: Equatable {
-    /// Chooses with `ViewThatFits`; used by hosts that embed the public view directly.
-    case automatic
-    case horizontal
-    case stacked
-}
-
 public struct PremiumCard: View {
     public let image: Image
     public let title: String
@@ -16,11 +8,8 @@ public struct PremiumCard: View {
     public let buttonTitle: String
     public let color: UIColor
     public let onTap: () -> Void
-    let layout: PremiumCardLayout
     /// A precomputed palette for the current appearance; resolved from the environment when nil.
     let palette: PremiumCardPalette?
-    /// Renders only the padded content so the measurer sizes it with the real environment.
-    var isMeasurement = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
@@ -43,12 +32,11 @@ public struct PremiumCard: View {
         self.buttonTitle = buttonTitle
         self.color = color
         self.onTap = onTap
-        self.layout = .automatic
         self.palette = nil
     }
 
-    /// Library cells pass a measured layout and a cached palette, so sizing never tries both arrangements.
-    init(payload: PremiumCardPayload, layout: PremiumCardLayout, palette: PremiumCardPalette?, onTap: @escaping () -> Void) {
+    /// Library cells pass a palette cached for their traits.
+    init(payload: PremiumCardPayload, palette: PremiumCardPalette?, onTap: @escaping () -> Void) {
         image = payload.image
         title = payload.title
         tierTitle = payload.tierTitle
@@ -56,7 +44,6 @@ public struct PremiumCard: View {
         buttonTitle = payload.buttonTitle
         color = payload.premium.color
         self.onTap = onTap
-        self.layout = layout
         self.palette = palette
     }
 
@@ -78,21 +65,16 @@ public struct PremiumCard: View {
 
     public var body: some View {
         let palette = palette ?? PremiumCardPalette.cached(color: color, traits: environmentTraits)
-        if isMeasurement {
-            paddedContent(palette)
-        } else {
-            card(palette)
-        }
-    }
-
-    private func card(_ palette: PremiumCardPalette) -> some View {
-        paddedContent(palette)
+        content(palette)
+            .padding(.leading, PremiumCardMetrics.leadingPadding)
+            .padding(.trailing, PremiumCardMetrics.trailingPadding)
+            .padding(.vertical, PremiumCardMetrics.verticalPadding)
             .frame(maxWidth: .infinity, minHeight: PremiumCardMetrics.minimumHeight, alignment: .leading)
             .background {
                 RoundedRectangle(cornerRadius: 36, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [Color(palette.base), Color(palette.middle), Color(palette.end)], startPoint: .topLeading,
+                            colors: [Color(palette.start), Color(palette.end)], startPoint: .topLeading,
                             endPoint: .bottomTrailing)
                     )
                     .contentShape(RoundedRectangle(cornerRadius: 36, style: .continuous))
@@ -114,31 +96,12 @@ public struct PremiumCard: View {
         ])
     }
 
-    /// The card content with its insets, without the background or the full-width frame.
-    private func paddedContent(_ palette: PremiumCardPalette) -> some View {
-        content(palette)
-            .padding(.leading, PremiumCardMetrics.leadingPadding)
-            .padding(.trailing, PremiumCardMetrics.trailingPadding)
-            .padding(.vertical, PremiumCardMetrics.verticalPadding)
-    }
-
     @ViewBuilder
     private func content(_ palette: PremiumCardPalette) -> some View {
-        switch layout {
-        case .horizontal:
-            horizontalContent(palette, allowsWrapping: false)
-        case .stacked:
-            stackedContent(palette)
-        case .automatic:
-            automaticContent(palette)
-        }
-    }
-
-    @ViewBuilder
-    private func automaticContent(_ palette: PremiumCardPalette) -> some View {
         if dynamicTypeSize.isAccessibilitySize {
             stackedContent(palette)
         } else if #available(iOS 16.0, *) {
+            // Decided in the cell's real environment; PremiumCell caches the resulting height.
             ViewThatFits(in: .horizontal) {
                 horizontalContent(palette, allowsWrapping: false)
                 stackedContent(palette)
@@ -159,9 +122,7 @@ public struct PremiumCard: View {
     private func stackedContent(_ palette: PremiumCardPalette) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             heading.allowsHitTesting(false)
-            // Trailing, as in the horizontal layout: the glass CTA keeps its contrast over the lighter end
-            // of the gradient. Over the darker leading edge it fails the accessibility contrast audit.
-            callToAction(palette).frame(maxWidth: .infinity, alignment: .trailing)
+            callToAction(palette)
         }
     }
 
@@ -185,16 +146,18 @@ public struct PremiumCard: View {
             .fixedSize(horizontal: false, vertical: true)
 
         let button = Button(action: onTap) { label.padding(.horizontal, 4) }
+        // Native translucent styles over the card: glass on iOS 26, bordered with a white tint earlier.
         Group {
             if #available(iOS 26.0, *) {
-                button.buttonStyle(.glassProminent).tint(Color(palette.controlTint))
+                button.buttonStyle(.glass).tint(.white).foregroundStyle(.white)
             } else {
-                button.buttonStyle(.borderedProminent).tint(Color(palette.legacyControlTint))
-                    .foregroundColor(.white)
+                button.buttonStyle(.bordered).tint(.white).foregroundColor(.white)
             }
         }
         .buttonBorderShape(.capsule)
         .controlSize(.regular)
+        // The card is always a dark surface; render the control as it would appear on one.
+        .environment(\.colorScheme, .dark)
         .fixedSize(horizontal: false, vertical: true)
         .frame(minHeight: 44)
     }
@@ -208,14 +171,16 @@ enum PremiumCardMetrics {
     static let verticalPadding: CGFloat = 14
 }
 
-/// Three related hues make the reference pill's gradient pronounced without animating it.
+/// One hue, two stops: the accent darkened until white text stays readable, and a deeper shade of it.
+/// The darkening also covers the translucent CTA fill, which lightens what lies under its label.
 struct PremiumCardPalette {
-    let base: UIColor
-    let middle: UIColor
+    let start: UIColor
     let end: UIColor
     let text = UIColor.white
-    let controlTint: UIColor
-    let legacyControlTint: UIColor
+
+    /// Approximate lightening of the card under a translucent white CTA fill.
+    static let controlFillOpacity: CGFloat = 0.2
+    static let startShade: CGFloat = 0.78
 
     private struct CacheKey: Hashable {
         let color: UIColor
@@ -225,7 +190,7 @@ struct PremiumCardPalette {
 
     @MainActor private static var cache: [CacheKey: PremiumCardPalette] = [:]
 
-    /// The palette only depends on the accent color, light or dark style and contrast; reuse it across layouts.
+    /// The palette only depends on the accent color, light or dark style and contrast.
     @MainActor
     static func cached(color: UIColor, traits: UITraitCollection) -> PremiumCardPalette {
         let key = CacheKey(color: color, style: traits.userInterfaceStyle, contrast: traits.accessibilityContrast)
@@ -237,71 +202,45 @@ struct PremiumCardPalette {
     }
 
     init(color: UIColor, traits: UITraitCollection) {
-        let resolved = color.resolvedColor(with: traits)
-        var hue: CGFloat = 0
-        var saturation: CGFloat = 0
-        var brightness: CGFloat = 0
-        var alpha: CGFloat = 1
-        guard resolved.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha) else {
-            base = resolved
-            middle = resolved
-            end = resolved
-            controlTint = .darkGray
-            legacyControlTint = .darkGray
-            return
-        }
-        if saturation < 0.05 {
-            base = UIColor(white: max(brightness * 0.55, 0.08), alpha: 1)
-            middle = UIColor(white: max(brightness * 0.75, 0.16), alpha: 1)
-            end = UIColor(white: max(brightness * 0.95, 0.24), alpha: 1)
-        } else {
-            func stop(_ offset: CGFloat, saturation: CGFloat, brightness: CGFloat) -> UIColor {
-                UIColor(
-                    hue: (hue + offset + 1).truncatingRemainder(dividingBy: 1),
-                    saturation: min(max(saturation, 0), 1), brightness: brightness, alpha: 1)
-            }
-            base = stop(-0.035, saturation: max(saturation, 0.95), brightness: 0.92)
-            middle = stop(0.005, saturation: max(saturation, 0.9), brightness: 0.98)
-            end = stop(0.045, saturation: max(saturation * 0.8, 0.75), brightness: 1)
-        }
         var r: CGFloat = 0
         var g: CGFloat = 0
         var b: CGFloat = 0
         var a: CGFloat = 1
-        middle.getRed(&r, green: &g, blue: &b, alpha: &a)
-        // The native prominent glass gets a softer, lighter tone than the banner.
-        let lightControlTint = UIColor(
-            red: r + (1 - r) * 0.55, green: g + (1 - g) * 0.55,
-            blue: b + (1 - b) * 0.55, alpha: 1)
-        // Older systems have a solid prominent fill rather than adaptive native glass.
-        func contrast(_ factor: CGFloat) -> Double {
-            let channels = [r, g, b].map { value -> Double in
-                let v = Double(value * factor)
-                return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
-            }
-            return 1.05 / (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2] + 0.05)
+        if !color.resolvedColor(with: traits).getRed(&r, green: &g, blue: &b, alpha: &a) {
+            (r, g, b) = (0.35, 0.35, 0.38)
         }
-        // Leave luminance headroom for the native glass material in dark/high-contrast appearances.
-        let minimumContrast = traits.userInterfaceStyle == .dark || traits.accessibilityContrast == .high ? 5.5 : 4.8
-        var factor: CGFloat = 1
-        if contrast(1) < minimumContrast {
-            var low: CGFloat = 0
-            var high: CGFloat = 1
-            for _ in 0..<12 {
-                let middle = (low + high) / 2
-                if contrast(middle) >= minimumContrast { low = middle } else { high = middle }
-            }
-            factor = low
+        let rgb = [r, g, b].map { min(max($0, 0), 1) }
+        let minimum: Double = traits.accessibilityContrast == .high ? 7 : 4.5
+        let factor = Self.darkening(rgb, minimum: minimum)
+        let endRGB = rgb.map { $0 * factor }
+        end = UIColor(red: endRGB[0], green: endRGB[1], blue: endRGB[2], alpha: 1)
+        start = UIColor(
+            red: endRGB[0] * Self.startShade, green: endRGB[1] * Self.startShade, blue: endRGB[2] * Self.startShade, alpha: 1)
+    }
+
+    /// White text contrast against a color, per WCAG relative luminance.
+    static func whiteContrast(_ rgb: [CGFloat]) -> Double {
+        let channels = rgb.map { value -> Double in
+            let v = Double(value)
+            return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
         }
-        if traits.userInterfaceStyle == .dark || traits.accessibilityContrast == .high {
-            // Already-dark accents still need a distinct CTA tone rather than the gradient's middle stop.
-            factor = min(factor, 0.9)
+        return 1.05 / (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2] + 0.05)
+    }
+
+    /// The largest scale of the color that keeps white text at `minimum`, also under the CTA fill.
+    private static func darkening(_ rgb: [CGFloat], minimum: Double) -> CGFloat {
+        func passes(_ factor: CGFloat) -> Bool {
+            let shaded = rgb.map { $0 * factor }
+            let underControl = shaded.map { $0 + (1 - $0) * controlFillOpacity }
+            return whiteContrast(shaded) >= minimum && whiteContrast(underControl) >= minimum
         }
-        legacyControlTint = UIColor(red: r * factor, green: g * factor, blue: b * factor, alpha: 1)
-        // Custom tints need appearance and Increased Contrast variants (Apple's adoption guidance).
-        // Keep the approved light tint; avoid adding white to a dark-mode glass fill.
-        controlTint =
-            traits.userInterfaceStyle == .dark || traits.accessibilityContrast == .high
-            ? legacyControlTint : lightControlTint
+        if passes(1) { return 1 }
+        var low: CGFloat = 0
+        var high: CGFloat = 1
+        for _ in 0..<16 {
+            let middle = (low + high) / 2
+            if passes(middle) { low = middle } else { high = middle }
+        }
+        return low
     }
 }

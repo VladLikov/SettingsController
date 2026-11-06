@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.0.1 — 2026-11-06
+
+### Fixed
+- The premium card again chooses its one-row or stacked arrangement with `ViewThatFits` inside the cell, as in 4.0.8. The 5.0 offscreen measurement was a few points wider than the device near the one-row limit, so on 375 pt screens "App Lock PRO / Get PRO" stacked. Heights are still cached per content, text size and width and shared across presentations.
+- The stacked card's CTA returns to the leading edge, under the heading.
+
+### Changed
+- Premium card palette: one hue, two stops, no hue shift. The accent is darkened until white text reaches 4.5:1 (7:1 with Increase Contrast), including under the CTA fill, so green, orange, yellow and gray cards are readable.
+- Every actionable row shows a chevron again, as in 4.x and system Settings; only More Apps shows the external arrow.
+- The CTA uses the native glass style (iOS 26+) or the bordered style with a white tint, always rendered for a dark surface, instead of tinted prominent styles.
+
 ## 5.0.0 — 2026-11-06
 
 Source-breaking release. See [Migration to 5.0](Documentation/MIGRATION-5.0.md); most 4.x initializers remain as deprecated wrappers.
