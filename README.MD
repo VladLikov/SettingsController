@@ -1,4 +1,4 @@
-> **5.0.0.** This release contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
+> **5.0.1.** The 5.0 line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
 
 # SettingsController
 
@@ -38,7 +38,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.0.0")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.0.1")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -174,7 +174,7 @@ Every custom row, profile row and premium payload has at most one `SettingsDesti
 }
 ```
 
-`SettingsActionContext` gives the presenting `viewController` and, for rows, the `tableView` and `indexPath`. Rows with `.controller` or `.factory` show a chevron and open in the navigation stack, or in the detail column on iPad and Duo. A premium destination is presented modally (full screen in compact width). A row whose destination is `nil` is inert.
+`SettingsActionContext` gives the presenting `viewController` and, for rows, the `tableView` and `indexPath`. Rows with `.controller` or `.factory` open in the navigation stack, or in the detail column on iPad and Duo. A premium destination is presented modally (full screen in compact width). A row whose destination is `nil` is inert.
 
 The configuration retains factories and actions. If their owner also retains the settings controller or configuration, capture independent services or use a weak capture.
 
@@ -300,7 +300,7 @@ let actionRow = SettingsRow(
 SettingsSection(title: "Advanced", kind: .rows([.row(row), .row(actionRow)]))
 ```
 
-Rows that show a screen have a chevron. Rows that leave the app (review, more apps, Telegram, VK, Language) show an arrow; sheets and actions show no accessory.
+Actionable rows show a chevron, as in system Settings; More Apps, which opens the developer's App Store page, shows an arrow.
 
 ## Settings Icon Generator
 
@@ -353,9 +353,9 @@ let card = PremiumCardPayload(
 SettingsSection(kind: .premiumCard(card))
 ```
 
-The header has three inputs: `image`, regular-weight `title` and bold, host-localized `tierTitle` (for example `PRO` or `Plus`). The title stays on one row when it fits; narrow widths and accessibility text sizes use a stacked layout. The subtitle is available to VoiceOver but not shown. The CTA uses native glass-prominent styling on iOS 26+ and bordered-prominent earlier; the CTA and the card background open the same destination.
+The header has three inputs: `image`, regular-weight `title` and bold, host-localized `tierTitle` (for example `PRO` or `Plus`). The title stays on one row when it fits; narrow widths and accessibility text sizes use a stacked layout. The subtitle is available to VoiceOver but not shown. The background is a soft two-stop gradient of the accent hue, darkened until white text keeps a contrast of at least 4.5:1 (7:1 with Increase Contrast), also under the translucent CTA. The CTA uses the native glass style on iOS 26+ and the bordered style earlier, rendered as on a dark surface; the CTA and the card background open the same destination.
 
-The card is measured once per content and text size and the result is shared by every settings presentation, so self-sizing does not repeat its SwiftUI layout. When your own appearance screen changes the accent, call `settingsController.updatePremiumColor(newColor)`; the built-in Appearance screen does this automatically.
+The card chooses its arrangement with `ViewThatFits` in the cell; the resulting height is cached per content, text size and width and shared by every settings presentation, so later self-sizing passes and presentations do not lay it out again. When your own appearance screen changes the accent, call `settingsController.updatePremiumColor(newColor)`; the built-in Appearance screen does this automatically.
 
 ## Presentation Options
 

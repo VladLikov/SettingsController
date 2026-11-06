@@ -8,7 +8,6 @@ final class PremiumCell: UITableViewCell {
 
     private var payload: PremiumCardPayload?
     private var onTap: (() -> Void)?
-    private var layout: PremiumCardLayout = .automatic
     private var usesLegacyHosting = false
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -41,7 +40,6 @@ final class PremiumCell: UITableViewCell {
         hostingParent = nil
         payload = nil
         onTap = nil
-        layout = .automatic
         contentConfiguration = nil
         backgroundConfiguration = nil
         accessoryType = .none
@@ -63,21 +61,18 @@ final class PremiumCell: UITableViewCell {
             usesLegacyHosting = false
             detachHost(discard: true)
             hostingParent = nil
-            // Reuse the last measured arrangement; sizing corrects it if the width changed.
-            layout = PremiumCardMeasurer.lastLayout(for: payload, traits: traitCollection) ?? .automatic
         } else {
             usesLegacyHosting = true
             hostingParent = parent
-            layout = .automatic
         }
         applyCard()
     }
 
-    /// Renders the card with the measured layout and a palette resolved from the cell's own traits.
+    /// Renders the card with a palette resolved from the cell's own traits.
     private func applyCard() {
         guard let payload, let onTap else { return }
         let palette = PremiumCardPalette.cached(color: payload.premium.color, traits: traitCollection)
-        let card = PremiumCard(payload: payload, layout: layout, palette: palette, onTap: onTap)
+        let card = PremiumCard(payload: payload, palette: palette, onTap: onTap)
         if #available(iOS 16, *), !usesLegacyHosting {
             contentConfiguration = UIHostingConfiguration { card }.margins(.all, 0)
         } else {
@@ -104,12 +99,24 @@ final class PremiumCell: UITableViewCell {
         defer { SettingsSignposts.signposter.endInterval("PremiumCell sizing", signpost) }
         PremiumCardSizingStatistics.recordCellSizing()
         let width = max(targetSize.width, 1)
-        let resolution = PremiumCardMeasurer.resolve(payload, width: width, traits: traitCollection)
-        if resolution.layout != layout {
-            layout = resolution.layout
-            applyCard()
+        if let height = PremiumCardHeightCache.height(for: payload, width: width, traits: traitCollection) {
+            return CGSize(width: width, height: height)
         }
-        return CGSize(width: width, height: resolution.height)
+        // A cache miss lays the card out in this cell, where ViewThatFits sees the real environment.
+        let start = CACurrentMediaTime()
+        let height: CGFloat
+        if let host {
+            height = ceil(host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude)).height)
+        } else {
+            height = ceil(
+                super.systemLayoutSizeFitting(
+                    CGSize(width: width, height: targetSize.height), withHorizontalFittingPriority: horizontalFittingPriority,
+                    verticalFittingPriority: verticalFittingPriority
+                ).height)
+        }
+        PremiumCardSizingStatistics.recordMeasurement(duration: CACurrentMediaTime() - start)
+        PremiumCardHeightCache.store(height, for: payload, width: width, traits: traitCollection)
+        return CGSize(width: width, height: height)
     }
 
     private func attachHost(to parent: UIViewController) {

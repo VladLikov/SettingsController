@@ -1,5 +1,14 @@
 # 5.0 verification
 
+## 5.0.1 update
+
+On a 375 pt iPhone the 5.0 premium card stacked where 4.0.8 showed one row: the offscreen measurement of the one-row card (346 pt) was wider than the cell (343 pt), while `ViewThatFits` in the cell fit it. 5.0.1 lets `ViewThatFits` decide in the cell again and caches only the resulting height (per content, text size and width) and the palette; first open lays the card out once, reloads and later presentations zero times. The offscreen-measurement and layout-parity results in the "PremiumCell sizing" section below describe 5.0.0 only.
+
+5.0.1 also replaces the premium palette (one hue, two stops, white text at 4.5:1 or 7:1 with Increase Contrast, also under the CTA fill) and uses the native glass or bordered CTA rendered for a dark surface. With this palette the stacked card's CTA is back at the leading edge and the iPad accessibility audit passes. Actionable rows show chevrons again; More Apps shows an arrow.
+
+Local results (Xcode 27.2, iOS 27.2): package tests on iPhone and iPad pass; example UI tests pass on iPhone 18 Pro (17), iPad Pro 11-inch (16 + 1 phone-only skip) and iPhone 13 mini (17, including the 72 pt one-row card at 375 pt). Card screenshots in all eight `AppColor` values, light and dark, were reviewed on the iPhone 13 mini.
+
+
 Date: 5 November 2026. Toolchain: Xcode 27.2 (27B52), Swift 6.4.4, iOS 15.0 deployment target. Simulators: iOS 27.2 iPhone, iPad Pro 11-inch (M5), iPhone Duo.
 
 ## Automated results

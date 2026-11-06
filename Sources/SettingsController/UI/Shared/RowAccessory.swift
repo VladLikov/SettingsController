@@ -1,12 +1,12 @@
 import UIKit
 
-/// The trailing accessory of a settings row. Follows the HIG: a chevron only for rows that show a screen.
+/// The trailing accessory of a settings row.
 enum RowAccessory: Equatable {
-    /// Shows a screen in the navigation stack or the detail column.
+    /// The standard chevron of an actionable row.
     case disclosure
-    /// Leaves the app, for example to the App Store, a social app or system Settings.
+    /// Leaves the app for an external page.
     case external
-    /// Presents a sheet or performs an action in place.
+    /// Not actionable.
     case none
 
     func apply(to cell: UITableViewCell) {
@@ -32,19 +32,18 @@ enum RowAccessory: Equatable {
 }
 
 extension DisplayRow {
+    /// Every actionable row shows a chevron, as in system Settings; More Apps, which leaves for the
+    /// developer's App Store page, shows an arrow. Catalog placeholders and the retry row show none.
     var accessory: RowAccessory {
         switch self {
-        case .item(.row(let row)):
-            return row.destination?.opensScreen == true ? .disclosure : .none
-        case .item(.defaultRow(let row)):
-            switch row {
-            case .appearance, .tapticEngine, .about: return .disclosure
-            case .user(_, _, let destination): return destination.opensScreen ? .disclosure : .none
-            case .rateApp, .moreApps, .telegram, .vkGroup, .language: return .external
-            case .shareApp, .redeemCode, .contactDeveloper, .premium: return .none
-            }
-        case .app(.loaded):
+        case .item(.defaultRow(.moreApps)):
             return .external
+        case .item(.row(let row)):
+            return row.destination == nil ? .none : .disclosure
+        case .item:
+            return .disclosure
+        case .app(.loaded):
+            return .disclosure
         case .app(.placeholder), .app(.failed):
             return .none
         }

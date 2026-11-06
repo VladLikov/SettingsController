@@ -7,7 +7,7 @@ import XCTest
 @MainActor
 final class PremiumCellSizingTests: XCTestCase {
     override func setUp() async throws {
-        PremiumCardMeasurer.removeAll()
+        PremiumCardHeightCache.removeAll()
         PremiumCardSizingStatistics.reset()
     }
 
@@ -77,10 +77,10 @@ final class PremiumCellSizingTests: XCTestCase {
             wider.isHidden = true
             wider.rootViewController = nil
         }
-        XCTAssertEqual(report("horizontal wider-open").swiftUI, 0, "A horizontal card's size does not depend on the width")
+        XCTAssertLessThanOrEqual(report("horizontal wider-open").swiftUI, 1, "A new width is measured once")
     }
 
-    func testStackedCardMeasuresTheFitCheckAndItsHeightOnlyOnce() {
+    func testStackedCardIsMeasuredOnceToo() {
         let (window, _) = mount()  // "Premium Plus" + "Continue" does not fit 343 pt and stacks, as in 4.0.8.
         defer {
             window.isHidden = true
@@ -88,7 +88,7 @@ final class PremiumCellSizingTests: XCTestCase {
         }
         let first = report("stacked first-open")
         XCTAssertLessThanOrEqual(first.cell, 2)
-        XCTAssertEqual(first.swiftUI, 2)
+        XCTAssertEqual(first.swiftUI, 1, "One layout in the cell, whichever arrangement ViewThatFits picks")
         let (second, _) = mount()
         defer {
             second.isHidden = true
@@ -108,69 +108,14 @@ final class PremiumCellSizingTests: XCTestCase {
         XCTAssertEqual(estimate, measured, accuracy: 0.5)
     }
 
-    func testTextSizeChangeProducesANewMeasurement() {
+    func testHeightCacheIsKeyedByWidthAndTextSize() {
         let payload = premiumCard()
-        _ = PremiumCardMeasurer.resolve(payload, width: 700, traits: traits(.large))
-        PremiumCardSizingStatistics.reset()
-        _ = PremiumCardMeasurer.resolve(payload, width: 700, traits: traits(.extraExtraLarge))
-        XCTAssertEqual(PremiumCardSizingStatistics.measurementCount, 1)
-        _ = PremiumCardMeasurer.resolve(payload, width: 700, traits: traits(.extraExtraLarge))
-        XCTAssertEqual(PremiumCardSizingStatistics.measurementCount, 1)
-    }
-
-    /// The measured layout must match what `ViewThatFits` renders in 4.0.8 for the same width and text size.
-    func testMeasuredHeightMatchesTheAutomaticCard() throws {
-        guard #available(iOS 16, *) else { throw XCTSkip("ViewThatFits reference requires iOS 16") }
-        let payloads = [
-            premiumCard(),
-            PremiumCardPayload(
-                title: "App Lock", tierTitle: "PRO", buttonTitle: "Get PRO",
-                premium: PremiumPayload(isPremium: false, color: .systemIndigo)),
-            PremiumCardPayload(
-                title: "Unlock every advanced feature", tierTitle: "Premium Plus",
-                buttonTitle: "Start free trial now", premium: PremiumPayload(isPremium: false, color: .systemPink)),
-        ]
-        let categories: [UIContentSizeCategory] = [
-            .small, .large, .extraExtraExtraLarge, .accessibilityMedium, .accessibilityExtraExtraExtraLarge,
-        ]
-        let widths: [CGFloat] = [288, 320, 343, 359, 398, 500, 700]
-        var stacked = 0
-        var horizontal = 0
-        for payload in payloads {
-            for category in categories {
-                for width in widths {
-                    let resolution = PremiumCardMeasurer.resolve(payload, width: width, traits: traits(category))
-                    let reference = referenceHeight(payload, width: width, category: category)
-                    XCTAssertEqual(
-                        resolution.height, reference, accuracy: 1,
-                        "\(payload.title) \(category.rawValue) width=\(width) layout=\(resolution.layout)")
-                    if resolution.layout == .stacked { stacked += 1 } else { horizontal += 1 }
-                }
-            }
-        }
-        XCTAssertGreaterThan(stacked, 0)
-        XCTAssertGreaterThan(horizontal, 0)
-    }
-
-    private func traits(_ category: UIContentSizeCategory) -> UITraitCollection {
-        UITraitCollection(traitsFrom: [
-            UITraitCollection(preferredContentSizeCategory: category),
-            UITraitCollection(displayScale: 3),
-            UITraitCollection(legibilityWeight: .regular),
-        ])
-    }
-
-    @available(iOS 16, *)
-    private func referenceHeight(_ payload: PremiumCardPayload, width: CGFloat, category: UIContentSizeCategory) -> CGFloat {
-        let card = PremiumCard(
-            image: payload.image, title: payload.title, tierTitle: payload.tierTitle, subtitle: payload.subtitle,
-            buttonTitle: payload.buttonTitle, color: payload.premium.color, onTap: {})
-        let host = UIHostingController(
-            rootView:
-                card
-                .environment(\.dynamicTypeSize, DynamicTypeSize(category) ?? .large)
-                .environment(\.legibilityWeight, .regular)
-                .environment(\.displayScale, 3))
-        return ceil(host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude)).height)
+        let large = UITraitCollection(preferredContentSizeCategory: .large)
+        let larger = UITraitCollection(preferredContentSizeCategory: .extraExtraLarge)
+        PremiumCardHeightCache.store(72, for: payload, width: 343, traits: large)
+        XCTAssertEqual(PremiumCardHeightCache.height(for: payload, width: 343, traits: large), 72)
+        XCTAssertNil(PremiumCardHeightCache.height(for: payload, width: 361, traits: large))
+        XCTAssertNil(PremiumCardHeightCache.height(for: payload, width: 343, traits: larger))
+        XCTAssertEqual(PremiumCardHeightCache.estimatedHeight(for: payload, traits: large), 72)
     }
 }

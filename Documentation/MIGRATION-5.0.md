@@ -74,4 +74,4 @@ These were implementation details and are now internal: `SettingsCell`, `SwitchC
 - Review, More Apps, Telegram and VK fall back to web links; you can remove `tg` and `vk` from `LSApplicationQueriesSchemes`.
 - The library's haptics and confirmation alerts are silent while the Taptic Engine setting is off.
 - App catalog results stay in memory for ten minutes per developer, limit and excluded app.
-- Chevrons appear only on rows that show a screen.
+- Actionable rows show a chevron as in 4.x; More Apps shows an external arrow (5.0.1).
