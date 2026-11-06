@@ -2,17 +2,61 @@ name: Public example and UI smoke
 on:
   push:
     branches: [main]
+    paths-ignore: ['**.md', '**.MD', 'Documentation/**', 'LICENSE']
   pull_request:
+    paths-ignore: ['**.md', '**.MD', 'Documentation/**', 'LICENSE']
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: example-${{ github.ref }}
   cancel-in-progress: true
+env:
+  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
 jobs:
-  example:
+  build:
+    name: Build for testing
     runs-on: xcode-27
-    timeout-minutes: 45
+    timeout-minutes: 30
+    steps:
+      - name: Toolchain evidence
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          xcrun swift --version
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # Dependencies and unchanged modules are reused between runs; a fresh checkout still recompiles changed sources.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .build/example-derived/SourcePackages
+            .build/example-derived/Build/Intermediates.noindex
+            .build/example-derived/ModuleCache.noindex
+          key: example-derived-xcode27.1-${{ hashFiles('Package.resolved', 'Package.swift', 'Sources/**', 'Examples/**', 'scripts/generate-example.py') }}
+          restore-keys: example-derived-xcode27.1-
+      - name: Build once for every simulator
+        run: MODE=build bash scripts/test-example.sh
+      # A tarball keeps the executable bits that artifact zips drop.
+      - name: Pack the built products
+        run: tar -czf example-products.tgz -C .build/example-derived/Build Products
+      - uses: actions/upload-artifact@v4
+        with:
+          name: example-products
+          path: example-products.tgz
+          retention-days: 1
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: example-build-log
+          path: .build/example-results/build.log
+          retention-days: 7
+  test:
+    name: example (${{ matrix.name }}, ${{ matrix.family }}, ${{ matrix.runtime }}, ${{ matrix.device }})
+    needs: build
+    runs-on: xcode-27
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -30,7 +74,6 @@ jobs:
             runtime: '27.1'
             device: iPhone Duo
     env:
-      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
       DEVICE_FAMILY: ${{ matrix.family }}
       DEVICE_NAME: ${{ matrix.device }}
       IOS_RUNTIME: ${{ matrix.runtime }}
@@ -40,12 +83,22 @@ jobs:
         run: |
           test -d "$DEVELOPER_DIR"
           xcodebuild -version
-          xcrun swift --version
           xcrun simctl list runtimes
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - run: bash scripts/test-example.sh
+      # A fresh runner's first simulator boot migrates data for minutes; start it while artifacts download.
+      - name: Start booting the simulator
+        run: MODE=boot bash scripts/test-example.sh
+      - uses: actions/download-artifact@v4
+        with:
+          name: example-products
+      - name: Unpack the built products
+        run: |
+          mkdir -p .build/example-derived/Build
+          tar -xzf example-products.tgz -C .build/example-derived/Build
+      - name: Test the prebuilt example
+        run: MODE=test bash scripts/test-example.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
