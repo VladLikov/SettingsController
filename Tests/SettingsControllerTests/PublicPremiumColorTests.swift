@@ -16,10 +16,10 @@ final class PublicPremiumColorTests: XCTestCase {
             ]))
         settings.updatePremiumColor(.systemRed)
         settings.loadViewIfNeeded()
-        XCTAssertEqual(settings.numberOfSections(in: settings.tableView), 1)
-        XCTAssertEqual(settings.tableView(settings.tableView, numberOfRowsInSection: 0), 1)
+        XCTAssertEqual(settings.tableView.numberOfSections, 1)
+        XCTAssertEqual(settings.tableView.numberOfRows(inSection: 0), 1)
         settings.updatePremiumColor(.systemRed)
         settings.updatePremiumColor(.systemGreen)
-        XCTAssertEqual(settings.tableView(settings.tableView, numberOfRowsInSection: 0), 1)
+        XCTAssertEqual(settings.tableView.numberOfRows(inSection: 0), 1)
     }
 }

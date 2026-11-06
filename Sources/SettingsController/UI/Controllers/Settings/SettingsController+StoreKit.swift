@@ -50,11 +50,8 @@ extension SettingsController {
         let changed = [openingStoreAppID, id].compactMap { $0 }
         openingStoreAppID = id
         guard isViewLoaded else { return }
-        let rows = (tableView.indexPathsForVisibleRows ?? []).filter { path in
-            guard case .app(.loaded(let app)) = displayRow(at: path) else { return false }
-            return changed.contains(app.id)
-        }
-        if !rows.isEmpty { UIView.performWithoutAnimation { tableView.reconfigureRows(at: rows) } }
+        let rows = visibleSectionIDs.flatMap { section in changed.map { SettingsRowID(section: section, kind: .app($0)) } }
+        reconfigure(Set(rows))
     }
 
     func displayAppOverlayIfNeeded() {
