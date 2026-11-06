@@ -98,8 +98,8 @@ final class UXBehaviorTests: XCTestCase {
     func testAboutOffersCopyForDiagnosticValuesAndLocalizedPremiumStatus() {
         let about = makeAbout()
         about.loadViewIfNeeded()
-        let bundleRow = IndexPath(row: 0, section: 0)
-        XCTAssertNotNil(about.tableView(about.tableView, contextMenuConfigurationForRowAt: bundleRow, point: .zero))
+        let osVersionRow = IndexPath(row: 0, section: 2)
+        XCTAssertNotNil(about.tableView(about.tableView, contextMenuConfigurationForRowAt: osVersionRow, point: .zero))
         let account = about.data.firstIndex { $0.section == .account }!
         let premium = about.data[account].items[1]
         XCTAssertNotEqual(premium.value, "false")
@@ -181,5 +181,40 @@ final class DoubleTapTests: XCTestCase {
         settings.tableView(settings.tableView, didSelectRowAt: row)
         XCTAssertEqual(created, 1)
         XCTAssertEqual(navigation.viewControllers.count, 2)
+    }
+}
+
+@MainActor
+final class TapticScreenTests: XCTestCase {
+    private final class Storage: TapticStorage {
+        var isTapticEngineEnabled = true
+        var tapticStyle = TapticStyle.medium
+    }
+
+    func testToggleRemovesStylesAndSelectionMovesTheCheckmark() throws {
+        let storage = Storage()
+        let controller = TapticEngineController(tapticStorage: storage, eventHandler: nil)
+        let window = mountedWindow(controller)
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        let table = controller.tableView!
+        XCTAssertEqual(table.numberOfSections, 2)
+        controller.tableView(table, didSelectRowAt: IndexPath(row: 2, section: 1))
+        table.layoutIfNeeded()
+        XCTAssertEqual(storage.tapticStyle, .heavy)
+        XCTAssertEqual(table.cellForRow(at: IndexPath(row: 2, section: 1))?.accessoryType, .checkmark)
+        XCTAssertEqual(table.cellForRow(at: IndexPath(row: 1, section: 1))?.accessoryType, Optional(.none))
+
+        let toggle = try XCTUnwrap(table.cellForRow(at: IndexPath(row: 0, section: 0)) as? SwitchCell)
+        toggle.switchControl.isOn = false
+        for target in toggle.switchControl.allTargets {
+            for action in toggle.switchControl.actions(forTarget: target, forControlEvent: .valueChanged) ?? [] {
+                _ = (target as NSObject).perform(NSSelectorFromString(action), with: toggle.switchControl)
+            }
+        }
+        XCTAssertFalse(storage.isTapticEngineEnabled)
+        XCTAssertEqual(table.numberOfSections, 1)
     }
 }

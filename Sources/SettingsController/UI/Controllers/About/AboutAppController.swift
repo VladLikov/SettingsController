@@ -8,7 +8,7 @@ import UIKit
 final class AboutAppController: UITableViewController {
 
     enum AboutSection {
-        case build
+        case update
         case links
         case device
         case account
@@ -16,10 +16,7 @@ final class AboutAppController: UITableViewController {
 
         var title: String? {
             switch self {
-            case .build:
-                return NSLocalizedString(
-                    "Build", bundle: .module, comment: "About section heading for bundle identifier, version and update check.")
-            case .links:
+            case .update, .links:
                 return nil
             case .device:
                 return NSLocalizedString("Device", bundle: .module, comment: "About section heading for operating system and device model.")
@@ -36,7 +33,7 @@ final class AboutAppController: UITableViewController {
                 return NSLocalizedString(
                     "Tap User ID to copy. Support may request it.", bundle: .module,
                     comment: "Account section footer explaining the explicit copy action.")
-            case .build, .links, .device, .locale:
+            case .update, .links, .device, .locale:
                 return nil
             }
         }
@@ -54,7 +51,6 @@ final class AboutAppController: UITableViewController {
         let title: String
         let subtitle: String?
         let value: String?
-        let icon: SettingsIcon?
         let action: AboutAction
 
         var isSelectable: Bool {
@@ -69,6 +65,12 @@ final class AboutAppController: UITableViewController {
 
     var data: [(section: AboutSection, items: [AboutItem])] = []
     let updateCheck = CancellableRequest()
+    var dataSource: TitledDataSource<AboutSection, String>?
+    private struct HeaderSizeKey: Equatable {
+        let width: CGFloat
+        let category: UIContentSizeCategory
+    }
+    private var headerSizeKey: HeaderSizeKey?
     var checkUpdateTask: Task<Void, Never>? { updateCheck.task }
 
     private(set) var isPremium: Bool
@@ -108,8 +110,37 @@ final class AboutAppController: UITableViewController {
         tableView.estimatedRowHeight = 58
 
         setupData()
+        installDataSource()
+        installHeader()
         observeAppearance()
         loadAccountInfo()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        sizeHeader()
+    }
+
+    /// The app icon, name, version and bundle ID above the list.
+    private func installHeader() {
+        let app = Self.appHeader
+        tableView.tableHeaderView = AboutAppHeaderView(
+            icon: AboutAppHeaderView.appIcon(), name: app.name, version: app.version, bundleID: app.bundleID)
+    }
+
+    /// A table header keeps its frame; resize it when the width or the text size changes.
+    private func sizeHeader() {
+        guard let header = tableView.tableHeaderView else { return }
+        let width = tableView.bounds.width
+        let key = HeaderSizeKey(width: width, category: traitCollection.preferredContentSizeCategory)
+        guard width > 0, key != headerSizeKey else { return }
+        headerSizeKey = key
+        let height = header.systemLayoutSizeFitting(
+            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel
+        ).height
+        header.frame = CGRect(x: 0, y: 0, width: width, height: ceil(height))
+        tableView.tableHeaderView = header
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -146,13 +177,7 @@ final class AboutAppController: UITableViewController {
         isPremium = premium
         if changed, isViewLoaded, let section = data.firstIndex(where: { $0.section == .account }) {
             data[section].items = accountItems()
-            guard tableView.window != nil else {
-                tableView.reloadData()
-                return
-            }
-            UIView.performWithoutAnimation {
-                tableView.reconfigureRows(at: data[section].items.indices.map { IndexPath(row: $0, section: section) })
-            }
+            reconfigureRows(titled: data[section].items.map(\.title))
         }
     }
 
@@ -190,52 +215,41 @@ final class AboutAppController: UITableViewController {
     }
 }
 
-// MARK: - UITableViewDataSource
+// MARK: - Data source
 
 extension AboutAppController {
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        data.count
+    private func installDataSource() {
+        let dataSource = TitledDataSource<AboutSection, String>(tableView: tableView) { [unowned self] tableView, indexPath, _ in
+            makeCell(in: tableView, at: indexPath)
+        }
+        dataSource.header = { $0.title }
+        dataSource.footer = { $0.footer }
+        self.dataSource = dataSource
+        tableView.dataSource = dataSource
+        var snapshot = NSDiffableDataSourceSnapshot<AboutSection, String>()
+        for group in data {
+            snapshot.appendSections([group.section])
+            snapshot.appendItems(group.items.map(\.title), toSection: group.section)
+        }
+        UIView.performWithoutAnimation { dataSource.apply(snapshot, animatingDifferences: false) }
     }
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        data[section].items.count
+    /// Re-renders the rows with the given titles, which identify About rows.
+    func reconfigureRows(titled titles: [String]) {
+        dataSource?.reconfigure(titles)
     }
 
-    override func tableView(
-        _ tableView: UITableView,
-        titleForHeaderInSection section: Int
-    ) -> String? {
-        data[section].section.title
-    }
-
-    override func tableView(
-        _ tableView: UITableView,
-        titleForFooterInSection section: Int
-    ) -> String? {
-        data[section].section.footer
-    }
-
-    override func tableView(
-        _ tableView: UITableView,
-        cellForRowAt indexPath: IndexPath
-    ) -> UITableViewCell {
-
+    private func makeCell(in tableView: UITableView, at indexPath: IndexPath) -> UITableViewCell {
         let item = data[indexPath.section].items[indexPath.row]
         let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
 
+        // As in Settings › General › About: the label on the left, its value on the right.
+        // A long value, such as a User ID, goes under its label instead.
         var config =
             item.subtitle == nil
             ? UIListContentConfiguration.valueCell()
             : UIListContentConfiguration.subtitleCell()
-
-        if let icon = item.icon {
-            config.applySettingsIcon(icon.generateSettingsImage(traitCollection: traitCollection))
-        } else {
-            config.image = nil
-            config.imageProperties.reservedLayoutSize = .zero
-            config.imageToTextPadding = SettingsMetrics.imageToTextPadding
-        }
         config.applySettingsRowLayout()
 
         config.text = item.title

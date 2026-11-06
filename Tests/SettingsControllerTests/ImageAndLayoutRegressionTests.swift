@@ -135,8 +135,8 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             window.isHidden = true
             window.rootViewController = nil
         }
-        XCTAssertEqual(controller.numberOfSections(in: controller.tableView), 2)
-        XCTAssertNotNil(controller.tableView(controller.tableView, titleForFooterInSection: 1))
+        XCTAssertEqual(controller.tableView.numberOfSections, 2)
+        XCTAssertNotNil(controller.tableView.dataSource?.tableView?(controller.tableView, titleForFooterInSection: 1))
         let toggle = try XCTUnwrap(controller.tableView.cellForRow(at: IndexPath(row: 0, section: 1)) as? SwitchCell)
         toggle.switchControl.isOn = false
         for target in toggle.switchControl.allTargets {
@@ -145,12 +145,12 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
             }
         }
         XCTAssertFalse(theme.followsSystemAppearance)
-        XCTAssertEqual(controller.numberOfSections(in: controller.tableView), 3)
-        XCTAssertNotNil(controller.tableView(controller.tableView, titleForFooterInSection: 1))
-        XCTAssertNil(controller.tableView(controller.tableView, titleForFooterInSection: 2))
+        XCTAssertEqual(controller.tableView.numberOfSections, 3)
+        XCTAssertNotNil(controller.tableView.dataSource?.tableView?(controller.tableView, titleForFooterInSection: 1))
+        XCTAssertNil(controller.tableView.dataSource?.tableView?(controller.tableView, titleForFooterInSection: 2))
     }
 
-    func testRemovedSavedColorDoesNotPreventSelection() {
+    func testRemovedSavedColorDoesNotPreventSelection() throws {
         let theme = RegressionTheme()
         let provider = RegressionProvider()
         theme.appColorID = "deleted"
@@ -159,8 +159,9 @@ final class ImageAndLayoutRegressionTests: XCTestCase {
         controller.tableView(controller.tableView, didSelectRowAt: IndexPath(row: 1, section: 0))
         XCTAssertEqual(theme.appColorID, "second")
         XCTAssertEqual(provider.themeUpdates, 1)
-        let first = controller.tableView(controller.tableView, cellForRowAt: IndexPath(row: 0, section: 0))
-        let second = controller.tableView(controller.tableView, cellForRowAt: IndexPath(row: 1, section: 0))
+        let dataSource = try XCTUnwrap(controller.tableView.dataSource)
+        let first = dataSource.tableView(controller.tableView, cellForRowAt: IndexPath(row: 0, section: 0))
+        let second = dataSource.tableView(controller.tableView, cellForRowAt: IndexPath(row: 1, section: 0))
         XCTAssertEqual(first.accessoryType, .none)
         XCTAssertEqual(second.accessoryType, .checkmark)
     }

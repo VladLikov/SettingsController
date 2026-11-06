@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.1.0 — 2026-11-06
+
+### Changed
+- Every table uses `UITableViewDiffableDataSource`: the settings list, Appearance, Taptic Engine, About and the mail form. Rows have stable identities (configuration section and definition index, App Store ID for catalog apps, dedicated identities for placeholders, the retry row and the premium card), so structural changes are applied as snapshot differences and content changes are reconfigured in place. The hand-written section diff, `insertSections`/`deleteSections` toggles and `reloadData` fallbacks are gone.
+- About is laid out like Apple's about screens: a header with the app icon, name, version and bundle ID, then Check for Update, the policy links and plain label–value rows without icon tiles.
+- Contact Developer reads like a Mail draft: the recipient and subject, a taller message field with the character count, and the device details that the draft will include.
+- Example UI tests on CI may take up to 300 s each; slow accessibility snapshots on runners exceeded the 120 s limit.
+- No public API changes.
+
 ## 5.0.1 — 2026-11-06
 
 ### Fixed

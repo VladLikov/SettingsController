@@ -73,24 +73,19 @@ extension SettingsController {
             userChanged = true
         }
         guard premiumChanged || userChanged else { return }
-        var replacements = Set<Int>()
-        var rows: [IndexPath] = []
-        for (visible, id) in visibleSectionIDs.enumerated() {
-            switch configuration.sections[id].kind {
-            case .premiumCard where premiumChanged: replacements.insert(id)
-            case .rows(let definitions):
-                for (index, row) in definitions.enumerated() {
-                    switch row {
-                    case .defaultRow(.premium) where premiumChanged,
-                        .defaultRow(.user) where userChanged:
-                        rows.append(IndexPath(row: index, section: visible))
-                    default: break
-                    }
+        var rows = Set<SettingsRowID>()
+        for id in visibleSectionIDs {
+            guard case .rows(let definitions) = configuration.sections[id].kind else { continue }
+            for (index, row) in definitions.enumerated() {
+                switch row {
+                case .defaultRow(.premium) where premiumChanged, .defaultRow(.user) where userChanged:
+                    rows.insert(SettingsRowID(section: id, kind: .item(index)))
+                default: break
                 }
-            default: break
             }
         }
-        rebuildSections(changedSectionIDs: replacements, reconfiguredRows: rows, animated: premiumChanged)
+        // A premium card turning into the Active row changes identity, so the snapshot replaces it.
+        rebuildSections(reconfiguring: rows, animated: premiumChanged)
     }
 
     func pushAboutController(appID: String, privacyURL: URL, termsURL: URL, navigationTitle: String?) {

@@ -38,6 +38,7 @@ public final class SettingsController: UITableViewController {
     let configuration: SettingsConfiguration
     // Original definitions remain in configuration. These arrays are a rendered projection.
     var sections: [DisplaySection] = []
+    var dataSource: SettingsTableDataSource?
     var visibleSectionIDs: [Int] = []
     var catalogStates: [Int: AppCatalogState] = [:]
     var catalogRequests: [Int: CancellableRequest] = [:]
@@ -109,6 +110,7 @@ public final class SettingsController: UITableViewController {
         tableView.register(UserCell.self)
         tableView.register(AppCell.self)
         tableView.register(PremiumCell.self)
+        installDataSource()
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = SettingsMetrics.estimatedRowHeight
         tableView.separatorInset.left = SettingsMetrics.separatorInset
@@ -195,47 +197,47 @@ public final class SettingsController: UITableViewController {
         configuration.eventHandler?.settingsDidDismiss()
     }
 
-    /// `animated` lets the table animate replaced sections (catalog results, premium card and row) natively.
+    /// Re-renders the model and applies it as a snapshot. Rows whose identity persists keep their cells;
+    /// rows in `changedSectionIDs` and `reconfiguring` are re-rendered in place. `animated` lets the
+    /// table animate inserted and removed rows natively (catalog results, premium card and row).
     func rebuildSections(
-        reload: Bool = true, changedSectionIDs: Set<Int>? = nil, reconfiguredRows: [IndexPath] = [], animated: Bool = false
+        reload: Bool = true, changedSectionIDs: Set<Int> = [], reconfiguring rows: Set<SettingsRowID> = [], animated: Bool = false
     ) {
-        let oldIDs = visibleSectionIDs
         let rendered = SettingsSectionRenderer.render(
             configuration.sections,
             state: SettingsRenderState(
                 catalogStates: catalogStates, isPremium: isPremium, premiumColorOverride: premiumColorOverride,
                 currentUser: currentUser, placeholderCount: { [self] in placeholderCount($0) }))
-        let result = rendered.sections
-        let ids = rendered.ids
-        guard reload, isViewLoaded, tableView.window != nil, let changedSectionIDs else {
-            sections = result
-            visibleSectionIDs = ids
-            // An offscreen table may not have acquired its initial row counts yet.
-            // Synchronize it without issuing batch operations against unknown counts.
-            if reload, isViewLoaded { tableView.reloadData() }
-            return
+        sections = rendered.sections
+        visibleSectionIDs = rendered.ids
+        guard reload, isViewLoaded, let dataSource else { return }
+        var reconfigured = rows
+        for (section, id) in zip(sections, visibleSectionIDs) where changedSectionIDs.contains(id) {
+            reconfigured.formUnion(section.rowIDs(section: id))
         }
-        let deleted = IndexSet(oldIDs.indices.filter { !ids.contains(oldIDs[$0]) })
-        let inserted = IndexSet(ids.indices.filter { !oldIDs.contains(ids[$0]) })
-        let replaced = IndexSet(oldIDs.indices.filter { ids.contains(oldIDs[$0]) && changedSectionIDs.contains(oldIDs[$0]) })
-        // System table animations only; UIKit picks the style and honors accessibility settings.
-        let animation: UITableView.RowAnimation = animated ? .automatic : .none
-        let apply = { [self] in
-            if !deleted.isEmpty || !inserted.isEmpty || !replaced.isEmpty {
-                tableView.performBatchUpdates {
-                    sections = result
-                    visibleSectionIDs = ids
-                    tableView.deleteSections(deleted, with: animation)
-                    tableView.insertSections(inserted, with: animation)
-                    tableView.reloadSections(replaced, with: animation)
+        let snapshot = makeSnapshot(reconfiguring: reconfigured)
+        if animated, tableView.window != nil {
+            dataSource.apply(snapshot, animatingDifferences: true)
+        } else {
+            UIView.performWithoutAnimation { dataSource.apply(snapshot, animatingDifferences: false) }
+        }
+    }
+
+    /// Identifiers of the premium card and, when requested, of premium rows.
+    func premiumRowIDs(includingActiveRows: Bool) -> Set<SettingsRowID> {
+        var ids = Set<SettingsRowID>()
+        for (section, id) in zip(sections, visibleSectionIDs) {
+            switch section.kind {
+            case .premiumCard:
+                ids.insert(SettingsRowID(section: id, kind: .premiumCard))
+            case .rows(let rows):
+                guard includingActiveRows else { continue }
+                for (index, row) in rows.enumerated() {
+                    if case .item(.defaultRow(.premium)) = row { ids.insert(SettingsRowID(section: id, kind: .item(index))) }
                 }
-            } else {
-                sections = result
-                visibleSectionIDs = ids
             }
-            if !reconfiguredRows.isEmpty { tableView.reconfigureRows(at: reconfiguredRows) }
         }
-        if animated { apply() } else { UIView.performWithoutAnimation(apply) }
+        return ids
     }
 
     /// Updates premium gradients and CTA tint after a host-owned appearance change.
@@ -246,23 +248,7 @@ public final class SettingsController: UITableViewController {
         rebuildSections(reload: false)
         guard isViewLoaded else { return }
         // An active entitlement renders the card as a premium row whose icon uses the same color.
-        reconfigureVisiblePremiumRows(includingActiveRows: true)
-    }
-
-    func reconfigureVisiblePremiumRows(includingActiveRows: Bool) {
-        let rows = (tableView.indexPathsForVisibleRows ?? []).filter { path in
-            switch sections[path.section].kind {
-            case .premiumCard: return true
-            case .rows(let items):
-                guard includingActiveRows, items.indices.contains(path.row), case .item(.defaultRow(.premium)) = items[path.row] else {
-                    return false
-                }
-                return true
-            }
-        }
-        if !rows.isEmpty {
-            UIView.performWithoutAnimation { tableView.reconfigureRows(at: rows) }
-        }
+        reconfigure(premiumRowIDs(includingActiveRows: true))
     }
 
     /// Text size and Bold Text change the card's measured size; re-measure the visible card.
@@ -270,7 +256,7 @@ public final class SettingsController: UITableViewController {
         if #available(iOS 17, *) {
             registerForTraitChanges([UITraitPreferredContentSizeCategory.self, UITraitLegibilityWeight.self]) {
                 (controller: SettingsController, _: UITraitCollection) in
-                controller.reconfigureVisiblePremiumRows(includingActiveRows: false)
+                controller.reconfigure(controller.premiumRowIDs(includingActiveRows: false))
             }
         }
     }
@@ -282,7 +268,7 @@ public final class SettingsController: UITableViewController {
             previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory
                 || previousTraitCollection?.legibilityWeight != traitCollection.legibilityWeight
         {
-            reconfigureVisiblePremiumRows(includingActiveRows: false)
+            reconfigure(premiumRowIDs(includingActiveRows: false))
         }
     }
 

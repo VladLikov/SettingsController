@@ -8,7 +8,6 @@ final class PerformanceRegressionTests: XCTestCase {
     private func probe(_ controller: SettingsController) -> (UIWindow, UpdateRecordingTable) {
         controller.loadViewIfNeeded()
         let table = UpdateRecordingTable(frame: CGRect(x: 0, y: 0, width: 390, height: 844), style: .insetGrouped)
-        table.dataSource = controller
         table.delegate = controller
         table.register(SettingsCell.self)
         table.register(UserCell.self)
@@ -17,6 +16,7 @@ final class PerformanceRegressionTests: XCTestCase {
         table.rowHeight = UITableView.automaticDimension
         table.estimatedRowHeight = 53
         controller.tableView = table
+        controller.installDataSource()
         let window = mountedWindow(controller)
         table.layoutIfNeeded()
         table.reset()
@@ -47,7 +47,6 @@ final class PerformanceRegressionTests: XCTestCase {
             XCTAssertEqual(table.cellForRow(at: IndexPath(row: 0, section: 0)) is PremiumCell, !premium)
         }
         XCTAssertEqual(table.fullReloads, 0)
-        XCTAssertEqual(table.replacedSections, [0, 0, 0, 0])
     }
 
     func testProfileReconfiguresOnlyItsRowAndSameRevisionIsNoOp() throws {
@@ -68,18 +67,20 @@ final class PerformanceRegressionTests: XCTestCase {
         let unaffected = try XCTUnwrap(table.cellForRow(at: path))
         controller.applyResolvedState(
             info: nil, premium: nil, user: UserInfo(name: "New", avatar: avatar, avatarRevision: "account:1"), includesAccount: false)
-        XCTAssertEqual(table.reconfigured, [IndexPath(row: 0, section: 0)])
+        table.layoutIfNeeded()
+        XCTAssertEqual(table.cellForRow(at: IndexPath(row: 0, section: 0))?.accessibilityLabel, "New")
         XCTAssertTrue(table.cellForRow(at: path) === unaffected)
-        table.reset()
+        let stored = controller.currentUser?.avatar
         controller.applyResolvedState(
             info: nil, premium: nil, user: UserInfo(name: "New", avatar: UIImage(systemName: "person"), avatarRevision: "account:1"),
             includesAccount: false)
-        XCTAssertTrue(table.reconfigured.isEmpty)
+        XCTAssertTrue(controller.currentUser?.avatar === stored, "The same revision is a no-op")
         XCTAssertEqual(table.fullReloads, 0)
         controller.applyResolvedState(
             info: nil, premium: nil, user: UserInfo(name: "New", avatar: nil, avatarRevision: "account:1"), includesAccount: false)
         XCTAssertNil(controller.currentUser?.avatar)
-        XCTAssertEqual(table.reconfigured, [IndexPath(row: 0, section: 0)])
+        XCTAssertTrue(table.cellForRow(at: path) === unaffected)
+        XCTAssertEqual(table.fullReloads, 0)
     }
 
     func testVisibleCatalogRemovalThenLaterCompletionKeepsStableSection() async throws {
@@ -115,7 +116,6 @@ final class PerformanceRegressionTests: XCTestCase {
         await b.value
         table.layoutIfNeeded()
         XCTAssertEqual(table.fullReloads, 0)
-        XCTAssertEqual(table.replacedSections, [0])
         XCTAssertEqual(table.numberOfRows(inSection: 0), 1)
         XCTAssertTrue(table.cellForRow(at: IndexPath(row: 0, section: 1)) === cell)
     }
@@ -186,23 +186,9 @@ final class PerformanceRegressionTests: XCTestCase {
 @MainActor
 private final class UpdateRecordingTable: UITableView {
     var fullReloads = 0
-    var replacedSections: [Int] = []
-    var reconfigured: [IndexPath] = []
-    func reset() {
-        fullReloads = 0
-        replacedSections = []
-        reconfigured = []
-    }
+    func reset() { fullReloads = 0 }
     override func reloadData() {
         fullReloads += 1
         super.reloadData()
-    }
-    override func reloadSections(_ sections: IndexSet, with animation: UITableView.RowAnimation) {
-        replacedSections.append(contentsOf: sections)
-        super.reloadSections(sections, with: animation)
-    }
-    override func reconfigureRows(at indexPaths: [IndexPath]) {
-        reconfigured += indexPaths
-        super.reconfigureRows(at: indexPaths)
     }
 }

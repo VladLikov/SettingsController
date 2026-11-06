@@ -52,7 +52,7 @@ final class AboutRegressionTests: XCTestCase {
         let task = try XCTUnwrap(about.checkUpdateTask)
         about.checkForUpdate()
         await gate.waitUntilStarted()
-        let path = IndexPath(row: 2, section: 0)
+        let path = IndexPath(row: 0, section: 0)
         let cell = try XCTUnwrap(about.tableView.cellForRow(at: path))
         let indicator = try XCTUnwrap(cell.accessoryView as? UIActivityIndicatorView)
         XCTAssertTrue(indicator.isAnimating)

@@ -1,25 +1,52 @@
 import UIKit
 
-// MARK: - UITableViewDataSource
+// MARK: - Diffable data source
 
 extension SettingsController {
 
-    public override func numberOfSections(in tableView: UITableView) -> Int {
-        sections.count
+    /// Creates the diffable data source for the current table and shows the rendered model.
+    func installDataSource() {
+        let dataSource = makeDataSource()
+        self.dataSource = dataSource
+        tableView.dataSource = dataSource
+        UIView.performWithoutAnimation { dataSource.apply(makeSnapshot(reconfiguring: []), animatingDifferences: false) }
     }
 
-    public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch sections[section].kind {
-        case .rows(let rows): rows.count
-        case .premiumCard: 1
+    private func makeDataSource() -> SettingsTableDataSource {
+        let dataSource = SettingsTableDataSource(tableView: tableView) { [unowned self] tableView, indexPath, _ in
+            makeCell(in: tableView, at: indexPath)
         }
+        dataSource.headerTitle = { [unowned self] id in
+            configuration.sections.indices.contains(id) ? configuration.sections[id].title : nil
+        }
+        dataSource.defaultRowAnimation = .automatic
+        return dataSource
     }
 
-    public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        sections[section].title
+    /// The snapshot of the rendered model, with the given rows reconfigured if they are still present.
+    func makeSnapshot(reconfiguring rows: Set<SettingsRowID>) -> NSDiffableDataSourceSnapshot<Int, SettingsRowID> {
+        var snapshot = NSDiffableDataSourceSnapshot<Int, SettingsRowID>()
+        for (section, id) in zip(sections, visibleSectionIDs) {
+            snapshot.appendSections([id])
+            snapshot.appendItems(section.rowIDs(section: id), toSection: id)
+        }
+        let present = Set(dataSource?.snapshot().itemIdentifiers ?? [])
+        let reconfigured = rows.filter { present.contains($0) && snapshot.indexOfItem($0) != nil }
+        if !reconfigured.isEmpty { snapshot.reconfigureItems(Array(reconfigured)) }
+        return snapshot
     }
 
-    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    /// Re-renders the given rows in place, without changing the table's structure.
+    func reconfigure(_ rows: Set<SettingsRowID>) {
+        guard let dataSource, !rows.isEmpty else { return }
+        var snapshot = dataSource.snapshot()
+        let present = rows.filter { snapshot.indexOfItem($0) != nil }
+        guard !present.isEmpty else { return }
+        snapshot.reconfigureItems(Array(present))
+        dataSource.apply(snapshot, animatingDifferences: false)
+    }
+
+    private func makeCell(in tableView: UITableView, at indexPath: IndexPath) -> UITableViewCell {
         switch sections[indexPath.section].kind {
         case .rows(let rows):
             switch rows[indexPath.row] {

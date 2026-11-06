@@ -1,41 +1,17 @@
-import SafeSFSymbols
 import UIKit
 
 // MARK: - Data
 
 extension AboutAppController {
 
-    static func icon(_ systemName: String, color: UIColor = .systemGray, padding: IconPadding? = IconPadding()) -> SettingsIcon {
-        SettingsIcon(
-            image: UIImage(systemName: systemName),
-            color: color,
-            padding: padding,
-            cacheIdentifier: "sf:\(systemName)"
-        )
-    }
-
     func refreshVisibleRows() {
         guard isViewLoaded else { return }
-        guard tableView.window != nil else {
-            tableView.reloadData()
-            return
-        }
-        guard let paths = tableView.indexPathsForVisibleRows, !paths.isEmpty else { return }
-        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
+        reconfigureRows(titled: data.flatMap { $0.items.map(\.title) })
     }
 
     func refreshUpdateRow() {
         guard isViewLoaded else { return }
-        guard tableView.window != nil else {
-            tableView.reloadData()
-            return
-        }
-        let paths = data.enumerated().flatMap { section, group in
-            group.items.enumerated().compactMap { row, item in
-                item.action == .checkForUpdate ? IndexPath(row: row, section: section) : nil
-            }
-        }
-        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
+        reconfigureRows(titled: data.flatMap { $0.items.filter { $0.action == .checkForUpdate }.map(\.title) })
     }
 
     func accountItems() -> [AboutItem] {
@@ -45,7 +21,6 @@ extension AboutAppController {
                     "User ID", bundle: .module, comment: "Diagnostic label for the current account identifier supplied by the host app."),
                 subtitle: userID ?? "-",
                 value: nil,
-                icon: Self.icon("person.fill"),
                 action: userID == nil ? .none : .copyUserID
             ),
             .init(
@@ -54,7 +29,6 @@ extension AboutAppController {
                 value: isPremium
                     ? NSLocalizedString("Active", bundle: .module, comment: "Status displayed for an active premium entitlement.")
                     : NSLocalizedString("Not active", bundle: .module, comment: "Status displayed when premium is inactive."),
-                icon: Self.icon("star.fill"),
                 action: .none
             ),
         ]
@@ -62,14 +36,7 @@ extension AboutAppController {
 
     func setupData() {
 
-        let bundle = Bundle.main
-
-        let appVersion = bundle.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-"
-        let build = bundle.infoDictionary?["CFBundleVersion"] as? String ?? "-"
-
-        let fullVersion = "\(appVersion) (\(build))"
-        let bundleID = bundle.bundleIdentifier ?? "-"
-        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        let osVersion = Self.systemVersionDescription
         let deviceModel = DeviceModel.supportDescription
         let systemLanguage = Locale.preferredLanguages.first ?? "-"
         let appLanguage = Bundle.main.preferredLocalizations.first ?? "-"
@@ -78,32 +45,15 @@ extension AboutAppController {
 
         data = [
             (
-                .build,
+                .update,
                 [
-                    .init(
-                        title: NSLocalizedString(
-                            "Bundle ID", bundle: .module, comment: "Not translated: technical diagnostic label in About."),
-                        subtitle: bundleID,
-                        value: nil,
-                        icon: Self.icon("info.circle.fill"),
-                        action: .none
-                    ),
-                    .init(
-                        title: NSLocalizedString(
-                            "App Version", bundle: .module, comment: "Diagnostic label for the installed app version and build."),
-                        subtitle: nil,
-                        value: fullVersion,
-                        icon: Self.icon("doc.fill"),
-                        action: .none
-                    ),
                     .init(
                         title: NSLocalizedString(
                             "Check for Update", bundle: .module, comment: "Action that checks the App Store for a newer app version."),
                         subtitle: nil,
                         value: nil,
-                        icon: nil,
                         action: .checkForUpdate
-                    ),
+                    )
                 ]
             ),
             (
@@ -115,7 +65,6 @@ extension AboutAppController {
                             comment: "Not translated in the catalog: link title to the host-provided policy page."),
                         subtitle: nil,
                         value: nil,
-                        icon: Self.icon("hand.raised.fill"),
                         action: .privacyPolicy
                     ),
                     .init(
@@ -124,7 +73,6 @@ extension AboutAppController {
                             comment: "Not translated in the catalog: link title to the host-provided terms page."),
                         subtitle: nil,
                         value: nil,
-                        icon: Self.icon("doc.text.fill"),
                         action: .terms
                     ),
                 ]
@@ -135,18 +83,16 @@ extension AboutAppController {
                     .init(
                         title: NSLocalizedString(
                             "OS Version", bundle: .module, comment: "Diagnostic label for the operating system version."),
-                        subtitle: osVersion,
-                        value: nil,
-                        icon: Self.icon("gearshape.fill"),
+                        subtitle: nil,
+                        value: osVersion,
                         action: .none
                     ),
                     .init(
                         title: NSLocalizedString(
                             "Device Model", bundle: .module,
                             comment: "Diagnostic label for the hardware model, without a user-assigned device name."),
-                        subtitle: deviceModel,
-                        value: nil,
-                        icon: Self.icon("iphone"),
+                        subtitle: nil,
+                        value: deviceModel,
                         action: .none
                     ),
                 ]
@@ -163,7 +109,6 @@ extension AboutAppController {
                         ),
                         subtitle: nil,
                         value: systemLanguage,
-                        icon: Self.icon("keyboard.fill"),
                         action: .none
                     ),
                     .init(
@@ -171,18 +116,35 @@ extension AboutAppController {
                             "App Language", bundle: .module, comment: "Diagnostic label for the language selected by the app bundle."),
                         subtitle: nil,
                         value: appLanguage,
-                        icon: Self.icon("at"),
                         action: .none
                     ),
                     .init(
                         title: NSLocalizedString("App Region", bundle: .module, comment: "Diagnostic label for the current locale region."),
                         subtitle: nil,
                         value: region.lowercased(),
-                        icon: Self.icon("globe"),
                         action: .none
                     ),
                 ]
             ),
         ]
+    }
+
+    /// "iOS 27.2 (24B91016s)": the system name and version, with the build that support needs.
+    static var systemVersionDescription: String {
+        let device = UIDevice.current
+        let description = ProcessInfo.processInfo.operatingSystemVersionString
+        let build =
+            description.range(of: #"\(.* ([^)]+)\)"#, options: .regularExpression)
+            .map { String(description[$0]).split(separator: " ").last.map { String($0.dropLast()) } ?? "" } ?? ""
+        return build.isEmpty ? "\(device.systemName) \(device.systemVersion)" : "\(device.systemName) \(device.systemVersion) (\(build))"
+    }
+
+    /// Name, version and build for the header.
+    static var appHeader: (name: String, version: String, bundleID: String) {
+        let info = Bundle.main.infoDictionary
+        let name = info?["CFBundleDisplayName"] as? String ?? info?["CFBundleName"] as? String ?? ""
+        let version = info?["CFBundleShortVersionString"] as? String ?? "-"
+        let build = info?["CFBundleVersion"] as? String ?? "-"
+        return (name, "\(version) (\(build))", Bundle.main.bundleIdentifier ?? "-")
     }
 }

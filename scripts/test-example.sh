@@ -33,5 +33,5 @@ xcrun simctl bootstatus "$ID" -b 2>&1 | tee "$OUT/bootstatus.log"
 xcodebuild -project Examples/SettingsExample/SettingsExample.xcodeproj -scheme SettingsExample \
   -destination "platform=iOS Simulator,id=$ID" -derivedDataPath .build/example-derived \
   -resultBundlePath "$OUT/TestResults.xcresult" -parallel-testing-enabled NO -collect-test-diagnostics never \
-  -test-timeouts-enabled YES -maximum-test-execution-time-allowance 120 \
+  -test-timeouts-enabled YES -maximum-test-execution-time-allowance 300 \
   test CODE_SIGNING_ALLOWED=NO IPHONEOS_DEPLOYMENT_TARGET=15.0 2>&1 | tee "$OUT/test.log"
