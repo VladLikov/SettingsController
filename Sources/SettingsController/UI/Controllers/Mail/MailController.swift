@@ -14,6 +14,7 @@ public class MailController: UITableViewController {
     private let productID: String?
     private weak var dataProvider: (any SettingsControllerDataProvider)?
     private let mailRequest = CancellableRequest()
+    private var dataSource: TitledDataSource<Int, Int>?
     var mailTask: Task<Void, Never>? { mailRequest.task }
     private var isPreparingMail = false
     private var pendingMailFallback: MailDraft?
@@ -106,6 +107,7 @@ extension MailController {
     private func setupView() {
 
         tableView.register(MailCell.self)
+        installDataSource()
 
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 100
@@ -125,33 +127,33 @@ extension MailController {
     }
 }
 
-// MARK: - UITableViewDataSource
+// MARK: - Data source
 
 extension MailController {
 
-    public override func numberOfSections(in tableView: UITableView) -> Int { 1 }
-
-    public override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 1 }
-
-    public override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        NSLocalizedString("Message", bundle: .module, comment: "Section heading for the editable support message.")
-    }
-
-    public override func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        NSLocalizedString(
-            "After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module,
-            comment: "Mail form footer explaining that the external mail app opens a draft and the user sends it there.")
-    }
-
-    public override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
-        let cell = tableView.dequeueReusableCell(withClass: MailCell.self, for: indexPath)
-
-        cell.delegate = self
-        cell.configure(type: type, text: currentText)
-        cell.showMissingCharacters(type.missingCharacters(in: currentText))
-
-        return cell
+    /// One section with the message field. The cell keeps its text view, so typing never re-creates it.
+    func installDataSource() {
+        let dataSource = TitledDataSource<Int, Int>(tableView: tableView) { [unowned self] tableView, indexPath, _ in
+            let cell = tableView.dequeueReusableCell(withClass: MailCell.self, for: indexPath)
+            cell.delegate = self
+            cell.configure(type: type, text: currentText)
+            cell.showMissingCharacters(type.missingCharacters(in: currentText))
+            return cell
+        }
+        dataSource.header = { _ in
+            NSLocalizedString("Message", bundle: .module, comment: "Section heading for the editable support message.")
+        }
+        dataSource.footer = { _ in
+            NSLocalizedString(
+                "After tapping Send, a draft opens in your mail app. Review it and send it there.", bundle: .module,
+                comment: "Mail form footer explaining that the external mail app opens a draft and the user sends it there.")
+        }
+        self.dataSource = dataSource
+        tableView.dataSource = dataSource
+        var snapshot = NSDiffableDataSourceSnapshot<Int, Int>()
+        snapshot.appendSections([0])
+        snapshot.appendItems([0], toSection: 0)
+        UIView.performWithoutAnimation { dataSource.apply(snapshot, animatingDifferences: false) }
     }
 }
 

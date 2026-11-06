@@ -16,26 +16,12 @@ extension AboutAppController {
 
     func refreshVisibleRows() {
         guard isViewLoaded else { return }
-        guard tableView.window != nil else {
-            tableView.reloadData()
-            return
-        }
-        guard let paths = tableView.indexPathsForVisibleRows, !paths.isEmpty else { return }
-        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
+        reconfigureRows(titled: data.flatMap { $0.items.map(\.title) })
     }
 
     func refreshUpdateRow() {
         guard isViewLoaded else { return }
-        guard tableView.window != nil else {
-            tableView.reloadData()
-            return
-        }
-        let paths = data.enumerated().flatMap { section, group in
-            group.items.enumerated().compactMap { row, item in
-                item.action == .checkForUpdate ? IndexPath(row: row, section: section) : nil
-            }
-        }
-        UIView.performWithoutAnimation { tableView.reconfigureRows(at: paths) }
+        reconfigureRows(titled: data.flatMap { $0.items.filter { $0.action == .checkForUpdate }.map(\.title) })
     }
 
     func accountItems() -> [AboutItem] {

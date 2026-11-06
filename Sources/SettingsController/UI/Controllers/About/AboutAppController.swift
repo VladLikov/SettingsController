@@ -69,6 +69,7 @@ final class AboutAppController: UITableViewController {
 
     var data: [(section: AboutSection, items: [AboutItem])] = []
     let updateCheck = CancellableRequest()
+    var dataSource: TitledDataSource<AboutSection, String>?
     var checkUpdateTask: Task<Void, Never>? { updateCheck.task }
 
     private(set) var isPremium: Bool
@@ -108,6 +109,7 @@ final class AboutAppController: UITableViewController {
         tableView.estimatedRowHeight = 58
 
         setupData()
+        installDataSource()
         observeAppearance()
         loadAccountInfo()
     }
@@ -146,13 +148,7 @@ final class AboutAppController: UITableViewController {
         isPremium = premium
         if changed, isViewLoaded, let section = data.firstIndex(where: { $0.section == .account }) {
             data[section].items = accountItems()
-            guard tableView.window != nil else {
-                tableView.reloadData()
-                return
-            }
-            UIView.performWithoutAnimation {
-                tableView.reconfigureRows(at: data[section].items.indices.map { IndexPath(row: $0, section: section) })
-            }
+            reconfigureRows(titled: data[section].items.map(\.title))
         }
     }
 
@@ -190,37 +186,32 @@ final class AboutAppController: UITableViewController {
     }
 }
 
-// MARK: - UITableViewDataSource
+// MARK: - Data source
 
 extension AboutAppController {
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        data.count
+    private func installDataSource() {
+        let dataSource = TitledDataSource<AboutSection, String>(tableView: tableView) { [unowned self] tableView, indexPath, _ in
+            makeCell(in: tableView, at: indexPath)
+        }
+        dataSource.header = { $0.title }
+        dataSource.footer = { $0.footer }
+        self.dataSource = dataSource
+        tableView.dataSource = dataSource
+        var snapshot = NSDiffableDataSourceSnapshot<AboutSection, String>()
+        for group in data {
+            snapshot.appendSections([group.section])
+            snapshot.appendItems(group.items.map(\.title), toSection: group.section)
+        }
+        UIView.performWithoutAnimation { dataSource.apply(snapshot, animatingDifferences: false) }
     }
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        data[section].items.count
+    /// Re-renders the rows with the given titles, which identify About rows.
+    func reconfigureRows(titled titles: [String]) {
+        dataSource?.reconfigure(titles)
     }
 
-    override func tableView(
-        _ tableView: UITableView,
-        titleForHeaderInSection section: Int
-    ) -> String? {
-        data[section].section.title
-    }
-
-    override func tableView(
-        _ tableView: UITableView,
-        titleForFooterInSection section: Int
-    ) -> String? {
-        data[section].section.footer
-    }
-
-    override func tableView(
-        _ tableView: UITableView,
-        cellForRowAt indexPath: IndexPath
-    ) -> UITableViewCell {
-
+    private func makeCell(in tableView: UITableView, at indexPath: IndexPath) -> UITableViewCell {
         let item = data[indexPath.section].items[indexPath.row]
         let cell = tableView.dequeueReusableCell(withClass: UITableViewCell.self, for: indexPath)
 
