@@ -63,7 +63,9 @@ if [ "$MODE" = test ]; then
   [ "${CI:-}" = true ] || exit 65
   # A runner snapshot that times out restarts the test process, and xcodebuild then skips its own retry.
   # Up to three such tests run once more on their own; more failures, or a second failure, fail the job.
-  FAILED=$(sed -nE "s/^Test Case '-\[([A-Za-z0-9_]+)\.([A-Za-z0-9_]+) ([A-Za-z0-9_]+)\]' failed.*/\1\/\2\/\3/p" "$OUT/test.log" | sort -u)
+  # A test whose app cannot be terminated reports only an error line, without "Test Case ... failed".
+  FAILED=$(sed -nE -e "s/^Test Case '-\[([A-Za-z0-9_]+)\.([A-Za-z0-9_]+) ([A-Za-z0-9_]+)\]' failed.*/\1\/\2\/\3/p" \
+    -e "s/.*error: -\[([A-Za-z0-9_]+)\.([A-Za-z0-9_]+) ([A-Za-z0-9_]+)\] : .*/\1\/\2\/\3/p" "$OUT/test.log" | sort -u)
   COUNT=$(printf '%s' "$FAILED" | grep -c . || true)
   if [ "$COUNT" -eq 0 ] || [ "$COUNT" -gt 3 ]; then exit 65; fi
   echo "Running $COUNT failed test(s) again:"; echo "$FAILED"
