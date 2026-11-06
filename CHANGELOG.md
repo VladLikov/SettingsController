@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.1.0 — Unreleased
+
+### Changed
+- Every table uses `UITableViewDiffableDataSource`: the settings list, Appearance, Taptic Engine, About and the mail form. Rows have stable identities (configuration section and definition index, App Store ID for catalog apps, dedicated identities for placeholders, the retry row and the premium card), so structural changes are applied as snapshot differences and content changes are reconfigured in place. The hand-written section diff, `insertSections`/`deleteSections` toggles and `reloadData` fallbacks are gone.
+- No public API changes.
+
 ## 5.0.1 — 2026-11-06
 
 ### Fixed
