@@ -51,16 +51,38 @@ final class AboutAppHeaderView: UIView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    /// The host app's primary icon, if its asset can be loaded.
+    /// Loads only standalone icon files. App-icon catalog renditions (including Icon Composer
+    /// assets) can raise an Objective-C exception in UIImage(named:), rather than return nil.
     static func appIcon(in bundle: Bundle = .main) -> UIImage? {
-        guard let icons = bundle.infoDictionary?["CFBundleIcons"] as? [String: Any],
-            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any]
-        else { return nil }
-        if let name = primary["CFBundleIconName"] as? String, let image = UIImage(named: name, in: bundle, with: nil) {
-            return image
+        guard let resources = bundle.resourceURL else { return nil }
+        let idiom = UIDevice.current.userInterfaceIdiom
+        // Bundle resolves device-qualified Info.plist keys (such as CFBundleIcons~ipad)
+        // for the current device before exposing infoDictionary.
+        let info = bundle.infoDictionary ?? [:]
+        var files: [String] = []
+        if let icons = info["CFBundleIcons"] as? [String: Any],
+            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
+            let names = primary["CFBundleIconFiles"] as? [String]
+        {
+            files.append(contentsOf: names.reversed())
         }
-        if let files = primary["CFBundleIconFiles"] as? [String], let file = files.last {
-            return UIImage(named: file, in: bundle, with: nil)
+        files.append(contentsOf: (info["CFBundleIconFiles"] as? [String] ?? []).reversed())
+
+        let idiomSuffixes = idiom == .pad ? ["~ipad", ""] : ["~iphone", ""]
+        for file in files {
+            let path = file as NSString
+            let ext = path.pathExtension.isEmpty ? "png" : path.pathExtension
+            let name = path.pathExtension.isEmpty ? file : path.deletingPathExtension
+            for suffix in idiomSuffixes {
+                for scale in ["@3x", "@2x", ""] {
+                    let url = resources.appendingPathComponent(name + scale + suffix).appendingPathExtension(ext)
+                    if FileManager.default.fileExists(atPath: url.path),
+                        let image = UIImage(contentsOfFile: url.path)
+                    {
+                        return image
+                    }
+                }
+            }
         }
         return nil
     }

@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.1.1 — 2026-11-06
+
+### Fixed
+- Opening About no longer asks UIKit to load an app-icon catalog rendition, which could raise `NSInternalInconsistencyException` (`Need an imageRef`) with Icon Composer icons. The header reads bundled primary-icon image files directly, supports iPad and scale variants, and uses its existing placeholder when no readable file is available.
+- Only loaded Our Apps catalog entries show the external-link arrow. More Apps and the other actionable settings rows use the standard disclosure indicator.
+
 ## 5.1.0 — 2026-11-06
 
 ### Changed

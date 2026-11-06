@@ -52,19 +52,30 @@ final class UXBehaviorTests: XCTestCase {
         }
     }
 
-    func testActionableRowsUseChevronsAndMoreAppsAnArrow() {
+    func testSettingsActionsUseChevronsAndOurAppsUseArrows() {
         for row: SettingsRowItem.DefaultRow in [
             .language, .contactDeveloper(email: "a@b.c"), .rateApp(appID: "1"), .shareApp(appID: "1"), .redeemCode,
             .telegram(id: "t"), .vkGroup(id: "1"),
         ] {
             XCTAssertEqual(DisplayRow.item(.defaultRow(row)).accessory, .disclosure, "\(row)")
         }
-        XCTAssertEqual(DisplayRow.item(.defaultRow(.moreApps(developerID: "1"))).accessory, .external)
+        XCTAssertEqual(DisplayRow.item(.defaultRow(.moreApps(developerID: "1"))).accessory, .disclosure)
         let action = SettingsRow(title: "A", icon: SettingsIcon(image: nil, color: .blue), destination: .action { _ in })
         XCTAssertEqual(DisplayRow.item(.row(action)).accessory, .disclosure)
         let inert = SettingsRow(title: "A", icon: SettingsIcon(image: nil, color: .blue), destination: nil)
         XCTAssertEqual(DisplayRow.item(.row(inert)).accessory, .none)
         XCTAssertEqual(DisplayRow.app(.placeholder).accessory, .none)
+        XCTAssertEqual(DisplayRow.app(.failed).accessory, .none)
+        let app = AppItem(
+            id: 1, name: "Example", iconURL: URL(string: "https://example.com/icon.png")!,
+            storeURL: URL(string: "https://apps.apple.com/app/id1")!)
+        let cell = UITableViewCell()
+        DisplayRow.app(.loaded(app)).accessory.apply(to: cell)
+        XCTAssertEqual(cell.accessoryType, .none)
+        XCTAssertNotNil((cell.accessoryView as? UIImageView)?.image)
+        DisplayRow.item(.defaultRow(.moreApps(developerID: "1"))).accessory.apply(to: cell)
+        XCTAssertEqual(cell.accessoryType, .disclosureIndicator)
+        XCTAssertNil(cell.accessoryView)
     }
 
     func testSecondTapOnAnOpeningAppDoesNotRestartTheRequest() async throws {

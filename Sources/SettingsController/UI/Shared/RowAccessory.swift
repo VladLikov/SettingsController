@@ -32,18 +32,16 @@ enum RowAccessory: Equatable {
 }
 
 extension DisplayRow {
-    /// Every actionable row shows a chevron, as in system Settings; More Apps, which leaves for the
-    /// developer's App Store page, shows an arrow. Catalog placeholders and the retry row show none.
+    /// Settings actions show standard chevrons. Loaded Our Apps catalog entries show an external
+    /// arrow; catalog placeholders and the retry row show none.
     var accessory: RowAccessory {
         switch self {
-        case .item(.defaultRow(.moreApps)):
-            return .external
         case .item(.row(let row)):
             return row.destination == nil ? .none : .disclosure
         case .item:
             return .disclosure
         case .app(.loaded):
-            return .disclosure
+            return .external
         case .app(.placeholder), .app(.failed):
             return .none
         }

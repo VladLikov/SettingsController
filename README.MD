@@ -1,4 +1,4 @@
-> **5.1.0.** The 5.x line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
+> **5.1.1.** The 5.x line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
 
 # SettingsController
 
@@ -38,7 +38,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.1.0")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.1.1")
 ```
 
 Then add `SettingsController` to your target dependencies.
