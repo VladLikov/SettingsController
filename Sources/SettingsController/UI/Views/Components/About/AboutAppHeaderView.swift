@@ -1,3 +1,4 @@
+import ImageIO
 import UIKit
 
 /// The About header, as in Apple's own about screens: the app icon, its name, version and bundle ID.
@@ -77,9 +78,11 @@ final class AboutAppHeaderView: UIView {
                 for scale in ["@3x", "@2x", ""] {
                     let url = resources.appendingPathComponent(name + scale + suffix).appendingPathExtension(ext)
                     if FileManager.default.fileExists(atPath: url.path),
-                        let image = UIImage(contentsOfFile: url.path)
+                        let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+                        CGImageSourceGetType(source) != nil,
+                        let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
                     {
-                        return image
+                        return UIImage(cgImage: image)
                     }
                 }
             }
