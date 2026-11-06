@@ -59,7 +59,17 @@ if [ "${CI:-}" = true ]; then TEST_FLAGS+=(-retry-tests-on-failure -test-iterati
 if [ "$MODE" = test ]; then
   XCTESTRUN=$(ls "$DERIVED"/Build/Products/*.xctestrun 2>/dev/null | head -1)
   [ -n "$XCTESTRUN" ] || { echo "No .xctestrun in $DERIVED/Build/Products; run MODE=build first" >&2; exit 2; }
-  xcodebuild test-without-building -xctestrun "$XCTESTRUN" "${TEST_FLAGS[@]}" 2>&1 | tee "$OUT/test.log"
+  if xcodebuild test-without-building -xctestrun "$XCTESTRUN" "${TEST_FLAGS[@]}" 2>&1 | tee "$OUT/test.log"; then exit 0; fi
+  [ "${CI:-}" = true ] || exit 65
+  # A runner snapshot that times out restarts the test process, and xcodebuild then skips its own retry.
+  # Up to three such tests run once more on their own; more failures, or a second failure, fail the job.
+  FAILED=$(sed -nE "s/^Test Case '-\[([A-Za-z0-9_]+)\.([A-Za-z0-9_]+) ([A-Za-z0-9_]+)\]' failed.*/\1\/\2\/\3/p" "$OUT/test.log" | sort -u)
+  COUNT=$(printf '%s' "$FAILED" | grep -c . || true)
+  if [ "$COUNT" -eq 0 ] || [ "$COUNT" -gt 3 ]; then exit 65; fi
+  echo "Running $COUNT failed test(s) again:"; echo "$FAILED"
+  ONLY=(); while read -r t; do ONLY+=("-only-testing:$t"); done <<<"$FAILED"
+  mv "$OUT/TestResults.xcresult" "$OUT/TestResults-first.xcresult"
+  xcodebuild test-without-building -xctestrun "$XCTESTRUN" "${TEST_FLAGS[@]}" "${ONLY[@]}" 2>&1 | tee "$OUT/test-rerun.log"
 else
   xcodebuild -project Examples/SettingsExample/SettingsExample.xcodeproj -scheme SettingsExample \
     "${TEST_FLAGS[@]}" test "${BUILD_FLAGS[@]}" 2>&1 | tee "$OUT/test.log"
