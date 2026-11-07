@@ -40,7 +40,11 @@ package_build = obj('package-build', 'PBXBuildFile', productRef=product)
 def phase(label, isa, files):
     return obj(label, isa, buildActionMask='2147483647', files=files, runOnlyForDeploymentPostprocessing='0')
 
-app_phases = [phase('app-sources', 'PBXSourcesBuildPhase', []), phase('app-frameworks', 'PBXFrameworksBuildPhase', [package_build]), phase('app-resources', 'PBXResourcesBuildPhase', [])]
+# The Run Script phase README.MD asks host apps to add: About shows the Liquid Glass rendering of AppIcon.icon.
+# It runs on every build and needs ENABLE_USER_SCRIPT_SANDBOXING = NO: the renderer reads every layer of the .icon.
+about_icon_script = '"${DEVELOPER_DIR%/Developer}/Applications/Icon Composer.app/Contents/Executables/ictool" "$SRCROOT/AppIcon.icon" --export-image --output-file "$SCRIPT_OUTPUT_FILE_0" --platform iOS --rendition Default --width 88 --height 88 --scale 3 > /dev/null\n'
+about_icon_phase = obj('about-icon-phase', 'PBXShellScriptBuildPhase', alwaysOutOfDate='1', buildActionMask='2147483647', files=[], inputPaths=[], name='Render About Icon', outputPaths=['$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/SettingsAboutIcon.png'], runOnlyForDeploymentPostprocessing='0', shellPath='/bin/sh', shellScript=about_icon_script)
+app_phases = [phase('app-sources', 'PBXSourcesBuildPhase', []), phase('app-frameworks', 'PBXFrameworksBuildPhase', [package_build]), phase('app-resources', 'PBXResourcesBuildPhase', []), about_icon_phase]
 test_phases = [phase('test-sources', 'PBXSourcesBuildPhase', []), phase('test-frameworks', 'PBXFrameworksBuildPhase', []), phase('test-resources', 'PBXResourcesBuildPhase', [])]
 base = dict(SWIFT_VERSION='6.0', IPHONEOS_DEPLOYMENT_TARGET='15.0', SDKROOT='iphoneos', CLANG_ENABLE_MODULES='YES', TARGETED_DEVICE_FAMILY='1,2', CODE_SIGN_STYLE='Automatic', ENABLE_USER_SCRIPT_SANDBOXING='YES')
 
@@ -55,14 +59,14 @@ def configurations(label, settings):
     return obj(label + 'list', 'XCConfigurationList', buildConfigurations=ids, defaultConfigurationIsVisible='0', defaultConfigurationName='Release')
 
 project_configs = configurations('project-config', base)
-app_configs = configurations('app-config', dict(PRODUCT_NAME='$(TARGET_NAME)', PRODUCT_BUNDLE_IDENTIFIER='com.example.SettingsControllerExample', INFOPLIST_FILE='Info.plist', GENERATE_INFOPLIST_FILE='NO', INFOPLIST_KEY_AdaptyAppleSearchAdsAttributionCollectionEnabled='YES', INFOPLIST_KEY_ITSAppUsesNonExemptEncryption='NO', LD_RUNPATH_SEARCH_PATHS=['$(inherited)', '@executable_path/Frameworks'], ASSETCATALOG_COMPILER_APPICON_NAME='', CURRENT_PROJECT_VERSION='1', MARKETING_VERSION='1.0'))
+app_configs = configurations('app-config', dict(PRODUCT_NAME='$(TARGET_NAME)', PRODUCT_BUNDLE_IDENTIFIER='com.example.SettingsControllerExample', INFOPLIST_FILE='Info.plist', GENERATE_INFOPLIST_FILE='NO', INFOPLIST_KEY_AdaptyAppleSearchAdsAttributionCollectionEnabled='YES', INFOPLIST_KEY_ITSAppUsesNonExemptEncryption='NO', LD_RUNPATH_SEARCH_PATHS=['$(inherited)', '@executable_path/Frameworks'], ASSETCATALOG_COMPILER_APPICON_NAME='AppIcon', ENABLE_USER_SCRIPT_SANDBOXING='NO', CURRENT_PROJECT_VERSION='1', MARKETING_VERSION='1.0'))
 test_configs = configurations('test-config', dict(PRODUCT_NAME='$(TARGET_NAME)', PRODUCT_BUNDLE_IDENTIFIER='com.example.SettingsControllerExample.UITests', GENERATE_INFOPLIST_FILE='YES', TEST_TARGET_NAME='SettingsExample', LD_RUNPATH_SEARCH_PATHS=['$(inherited)', '@executable_path/Frameworks', '@loader_path/Frameworks']))
 app_target = obj('app-target', 'PBXNativeTarget', buildConfigurationList=app_configs, buildPhases=app_phases, buildRules=[], dependencies=[], fileSystemSynchronizedGroups=[sources], name='SettingsExample', packageProductDependencies=[product], productName='SettingsExample', productReference=app_product, productType='com.apple.product-type.application')
 proxy = obj('proxy', 'PBXContainerItemProxy', containerPortal=uid('project'), proxyType='1', remoteGlobalIDString=app_target, remoteInfo='SettingsExample')
 dependency = obj('test-dependency', 'PBXTargetDependency', target=app_target, targetProxy=proxy)
 test_target = obj('test-target', 'PBXNativeTarget', buildConfigurationList=test_configs, buildPhases=test_phases, buildRules=[], dependencies=[dependency], fileSystemSynchronizedGroups=[sources], name='SettingsExampleUITests', productName='SettingsExampleUITests', productReference=test_product, productType='com.apple.product-type.bundle.ui-testing')
 app_exceptions = obj('app-membership', 'PBXFileSystemSynchronizedBuildFileExceptionSet', target=app_target, membershipExceptions=['UITests.swift', 'Info.plist', 'README.md'])
-test_exceptions = obj('test-membership', 'PBXFileSystemSynchronizedBuildFileExceptionSet', target=test_target, membershipExceptions=['App.swift', 'Info.plist', 'README.md'])
+test_exceptions = obj('test-membership', 'PBXFileSystemSynchronizedBuildFileExceptionSet', target=test_target, membershipExceptions=['App.swift', 'AppIcon.icon', 'Info.plist', 'README.md'])
 objects[sources]['exceptions'] = [app_exceptions, test_exceptions]
 project = obj('project', 'PBXProject', attributes=dict(BuildIndependentTargetsInParallel='YES', LastUpgradeCheck='2600', TargetAttributes={app_target: dict(CreatedOnToolsVersion='26.0'), test_target: dict(CreatedOnToolsVersion='26.0', TestTargetID=app_target)}), buildConfigurationList=project_configs, compatibilityVersion='Xcode 16.0', developmentRegion='en', hasScannedForEncodings='0', knownRegions=locales + ['Base'], mainGroup=main_group, packageReferences=[package], productRefGroup=products, projectDirPath='', projectRoot='', targets=[app_target, test_target])
 PROJECT.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,30 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.36000,0.40000,0.98000,1.00000",
+      "display-p3:0.18000,0.22000,0.78000,1.00000"
+    ],
+    "orientation" : {
+      "start" : { "x" : 0.5, "y" : 0 },
+      "stop" : { "x" : 0.5, "y" : 1 }
+    }
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : true,
+          "image-name" : "sliders.svg",
+          "name" : "sliders"
+        }
+      ],
+      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
+      "specular" : true,
+      "translucency" : { "enabled" : true, "value" : 0.5 }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [ "watchOS" ],
+    "squares" : "shared"
+  }
+}

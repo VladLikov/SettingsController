@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.2.0 — 2026-11-07
+
+### Added
+- About shows an app's Icon Composer icon with its Liquid Glass look. A Run Script phase in the host app renders the `.icon` to `SettingsAboutIcon.png` with Xcode's Icon Composer, and About prefers that file to the flat bundled PNG, whose glass layers show up as stripes. Setup: README › App icon in About.
+
+### Fixed
+- With a top inset (`SettingsInsets(top:)`) and rows taller than the screen, Settings opened scrolled by that inset, so the large title appeared collapsed until the user scrolled. The list now opens at the top with the large title.
+
 ## 5.1.1 — 2026-11-06
 
 ### Fixed

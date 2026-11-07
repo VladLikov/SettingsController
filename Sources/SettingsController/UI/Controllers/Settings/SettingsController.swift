@@ -116,6 +116,9 @@ public final class SettingsController: UITableViewController {
         tableView.separatorInset.left = SettingsMetrics.separatorInset
         tableView.contentInset.top = configuration.insets?.top ?? 0
         tableView.contentInset.bottom = baseBottomInset
+        // A content inset does not move the offset. With rows taller than the screen the table would start
+        // scrolled by the top inset, and the navigation bar would show a collapsed large title.
+        tableView.contentOffset.y = -tableView.adjustedContentInset.top
         navigationItem.largeTitleDisplayMode = .automatic
         clearsSelectionOnViewWillAppear = true
         observeTextSizeChanges()

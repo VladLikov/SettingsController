@@ -32,7 +32,8 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 final class DemoStore: SettingsControllerDelegate {
     var dismissalProbe: QADismissalProbe?
     weak var settings: SettingsController?
-    var premium = false
+    // QA: `-demo-premium-active` opens settings with premium already active.
+    var premium = ProcessInfo.processInfo.arguments.contains("-demo-premium-active")
     var name = "Demo User"
     var userID: String? = "demo-user-123"
     let theme = DemoTheme()
@@ -76,6 +77,8 @@ final class DemoStore: SettingsControllerDelegate {
             })
         return SettingsConfiguration(
             title: "Settings",
+            // QA: `-demo-top-inset` adds a host top inset, like apps that space the first section.
+            insets: arguments.contains("-demo-top-inset") ? SettingsInsets(top: 25) : nil,
             sections: [
                 SettingsSection(
                     kind: .rows([.defaultRow(.user(name: name, destination: .factory { [self] in ProfileController(store: self) }))])),

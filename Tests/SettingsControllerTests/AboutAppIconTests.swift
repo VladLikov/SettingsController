@@ -12,6 +12,15 @@ final class AboutAppIconTests: XCTestCase {
         XCTAssertEqual(image.cgImage?.width, 120)
     }
 
+    func testRenderedIconComposerIconWinsOverTheFlatBundledPNG() throws {
+        let bundle = try makeBundle(info: primaryIcon(name: "AppIcon", files: ["AppIcon60x60"]))
+        try writePNG("AppIcon60x60@2x.png", size: 120, in: bundle)
+        try writePNG(AboutAppHeaderView.renderedIconFile, size: 264, in: bundle)
+        let image = try XCTUnwrap(AboutAppHeaderView.appIcon(in: bundle))
+        XCTAssertEqual(image.cgImage?.width, 264)
+        XCTAssertEqual(image.size.width, 88, accuracy: 0.01, "264 px render is the 88 pt header at @3x")
+    }
+
     func testCatalogNameAloneDoesNotTriggerNamedImageLoading() throws {
         let bundle = try makeBundle(info: primaryIcon(name: "AppIcon", files: []))
         // Even an image with this name must not be resolved through the asset catalog.
