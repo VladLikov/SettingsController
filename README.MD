@@ -1,4 +1,4 @@
-> **5.1.1.** The 5.x line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
+> **5.2.0.** The 5.x line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
 
 # SettingsController
 
@@ -38,7 +38,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.1.1")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.2.0")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -336,6 +336,23 @@ Images are cached by glyph, color, padding, size, corner radius, scale and inter
 - `.vkGroup(id:)`
 - `.redeemCode`: the offer code sheet (`AppStore.presentOfferCodeRedeemSheet` on iOS 16+)
 - `.about(appID:privacyURL:termsURL:)`: build, device, account and locale diagnostics; every value offers Copy
+
+### App icon in About
+
+About shows the app icon above the name and version. iOS gives an app no public way to read its own Icon Composer icon (`.icon`), and the flat PNG that Xcode bundles for one has no Liquid Glass: layers come out as stripes and translucent shapes. Add one Run Script build phase to the app target so About shows the real icon:
+
+1. Target › Build Phases › + › New Run Script Phase, named "Render About Icon".
+2. Script (use your icon's path):
+
+   ```sh
+   "${DEVELOPER_DIR%/Developer}/Applications/Icon Composer.app/Contents/Executables/ictool" "$SRCROOT/AppIcon.icon" --export-image --output-file "$SCRIPT_OUTPUT_FILE_0" --platform iOS --rendition Default --width 88 --height 88 --scale 3 > /dev/null
+   ```
+
+3. Output Files: `$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/SettingsAboutIcon.png`
+4. Uncheck "Based on dependency analysis", so edits in Icon Composer show up on the next build.
+5. Build Settings › `ENABLE_USER_SCRIPT_SANDBOXING` = `NO` for the app target. Icon Composer's renderer reads every layer of the `.icon`, and the script sandbox only allows files listed one by one.
+
+Without the phase, About uses the PNG icon files in the bundle, as before. The example app has this phase; see `scripts/generate-example.py`.
 
 ## Premium Card
 

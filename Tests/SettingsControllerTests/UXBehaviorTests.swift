@@ -229,3 +229,26 @@ final class TapticScreenTests: XCTestCase {
         XCTAssertEqual(table.numberOfSections, 1)
     }
 }
+
+@MainActor
+final class LargeTitleTests: XCTestCase {
+    /// A host top inset with rows taller than the screen used to open the list scrolled by that inset,
+    /// which showed a collapsed large title until the user scrolled back.
+    func testTopInsetWithLongContentOpensAtTheTopWithALargeTitle() {
+        let rows = (0..<30).map { index in
+            SettingsRowItem.row(SettingsRow(title: "Row \(index)", icon: SettingsIcon(image: nil, color: .blue), destination: nil))
+        }
+        let settings = SettingsController(
+            configuration: SettingsConfiguration(insets: SettingsInsets(top: 25), sections: [SettingsSection(kind: .rows(rows))]))
+        let navigation = UINavigationController(rootViewController: settings)
+        navigation.navigationBar.prefersLargeTitles = true
+        let window = mountedWindow(navigation)
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+        let table = settings.tableView!
+        XCTAssertGreaterThan(table.contentSize.height, table.bounds.height)
+        XCTAssertEqual(table.contentOffset.y, -table.adjustedContentInset.top, accuracy: 0.5)
+    }
+}

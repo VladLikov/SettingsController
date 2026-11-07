@@ -52,10 +52,18 @@ final class AboutAppHeaderView: UIView {
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    /// The file `AboutIconPlugin` renders from the app's Icon Composer icon, at 88 pt @3x.
+    static let renderedIconFile = "SettingsAboutIcon.png"
+
     /// Loads only standalone icon files. App-icon catalog renditions (including Icon Composer
     /// assets) can raise an Objective-C exception in UIImage(named:), rather than return nil.
     static func appIcon(in bundle: Bundle = .main) -> UIImage? {
         guard let resources = bundle.resourceURL else { return nil }
+        // The Liquid Glass rendering comes first: the flat PNG Xcode bundles for an `.icon` has no glass effects.
+        let rendered = resources.appendingPathComponent(renderedIconFile)
+        if let image = image(at: rendered) {
+            return UIImage(cgImage: image, scale: CGFloat(image.width) / iconSize, orientation: .up)
+        }
         let idiom = UIDevice.current.userInterfaceIdiom
         // Bundle resolves device-qualified Info.plist keys (such as CFBundleIcons~ipad)
         // for the current device before exposing infoDictionary.
@@ -77,17 +85,19 @@ final class AboutAppHeaderView: UIView {
             for suffix in idiomSuffixes {
                 for scale in ["@3x", "@2x", ""] {
                     let url = resources.appendingPathComponent(name + scale + suffix).appendingPathExtension(ext)
-                    if FileManager.default.fileExists(atPath: url.path),
-                        let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-                        CGImageSourceGetType(source) != nil,
-                        let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
-                    {
-                        return UIImage(cgImage: image)
-                    }
+                    if let image = image(at: url) { return UIImage(cgImage: image) }
                 }
             }
         }
         return nil
+    }
+
+    private static func image(at url: URL) -> CGImage? {
+        guard FileManager.default.fileExists(atPath: url.path),
+            let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+            CGImageSourceGetType(source) != nil
+        else { return nil }
+        return CGImageSourceCreateImageAtIndex(source, 0, nil)
     }
 
     private static func placeholderIcon() -> UIImage? {
