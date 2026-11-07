@@ -1,5 +1,10 @@
 # Changelog
 
+## 5.2.1 — 2026-11-07
+
+### Fixed
+- The external arrow of Our Apps rows sat about 5 pt further from the trailing edge than the disclosure chevron of the rows above it. UIKit insets a bare `UIImageView` accessory more than other accessory views, so the arrow is now drawn inside a plain view and shares the chevron's trailing edge and vertical center at every width and table style. The arrow keeps its own size and still follows Dynamic Type.
+
 ## 5.2.0 — 2026-11-07
 
 ### Added
