@@ -1,3 +1,4 @@
+import AlertKit
 import UIKit
 
 public struct PremiumPayload {
@@ -5,13 +6,23 @@ public struct PremiumPayload {
     public private(set) var color: UIColor
     /// Shown modally (full screen in compact width) or run when the user is not premium.
     public let destination: SettingsDestination?
+    /// Optional AlertKit style for the confirmation shown to premium users.
+    public let activeAlertStyle: AlertViewStyle?
 
     public typealias PremiumAction = @MainActor (_ fromVC: UIViewController) -> Void
 
     public init(isPremium: Bool, color: UIColor, destination: SettingsDestination? = nil) {
+        self.init(isPremium: isPremium, color: color, destination: destination, activeAlertStyle: nil)
+    }
+
+    public init(
+        isPremium: Bool, color: UIColor, destination: SettingsDestination? = nil,
+        activeAlertStyle: AlertViewStyle?
+    ) {
         self.isPremium = isPremium
         self.color = color
         self.destination = destination
+        self.activeAlertStyle = activeAlertStyle
     }
 
     @available(*, deprecated, message: "Use init(isPremium:color:destination:) with .controller or .action.")
