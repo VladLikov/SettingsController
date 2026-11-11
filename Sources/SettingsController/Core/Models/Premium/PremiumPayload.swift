@@ -11,9 +11,13 @@ public struct PremiumPayload {
 
     public typealias PremiumAction = @MainActor (_ fromVC: UIViewController) -> Void
 
+    public init(isPremium: Bool, color: UIColor, destination: SettingsDestination? = nil) {
+        self.init(isPremium: isPremium, color: color, destination: destination, activeAlertStyle: nil)
+    }
+
     public init(
         isPremium: Bool, color: UIColor, destination: SettingsDestination? = nil,
-        activeAlertStyle: AlertViewStyle? = nil
+        activeAlertStyle: AlertViewStyle?
     ) {
         self.isPremium = isPremium
         self.color = color

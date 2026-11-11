@@ -1,5 +1,10 @@
 # Changelog
 
+## 5.2.2 — 2026-11-11
+
+### Added
+- The active Premium row accepts an optional AlertKit confirmation style through `PremiumPayload.activeAlertStyle`. Existing configurations keep the iOS 17 Apple Music style.
+
 ## 5.2.1 — 2026-11-07
 
 ### Fixed

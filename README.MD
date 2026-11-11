@@ -1,4 +1,4 @@
-> **5.2.1.** The 5.x line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
+> **5.2.2.** The 5.x line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
 
 # SettingsController
 
@@ -38,7 +38,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.2.1")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.2.2")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -66,6 +66,8 @@ func showSettings(from controller: UIViewController) {
 ```
 
 Replace the example App Store ID with your app's ID.
+
+Pass `activeAlertStyle: .iOS16AppleMusic` to `PremiumPayload` to use the iOS 16 Apple Music confirmation for the active Premium row. The default is the iOS 17 Apple Music style.
 
 ### Full configuration example
 
