@@ -16,7 +16,8 @@ final class TitledDataSource<Section: Hashable & Sendable, Item: Hashable & Send
     /// Re-renders the given items in place if they are shown.
     func reconfigure(_ items: [Item]) {
         var snapshot = snapshot()
-        let present = items.filter { snapshot.indexOfItem($0) != nil }
+        var seen = Set<Item>()
+        let present = items.filter { snapshot.indexOfItem($0) != nil && seen.insert($0).inserted }
         guard !present.isEmpty else { return }
         snapshot.reconfigureItems(present)
         apply(snapshot, animatingDifferences: false)

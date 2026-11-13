@@ -26,6 +26,21 @@ final class PremiumThemeTests: XCTestCase {
         guard case .premiumCard(let rebuilt) = settings.sections[0].kind else { return XCTFail("Expected card") }
         XCTAssertEqual(rebuilt.premium.color, UIColor.systemRed)
     }
+    func testSelectingCurrentAccentColorCanRefreshItsCheckmark() throws {
+        let theme = TestTheme()
+        theme.appColorID = TestColor.red.rawValue
+        let controller = AppearanceController(themeStorage: theme, colors: TestColor.allCases, eventHandler: nil)
+        controller.loadViewIfNeeded()
+
+        let selected = IndexPath(row: 0, section: 0)
+        controller.tableView(controller.tableView, didSelectRowAt: selected)
+
+        let dataSource = try XCTUnwrap(controller.dataSource)
+        let cell = dataSource.tableView(controller.tableView, cellForRowAt: selected)
+        XCTAssertEqual(theme.appColorID, TestColor.red.rawValue)
+        XCTAssertEqual(cell.accessoryType, .checkmark)
+    }
+
     func testNewColorSurvivesPremiumActivationAndRestoration() throws {
         let original = premiumCard()
         let settings = SettingsController(
