@@ -1,4 +1,4 @@
-> **5.2.2.** The 5.x line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
+> **5.2.4.** The 5.x line contains source-breaking changes relative to 4.0.x. Most 4.x initializers remain as deprecated wrappers. Read [Migration to 5.0](Documentation/MIGRATION-5.0.md), the [release checklist](Documentation/RELEASE-CHECKLIST.md) and the [5.0 verification and its limits](Documentation/VERIFICATION-5.0.md). Existing 4.x and 3.x release tags are unchanged.
 
 # SettingsController
 
@@ -38,7 +38,7 @@ https://github.com/VladLikov/SettingsController.git
 Or add it to `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.2.2")
+.package(url: "https://github.com/VladLikov/SettingsController.git", from: "5.2.4")
 ```
 
 Then add `SettingsController` to your target dependencies.
@@ -393,6 +393,14 @@ navigationController?.pushViewController(SettingsController(configuration: confi
 ```
 
 On iOS 27.0 and later the library uses a column-style `UISplitViewController`; on iOS 27.1 an active division (iPhone Duo) requests equal 50/50 columns, with Settings in the primary pane. UIKit owns fold avoidance, safe areas and compact/expanded transitions. iOS 15–26 keep the classic split presentation.
+
+On iOS and iPadOS 27 or later, you can set a scroll edge style for the main settings list before presenting it. UIKit chooses the style for any edge left unspecified.
+
+```swift
+if #available(iOS 27.0, *) {
+    configuration.setScrollEdgeEffects(top: .soft, bottom: .soft)
+}
+```
 
 ## App Store and URL Notes
 

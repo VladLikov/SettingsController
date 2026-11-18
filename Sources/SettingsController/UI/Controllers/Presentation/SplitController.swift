@@ -2,12 +2,36 @@ import UIKit
 
 final class SplitPlaceholderController: UIViewController {
     override func loadView() {
-        view = EmptyStateView(
-            title: NSLocalizedString(
-                "Select an item", bundle: .module, comment: "Prompt in an empty split detail column before a settings item is selected."),
-            subtitle: NSLocalizedString(
-                "Additional information will appear here.", bundle: .module,
-                comment: "Explanation in the empty split detail column on iPad or an expanded phone before a settings item is selected.")
+        if #available(iOS 17.0, *) {
+            view = UIView()
+            view.backgroundColor = .systemGroupedBackground
+        } else {
+            view = EmptyStateView(title: selectionPrompt, subtitle: selectionExplanation)
+        }
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        if #available(iOS 17.0, *) {
+            var configuration = UIContentUnavailableConfiguration.empty()
+            configuration.image = EmptyStateView.settingsImage
+            configuration.text = selectionPrompt
+            configuration.secondaryText = selectionExplanation
+            contentUnavailableConfiguration = configuration
+        }
+    }
+
+    private var selectionPrompt: String {
+        NSLocalizedString(
+            "Select an item", bundle: .module,
+            comment: "Prompt shown in the empty settings detail column. Asks the user to choose a settings item from the sidebar."
+        )
+    }
+
+    private var selectionExplanation: String {
+        NSLocalizedString(
+            "Additional information will appear here.", bundle: .module,
+            comment: "Subtitle in the empty settings detail column explaining where the selected item's details will appear."
         )
     }
 }

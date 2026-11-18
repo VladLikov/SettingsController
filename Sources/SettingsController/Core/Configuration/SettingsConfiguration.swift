@@ -50,6 +50,7 @@ public final class SettingsConfiguration {
 
     private let retainedEventHandler: (any SettingsControllerEventHandler)?
     private let retainedDataProvider: (any SettingsControllerDataProvider)?
+    private var configureScrollEdgeEffects: (@MainActor (UIScrollView) -> Void)?
 
     public init(
         title: String? = nil,
@@ -71,5 +72,21 @@ public final class SettingsConfiguration {
         self.retainedDataProvider = dataProvider
         self.eventHandler = eventHandler ?? delegate
         self.dataProvider = dataProvider ?? delegate
+    }
+
+    /// Sets the edge styles for the main settings list. Call before presenting Settings.
+    /// Pass nil for an edge to leave its style under UIKit's control.
+    @available(iOS 27.0, *)
+    @MainActor
+    public func setScrollEdgeEffects(top: UIScrollEdgeEffect.Style? = nil, bottom: UIScrollEdgeEffect.Style? = nil) {
+        configureScrollEdgeEffects = { scrollView in
+            if let top { scrollView.topEdgeEffect.style = top }
+            if let bottom { scrollView.bottomEdgeEffect.style = bottom }
+        }
+    }
+
+    @MainActor
+    func applyScrollEdgeEffects(to scrollView: UIScrollView) {
+        configureScrollEdgeEffects?(scrollView)
     }
 }

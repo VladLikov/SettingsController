@@ -106,6 +106,7 @@ public final class SettingsController: UITableViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         title = configuration.title
+        configuration.applyScrollEdgeEffects(to: tableView)
         tableView.register(SettingsCell.self)
         tableView.register(UserCell.self)
         tableView.register(AppCell.self)

@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.2.4 — 2026-11-18
+
+### Changed
+- The empty detail pane uses the native UIKit unavailable-content view on iOS and iPadOS 17 and later, with an SF Symbols gear and both localized selection prompts.
+
+### Added
+- On iOS and iPadOS 27 and later, `SettingsConfiguration.setScrollEdgeEffects(top:bottom:)` lets hosts choose the scroll edge styles for the main settings list. Unspecified edges use UIKit defaults.
+
 ## 5.2.2 — 2026-11-11
 
 ### Added
